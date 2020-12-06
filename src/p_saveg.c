@@ -155,7 +155,7 @@ static void P_NetArchivePlayers(void)
 		WRITEINT32(save_p, players[i].deadtimer);
 		WRITEUINT32(save_p, players[i].exiting);
 		WRITEUINT8(save_p, players[i].homing);
-	    WRITEFIXED(save_p, players[i].shieldactive);
+		WRITEFIXED(save_p, players[i].shieldactive);
 		WRITEUINT32(save_p, players[i].dashmode);
 		WRITEUINT32(save_p, players[i].skidtime);
 
