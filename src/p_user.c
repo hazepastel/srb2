@@ -1095,6 +1095,7 @@ void P_ResetPlayer(player_t *player)
 	player->powers[pw_tailsfly] = 0;
 	player->onconveyor = 0;
 	player->skidtime = 0;
+	player->shieldactive = 0;
 	if (player-players == consoleplayer && botingame)
 		CV_SetValue(&cv_analog[1], true);
 }
@@ -4426,6 +4427,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			if (!(player->mo->tracer->flags & MF_MISSILE)) // Missiles remember their owner!
 				P_SetTarget(&player->mo->tracer->target, NULL);
 			P_SetTarget(&player->mo->tracer, NULL);
+
 		}
 		else if (player->powers[pw_carry] == CR_ROPEHANG)
 		{
@@ -5048,8 +5050,8 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 			// Force stop
 			if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE)
 			{
+				player->shieldactive = FixedHypot(player->rmomx, player->rmomy);
 				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-				player->mo->momx = player->mo->momy = player->mo->momz = 0;
 				S_StartSound(player->mo, sfx_ngskid);
 			}
 			else
@@ -5493,6 +5495,21 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		}
 		else if ((player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND && !player->powers[pw_super])
 			P_DoJumpShield(player);
+	}
+
+	// Force stop pt2
+	if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE
+	&& player->shieldactive)
+	{
+		if (cmd->buttons & BT_SPIN)
+		{
+			player->mo->momx = player->mo->momy = player->mo->momz = 0;
+		}
+		else
+		{
+			P_Thrust(player->mo, player->mo->angle, player->shieldactive);
+			player->shieldactive = 0;
+		}
 	}
 
 	// HOMING option.
