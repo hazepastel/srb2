@@ -7632,15 +7632,33 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 		&& (mobj->target->player->powers[pw_shield] & SH_FORCE)
 		&& */ (mobj->target->player->pflags & PF_SHIELDABILITY))
 		{
-			mobj_t *whoosh = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_GHOST); // done here so the offset is correct
-			P_SetMobjState(whoosh, mobj->info->raisestate);
-			whoosh->destscale = whoosh->scale << 1;
-			whoosh->scalespeed = FixedMul(whoosh->scalespeed, whoosh->scale);
-			whoosh->height = 38*whoosh->scale;
-			whoosh->fuse = 10;
-			whoosh->flags |= MF_NOCLIPHEIGHT;
-			whoosh->momz = mobj->target->momz; // Stay reasonably centered for a few frames
+
+			static UINT8 forcetime = TICRATE*5/2; //enforce stall time limit of two and a half seconds
+			if (forcetime && mobj->target->player->shieldactive)
+			{
+				if (!(leveltime%6)) //pulse while stalled
+				{
+					mobj_t *whoosh = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_GHOST); // done here so the offset is correct
+					P_SetMobjState(whoosh, mobj->info->raisestate);
+					whoosh->destscale = whoosh->scale << 1;
+					whoosh->scalespeed = FixedMul(whoosh->scalespeed, whoosh->scale);
+					whoosh->height = 38*whoosh->scale;
+					whoosh->fuse = 10;
+					whoosh->flags |= MF_NOCLIPHEIGHT;
+					whoosh->momz = mobj->target->momz; // Stay reasonably centered for a few frames
+					if (forcetime < TICRATE)
+					{
+						whoosh->color = SKINCOLOR_RUBY; //turn whoosh red when its timer is almost up
+						whoosh->colorized = true;
+					}
+				}
+				forcetime--;
+			}
+			else
+			{
 			mobj->target->player->pflags &= ~PF_SHIELDABILITY; // prevent eternal whoosh
+			forcetime = TICRATE*5/2;
+			}
 		}
 		/* FALLTHRU */
 	case MT_FLAMEAURA_ORB:
