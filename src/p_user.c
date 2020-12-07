@@ -1984,6 +1984,7 @@ void P_SwitchShield(player_t *player, UINT16 shieldtype)
 		{
 			player->pflags &= ~(PF_SPINNING|PF_SHIELDABILITY); // They'll still have PF_THOKKED...
 			player->homing = 0;
+			player->shieldactive = 0;
 		}
 
 		player->powers[pw_shield] = shieldtype|(player->powers[pw_shield] & SH_STACK);
@@ -4427,6 +4428,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			if (!(player->mo->tracer->flags & MF_MISSILE)) // Missiles remember their owner!
 				P_SetTarget(&player->mo->tracer->target, NULL);
 			P_SetTarget(&player->mo->tracer, NULL);
+
 		}
 		else if (player->powers[pw_carry] == CR_ROPEHANG)
 		{
@@ -5049,7 +5051,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 			// Force stop
 			if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE)
 			{
-				player->shieldactive = FixedHypot(player->rmomx, player->rmomy);
+				player->shieldactive = FixedHypot(player->rmomx, player->rmomy)+1;
 				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 				S_StartSound(player->mo, sfx_ngskid);
 			}
@@ -5500,7 +5502,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 	if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE
 	&& player->shieldactive)
 	{
-		if (cmd->buttons & BT_SPIN)
+		if (player->pflags & PF_SHIELDABILITY && cmd->buttons & BT_SPIN)
 		{
 			player->mo->momx = player->mo->momy = player->mo->momz = 0;
 		}
