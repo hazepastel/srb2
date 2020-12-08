@@ -7633,10 +7633,10 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 		&& */ (mobj->target->player->pflags & PF_SHIELDABILITY))
 		{
 
-			static UINT8 forcetime = TICRATE*5/2; //enforce stall time limit of two and a half seconds
+			static UINT8 forcetime = TICRATE*3; // enforce stall time limit of three seconds
 			if (forcetime && mobj->target->player->shieldactive)
 			{
-				if (!(leveltime%6)) //pulse while stalled
+				if (forcetime == TICRATE*3 || !(leveltime%6)) // pulse while stalled
 				{
 					mobj_t *whoosh = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_GHOST); // done here so the offset is correct
 					P_SetMobjState(whoosh, mobj->info->raisestate);
@@ -7646,18 +7646,23 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 					whoosh->fuse = 10;
 					whoosh->flags |= MF_NOCLIPHEIGHT;
 					whoosh->momz = mobj->target->momz; // Stay reasonably centered for a few frames
-					if (forcetime < TICRATE)
-					{
-						whoosh->color = SKINCOLOR_RUBY; //turn whoosh red when its timer is almost up
-						whoosh->colorized = true;
-					}
+                    			if (forcetime < TICRATE)
+                    			{
+                        			whoosh->color = SKINCOLOR_RUBY; // turn whoosh red at 1 second remaining
+                        			whoosh->colorized = true;
+                    			}
+                    			else if (forcetime < TICRATE*2)
+                    			{
+                        			whoosh->color = SKINCOLOR_MAGENTA; // turn whoosh magenta at 2 seconds remaining
+                        			whoosh->colorized = true;
+                    			}
 				}
 				forcetime--;
 			}
 			else
 			{
-			mobj->target->player->pflags &= ~PF_SHIELDABILITY; // prevent eternal whoosh
-			forcetime = TICRATE*5/2;
+				mobj->target->player->pflags &= ~PF_SHIELDABILITY; // prevent eternal whoosh
+				forcetime = TICRATE*3;
 			}
 		}
 		/* FALLTHRU */
