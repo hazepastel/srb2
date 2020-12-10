@@ -7624,45 +7624,49 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 		}
 		break;
 	case MT_FORCE_ORB:
-		if (!(mobj->flags2 & MF2_SHIELD))
-			return;
-		if (/*
-		&& mobj->target -- the following is implicit by P_AddShield
-		&& mobj->target->player
-		&& (mobj->target->player->powers[pw_shield] & SH_FORCE)
-		&& */ (mobj->target->player->pflags & PF_SHIELDABILITY))
 		{
-
-			static UINT8 forcetime = TICRATE*3; // enforce stall time limit of three seconds
-			if (forcetime && mobj->target->player->shieldactive)
+			static UINT8 forcetime = TICRATE*3;
+			if (!(mobj->flags2 & MF2_SHIELD))
+			return;
+			if (/*
+			&& mobj->target -- the following is implicit by P_AddShield
+			&& mobj->target->player
+			&& (mobj->target->player->powers[pw_shield] & SH_FORCE)
+			&& */ (mobj->target->player->pflags & PF_SHIELDABILITY))
 			{
-				if (forcetime == TICRATE*3 || !(leveltime%6)) // pulse while stalled
+				if (forcetime && mobj->target->player->shieldactive)
 				{
-					mobj_t *whoosh = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_GHOST); // done here so the offset is correct
-					P_SetMobjState(whoosh, mobj->info->raisestate);
-					whoosh->destscale = whoosh->scale << 1;
-					whoosh->scalespeed = FixedMul(whoosh->scalespeed, whoosh->scale);
-					whoosh->height = 38*whoosh->scale;
-					whoosh->fuse = 10;
-					whoosh->flags |= MF_NOCLIPHEIGHT;
-					whoosh->momz = mobj->target->momz; // Stay reasonably centered for a few frames
-                    			if (forcetime < TICRATE)
-                    			{
-                        			whoosh->color = SKINCOLOR_RUBY; // turn whoosh red at 1 second remaining
-                        			whoosh->colorized = true;
-                    			}
-                    			else if (forcetime < TICRATE*2)
-                    			{
-                        			whoosh->color = SKINCOLOR_MAGENTA; // turn whoosh magenta at 2 seconds remaining
-                        			whoosh->colorized = true;
-                    			}
+					if (forcetime == TICRATE*3 || !(leveltime%6)) // pulse while stalled
+					{
+						mobj_t *whoosh = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_GHOST); // done here so the offset is correct
+						P_SetMobjState(whoosh, mobj->info->raisestate);
+						whoosh->destscale = whoosh->scale << 1;
+						whoosh->scalespeed = FixedMul(whoosh->scalespeed, whoosh->scale);
+						whoosh->height = 38*whoosh->scale;
+						whoosh->fuse = 10;
+						whoosh->flags |= MF_NOCLIPHEIGHT;
+						whoosh->momz = mobj->target->momz; // Stay reasonably centered for a few frames
+                    				if (forcetime < TICRATE)
+                    				{
+                        				whoosh->color = SKINCOLOR_RUBY; // turn whoosh red at 1 second remaining
+                        				whoosh->colorized = true;
+                    				}
+                    				else if (forcetime < TICRATE*2)
+                    				{
+                        				whoosh->color = SKINCOLOR_MAGENTA; // turn whoosh magenta at 2 seconds remaining
+                        				whoosh->colorized = true;
+                    				}
+					}
+					forcetime--;
 				}
-				forcetime--;
+				else
+				{
+					mobj->target->player->pflags &= ~PF_SHIELDABILITY; // prevent eternal whoosh
+				}
 			}
-			else
+			else if (forcetime < TICRATE*3)
 			{
-				mobj->target->player->pflags &= ~PF_SHIELDABILITY; // prevent eternal whoosh
-				forcetime = TICRATE*3;
+				forcetime = TICRATE*3; // enforce stall time limit of three seconds
 			}
 		}
 		/* FALLTHRU */
