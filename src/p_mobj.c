@@ -7625,13 +7625,10 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 	case MT_FORCE_ORB:
 		{
 			static UINT8 forcetime = TICRATE*3;
+
 			if (!(mobj->flags2 & MF2_SHIELD))
-			return;
-			if (/*
-			&& mobj->target -- the following is implicit by P_AddShield
-			&& mobj->target->player
-			&& (mobj->target->player->powers[pw_shield] & SH_FORCE)
-			&& */ (mobj->target->player->pflags & PF_SHIELDABILITY))
+				return;
+			if (mobj->target->player->pflags & PF_SHIELDABILITY)
 			{
 				if (forcetime && mobj->target->player->shieldactive)
 				{
