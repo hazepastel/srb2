@@ -4346,6 +4346,7 @@ boolean P_SuperReady(player_t *player)
 	&& !player->powers[pw_invulnerability]
 	&& !player->powers[pw_tailsfly]
 	&& (player->charflags & SF_SUPER)
+	&& !(player->charflags & SF_DISABLETRANSFORM)
 	&& (player->pflags & PF_JUMPED)
 	&& !(player->powers[pw_shield] & SH_NOSTACK)
 	&& !(maptol & TOL_NIGHTS)
