@@ -577,7 +577,7 @@ void Y_IntermissionDrawer(void)
 				ttheight += V_LevelNameHeight(data.spec.passed4) + 2;
 				V_DrawLevelTitle(data.spec.passedx4 + xoffset3, ttheight, 0, data.spec.passed4);
 
-				if (!(skins[players[consoleplayer].skin].flags & SF_DISABLETRANSFORM)) // don't display the tutorial text for nonstandard transformations
+				if (!(players[consoleplayer].charflags & SF_DISABLETRANSFORM)) // don't display the tutorial text for nonstandard transformations
 				{
 					ttheight = 108;
 					V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset4 - (V_LevelNameWidth(ringtext)/2), ttheight, 0, ringtext);
