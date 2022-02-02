@@ -1452,7 +1452,7 @@ void Y_StartIntermission(void)
 				{
 					strcpy(data.spec.passed3, "can now become");
 					if (strlen(skins[players[consoleplayer].skin].supername) > 20) //too long, use generic
-						strcpy(data.spec.passed4, "Super");
+						strcpy(data.spec.passed4, "their super form");
 					else
 						strcpy(data.spec.passed4, skins[players[consoleplayer].skin].supername);
 				}

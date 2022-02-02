@@ -113,7 +113,7 @@ static void Sk_SetDefaultValue(skin_t *skin)
 
 	strcpy(skin->realname, "Someone");
 	strcpy(skin->hudname, "???");
-	strcpy(skin->supername, "Super");
+	strcpy(skin->supername, "Someone super");
 
 	skin->starttranscolor = 96;
 	skin->prefcolor = SKINCOLOR_GREEN;
