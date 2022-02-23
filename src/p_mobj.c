@@ -10086,6 +10086,27 @@ void P_MobjThinker(mobj_t *mobj)
 		}
 	}
 
+	// Hybrid thinker
+	if (mobj->flags & MF_HYBRID)
+	{
+		if (!mobj->hybridtics)
+			mobj->hybridtics = 5;
+		// If we're placed over a deathpit, we want our thinker to stay on
+		if ((GETSECSPECIAL(mobj->subsector->sector->special, 1) == 6) || (GETSECSPECIAL(mobj->subsector->sector->special, 1) == 7))
+			;
+		// Count down only when not moving
+		else if (!mobj->momx && !mobj->momy && !mobj->momz) 
+			mobj->hybridtics -= 1;
+		if (mobj->hybridtics == 1)
+		{
+			mobj->hybridtics = 0;
+			mobj->flags |= MF_NOTHINK;
+			return;
+		}
+		P_SceneryThinker(mobj);
+		return;
+	}
+
 	// Special thinker for scenery objects
 	if (mobj->flags & MF_SCENERY)
 	{
@@ -12985,7 +13006,7 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 				P_SetMobjState(mobj, mobj->info->meleestate);
 		}
 		else
-			mobj->flags |= MF_NOTHINK;
+			mobj->flags |= MF_HYBRID;
 		// no collision for spikes if the ambush flag is checked
 		if ((mthing->options & MTF_AMBUSH) || metalrecording)
 		{
