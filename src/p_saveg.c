@@ -1486,6 +1486,7 @@ typedef enum
 	MD2_SPRITEXOFFSET = 1<<20,
 	MD2_SPRITEYOFFSET = 1<<21,
 	MD2_FLOORSPRITESLOPE = 1<<22,
+	MD2_HYBRIDTICS  = 1<<23,
 } mobj_diff2_t;
 
 typedef enum
@@ -1720,6 +1721,8 @@ static void SaveMobjThinker(const thinker_t *th, const UINT8 type)
 		|| (slope->normal.z != FRACUNIT))
 			diff2 |= MD2_FLOORSPRITESLOPE;
 	}
+	if (mobj->hybridtics)
+		diff2 |= MD2_HYBRIDTICS;
 
 	if (diff2 != 0)
 		diff |= MD_MORE;
@@ -1895,6 +1898,8 @@ static void SaveMobjThinker(const thinker_t *th, const UINT8 type)
 		WRITEFIXED(save_p, slope->normal.y);
 		WRITEFIXED(save_p, slope->normal.z);
 	}
+	if (diff2 & MD2_HYBRIDTICS)
+		WRITESINT8(save_p, mobj->hybridtics);
 
 	WRITEUINT32(save_p, mobj->mobjnum);
 }
@@ -2942,6 +2947,8 @@ static thinker_t* LoadMobjThinker(actionf_p1 thinker)
 		slope->normal.y = READFIXED(save_p);
 		slope->normal.z = READFIXED(save_p);
 	}
+	if (diff2 & MD2_HYBRIDTICS)
+		mobj->hybridtics = READSINT8(save_p);
 
 	if (diff & MD_REDFLAG)
 	{
