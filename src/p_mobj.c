@@ -1488,7 +1488,11 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 	{
 		if ((mo->player->pflags & PF_GLIDING)
 		|| (mo->player->charability == CA_FLY && mo->player->panim == PA_ABILITY))
-			gravityadd = gravityadd/3; // less gravity while flying/gliding
+			gravityadd = gravityadd/2; // less gravity while flying/gliding
+
+		if (mo->player->panim != PA_SPRING && mo->player->panim != PA_FALL && (P_MobjFlip(mo)*mo->momz > FixedMul(20<<FRACBITS, mo->scale)))
+			gravityadd = gravityadd*4/3; // increase gravity to counter slope rocketing
+
 		if (mo->player->climbing || (mo->player->powers[pw_carry] == CR_NIGHTSMODE))
 			gravityadd = 0;
 
@@ -1641,20 +1645,19 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 	player = mo->player;
 	if (player) // valid only if player avatar
 	{
-		// spinning friction
-		if (player->pflags & PF_SPINNING && (player->rmomx || player->rmomy) && !(player->pflags & PF_STARTDASH))
-		{
-			if (twodlevel || player->mo->flags2 & MF2_TWOD) // Otherwise handled in P_3DMovement
-			{
-				const fixed_t ns = FixedDiv(549*ORIG_FRICTION,500*FRACUNIT);
-				mo->momx = FixedMul(mo->momx, ns);
-				mo->momy = FixedMul(mo->momy, ns);
-			}
-		}
-		else if (abs(player->rmomx) < FixedMul(STOPSPEED, mo->scale)
-		    && abs(player->rmomy) < FixedMul(STOPSPEED, mo->scale)
-		    && (!(player->cmd.forwardmove && !(twodlevel || mo->flags2 & MF2_TWOD)) && !player->cmd.sidemove && !(player->pflags & PF_SPINNING))
-			&& !(player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/2)))
+		if (((player->pflags & PF_GLIDING) && !player->skidtime) || ((player->pflags & PF_SPINNING) && P_IsObjectOnGround(mo)))
+			return;
+
+		if (P_MobjFlip(mo)*mo->momz < 0 && (mo->state-states == S_PLAY_WALK))
+			P_SetPlayerMobjState(mo, S_PLAY_FALL);
+		else if (mo->state-states == S_PLAY_RUN && !P_IsObjectOnGround(mo))
+			P_SetPlayerMobjState(mo, S_PLAY_WALK);
+		
+		if (abs(player->rmomx) < FixedMul(STOPSPEED, mo->scale)
+		&& abs(player->rmomy) < FixedMul(STOPSPEED, mo->scale)
+		&& (!(player->cmd.forwardmove && !(twodlevel || mo->flags2 & MF2_TWOD)) && !player->cmd.sidemove && !(player->pflags & PF_SPINNING))
+		&& !(player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/2))
+		&& P_IsObjectOnGround(mo))
 		{
 			// if in a walking frame, stop moving
 			if (player->panim == PA_WALK)
@@ -1662,7 +1665,7 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 			mo->momx = player->cmomx;
 			mo->momy = player->cmomy;
 		}
-		else if (!(mo->eflags & MFE_SPRUNG))
+		else if (!(mo->eflags & MFE_SPRUNG) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
 		{
 			if (oldx == mo->x && oldy == mo->y) // didn't go anywhere
 			{
@@ -1961,11 +1964,7 @@ void P_XYMovement(mobj_t *mo)
 					mo->momz = transfermomz;
 					mo->standingslope = NULL;
 					if (player)
-					{
 						player->powers[pw_justlaunched] = 2;
-						if (player->pflags & PF_SPINNING)
-							player->pflags |= PF_THOKKED;
-					}
 				}
 			}
 		}
@@ -2100,7 +2099,7 @@ void P_XYMovement(mobj_t *mo)
 		return;
 
 	if (((!(mo->eflags & MFE_VERTICALFLIP) && mo->z > mo->floorz) || (mo->eflags & MFE_VERTICALFLIP && mo->z+mo->height < mo->ceilingz))
-		&& !(player && player->pflags & PF_SLIDING))
+		&& !(player))
 		return; // no friction when airborne
 
 	P_XYFriction(mo, oldx, oldy);
