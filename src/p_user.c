@@ -5506,6 +5506,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		if (player->pflags & PF_SHIELDABILITY && cmd->buttons & BT_SPIN)
 		{
 			player->mo->momx = player->mo->momy = player->mo->momz = 0;
+			player->mo->angle = player->drawangle = cmd->angleturn<<16;
 			if (player->dashmode >= DASHMODE_THRESHOLD)
 			{
 				player->dashmode = DASHMODE_MAX+3; // reverse dashmode decay
