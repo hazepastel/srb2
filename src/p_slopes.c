@@ -925,7 +925,7 @@ void P_ButteredSlope(mobj_t *mo)
 	{
 		fixed_t spinadd = 0;
 		spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 3/2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
-		thrust = thrust + spinadd;
+		thrust += spinadd;
 	}
 
 	// Let's get the gravity strength for the object...

@@ -1824,7 +1824,7 @@ boolean P_IsObjectOnGroundIn(mobj_t *mo, sector_t *sec)
 //
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
 {
-	value = FixedMul(value, 23*FRACUNIT/20); //gravity adjustment
+	value = value*19/16; //gravity adjustment
 
 	if (mo->eflags & MFE_VERTICALFLIP)
 		value = -value;
@@ -2456,11 +2456,6 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 
 				if (player->powers[pw_super])
 					runspd = FixedMul(runspd, 5*FRACUNIT/3);
-
-				runspd = FixedMul(runspd, player->mo->movefactor);
-
-				if (maptol & TOL_2D)
-					runspd = FixedMul(runspd, 2*FRACUNIT/3);
 
 				if (player->cmomx || player->cmomy)
 				{
@@ -4354,6 +4349,7 @@ boolean P_SuperReady(player_t *player)
 //
 void P_DoJump(player_t *player, boolean soundandstate)
 {
+#define default 37*(FRACUNIT/5)
 	fixed_t factor;
 	fixed_t startingz = P_MobjFlip(player->mo)*player->mo->momz;
 	const fixed_t dist6 = FixedMul(FixedDiv(player->speed, player->mo->scale), player->actionspd)/20;
@@ -4414,7 +4410,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		// Jump this high.
 		if (player->powers[pw_carry] == CR_PLAYER)
 		{
-			player->mo->momz = 12*FRACUNIT;
+			player->mo->momz = default;
 			player->powers[pw_carry] = CR_NONE;
 			P_SetTarget(&player->mo->tracer, NULL);
 			if (player-players == consoleplayer && botingame)
@@ -4422,7 +4418,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		}
 		else if (player->powers[pw_carry] == CR_GENERIC)
 		{
-			player->mo->momz = 12*FRACUNIT;
+			player->mo->momz = default;
 			player->powers[pw_carry] = CR_NONE;
 			if (!(player->mo->tracer->flags & MF_MISSILE)) // Missiles remember their owner!
 				P_SetTarget(&player->mo->tracer->target, NULL);
@@ -4430,13 +4426,13 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		}
 		else if (player->powers[pw_carry] == CR_ROPEHANG)
 		{
-			player->mo->momz = 12*FRACUNIT;
+			player->mo->momz = default;
 			player->powers[pw_carry] = CR_NONE;
 			P_SetTarget(&player->mo->tracer, NULL);
 		}
 		else if (player->powers[pw_carry] == CR_ROLLOUT)
 		{
-			player->mo->momz = 12*FRACUNIT;
+			player->mo->momz = default;
 			if (player->mo->tracer)
 			{
 				if (P_MobjFlip(player->mo->tracer)*player->mo->tracer->momz > 0)
@@ -4451,7 +4447,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		}
 		else if (player->mo->eflags & MFE_GOOWATER)
 		{
-			player->mo->momz = 19*FRACUNIT/2;
+			player->mo->momz = default*4/5;
 			if (player->charability == CA_JUMPBOOST && onground)
 			{
 				if (player->charflags & SF_MULTIABILITY)
@@ -4461,10 +4457,10 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			}
 		}
 		else if (maptol & TOL_NIGHTS)
-			player->mo->momz = 18*FRACUNIT;
+			player->mo->momz = default<<1;
 		else if (player->powers[pw_super] && !(player->charflags & SF_NOSUPERJUMPBOOST))
 		{
-			player->mo->momz = 16*FRACUNIT;
+			player->mo->momz = default*5/3;
 
 			// Add a boost for super characters with float/slowfall and multiability.
 			if (player->charability == CA_JUMPBOOST)
@@ -4477,7 +4473,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		}
 		else
 		{
-			player->mo->momz = 12*FRACUNIT; // Default jump momentum.
+			player->mo->momz = default; // Default jump momentum.
 			if (player->charability == CA_JUMPBOOST && onground)
 			{
 				if (player->charflags & SF_MULTIABILITY)
@@ -4494,7 +4490,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		player->pflags |= PF_STARTJUMP;
 	}
 
-	factor = player->jumpfactor;
+	factor = player->jumpfactor*8/5;
 
 	if (player->charflags & SF_MULTIABILITY && player->charability == CA_DOUBLEJUMP && (player->actionspd >> FRACBITS) != -1)
 		factor -= max(0, player->secondjump * player->jumpfactor / ((player->actionspd >> FRACBITS) + 1)); // Reduce the jump height each time
@@ -4528,6 +4524,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 
 		P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
 	}
+#undef default
 }
 
 static void P_DoSpinDashDust(player_t *player)
@@ -5910,8 +5907,12 @@ static void P_3dMovement(player_t *player)
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
 		acceleration = 62;
 
-	if (player->mo->movefactor != FRACUNIT) // Friction-scaled acceleration...
-		acceleration = FixedMul(acceleration<<FRACBITS, player->mo->movefactor)>>FRACBITS;
+	if (player->mo->movefactor != FRACUNIT) // Friction-scaled acceleration
+	{
+		acceleration = FixedMul(acceleration, player->mo->movefactor);
+		if (leveltime%2 == 0 && !spin)
+			topspeed = normalspd;
+	}
 
 	// Forward movement
 	if (player->climbing)
