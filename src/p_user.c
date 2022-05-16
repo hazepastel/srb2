@@ -4835,7 +4835,7 @@ void P_DoJumpShield(player_t *player)
 	}
 	else
 	{
-		player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE);
+		player->pflags |= PF_NOJUMPDAMAGE;
 		P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
 		S_StartSound(player->mo, sfx_wdjump);
 	}
