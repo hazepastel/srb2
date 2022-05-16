@@ -1089,6 +1089,9 @@ static void IdentifyVersion(void)
 	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "patch.pk3"));
 #endif
 
+	// Add rphys patch file
+	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "rphys.pk3"));
+
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 	{
 #define MUSICTEST(str) \

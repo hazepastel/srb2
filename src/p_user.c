@@ -2404,7 +2404,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 				{
 					mobjtype_t type = player->revitem;
 					P_SetPlayerMobjState(player->mo, S_PLAY_MELEE_LANDING);
-					player->mo->tics = (player->mo->movefactor == FRACUNIT) ? TICRATE/2 : (FixedDiv(35<<(FRACBITS-1), FixedSqrt(player->mo->movefactor)))>>FRACBITS;
+					player->mo->tics = TICRATE/2;
 					S_StartSound(player->mo, sfx_s3k8b);
 					player->pflags |= PF_FULLSTASIS;
 
@@ -2413,10 +2413,10 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 					{
 						UINT8 i = 0;
 						angle_t throwang = -(2*ANG30);
-						fixed_t xo = P_ReturnThrustX(player->mo, player->drawangle, 16*player->mo->scale);
-						fixed_t yo = P_ReturnThrustY(player->mo, player->drawangle, 16*player->mo->scale);
-						fixed_t zo = 6*player->mo->scale;
-						fixed_t mu = FixedMul(player->maxdash, player->mo->scale);
+						fixed_t xo = P_ReturnThrustX(player->mo, player->drawangle, 24*player->mo->scale);
+						fixed_t yo = P_ReturnThrustY(player->mo, player->drawangle, 24*player->mo->scale);
+						fixed_t zo = 9*player->mo->scale;
+						fixed_t mu = FixedMul(player->maxdash+(5<<FRACBITS), player->mo->scale);
 						fixed_t mu2 = FixedHypot(player->mo->momx, player->mo->momy);
 						fixed_t ev;
 						mobj_t *missile = NULL;
@@ -5002,10 +5002,11 @@ void P_Telekinesis(player_t *player, fixed_t thrust, fixed_t range)
 static void P_DoTwinSpin(player_t *player)
 {
 	player->pflags &= ~PF_NOJUMPDAMAGE;
-	player->pflags |= P_GetJumpFlags(player) | PF_THOKKED;
+	player->pflags |= P_GetJumpFlags(player);
 	S_StartSound(player->mo, sfx_s3k42);
 	player->mo->frame = 0;
 	P_SetPlayerMobjState(player->mo, S_PLAY_TWINSPIN);
+	player->weapondelay = TICRATE*5/8;
 }
 
 //
@@ -5148,7 +5149,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 	//& SUPER FLOAT!//
 	//////////////////
 
-	if ((player->pflags & PF_JUMPED) && !player->exiting && !P_PlayerInPain(player))
+	if (((player->pflags & PF_JUMPED) || player->panim == PA_FALL || player->panim == PA_SPRING) && !player->exiting && !P_PlayerInPain(player))
 	{
 		if (onground || player->climbing || player->powers[pw_carry])
 			;
@@ -5157,38 +5158,18 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		else if (player->pflags & (PF_GLIDING|PF_SLIDING|PF_SHIELDABILITY)) // If the player has used an ability previously
 			;
 		else if (P_PlayerShieldThink(player, cmd, lockonthok, visual))
-			;
+			player->pflags |= P_GetJumpFlags(player);
 		else if ((cmd->buttons & BT_SPIN))
 		{
-			if (!(player->pflags & PF_SPINDOWN) && P_SuperReady(player))
+			if (!(player->pflags & PF_SPINDOWN) && P_SuperReady(player) && !(player->pflags & PF_THOKKED))
 			{
 				// If you can turn super and aren't already,
 				// and you don't have a shield, do it!
 				P_DoSuperTransformation(player, false);
 			}
-			else if (!LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
+			else if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
 				switch (player->charability)
 				{
-					case CA_THOK:
-						if (player->powers[pw_super]) // Super Sonic float
-						{
-							if ((player->speed > 5*player->mo->scale) // FixedMul(5<<FRACBITS, player->mo->scale), but scale is FRACUNIT-based
-							&& (P_MobjFlip(player->mo)*player->mo->momz <= 0))
-							{
-								if (player->panim != PA_RUN && player->panim != PA_WALK)
-								{
-									if (player->speed >= FixedMul(player->runspeed, player->mo->scale))
-										P_SetPlayerMobjState(player->mo, S_PLAY_FLOAT_RUN);
-									else
-										P_SetPlayerMobjState(player->mo, S_PLAY_FLOAT);
-								}
-
-								player->mo->momz = 0;
-								player->pflags &= ~(PF_STARTJUMP|PF_SPINNING);
-								player->secondjump = 1;
-							}
-						}
-						break;
 					case CA_TELEKINESIS:
 						if (!(player->pflags & (PF_THOKKED|PF_SPINDOWN)) || (player->charflags & SF_MULTIABILITY))
 						{
@@ -5198,7 +5179,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 						}
 						break;
 					case CA_TWINSPIN:
-						if ((player->charability2 == CA2_MELEE) && (!(player->pflags & (PF_THOKKED|PF_SPINDOWN)) || player->charflags & SF_MULTIABILITY))
+						if ((player->charability2 == CA2_MELEE && !(player->pflags & PF_SPINDOWN) && !player->weapondelay) || player->charflags & SF_MULTIABILITY)
 							P_DoTwinSpin(player);
 						break;
 					default:
@@ -5272,21 +5253,27 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 			// and you don't have a shield, do it!
 			P_DoSuperTransformation(player, false);
 		}*/
-		else if (player->pflags & PF_JUMPED)
+		else if ((player->pflags & PF_JUMPED) || player->panim == PA_FALL || player->panim == PA_SPRING)
 		{
+			if (!(player->pflags & PF_JUMPED) && (player->panim == PA_FALL || player->panim == PA_SPRING) && !(player->pflags & PF_THOKKED))
+			{
+				player->pflags |= P_GetJumpFlags(player);
+				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
+			}
+				
 			if (!LUA_HookPlayer(player, HOOK(AbilitySpecial)))
 			switch (player->charability)
 			{
 				case CA_THOK:
 				case CA_HOMINGTHOK:
-				case CA_JUMPTHOK: // Credit goes to CZ64 and Sryder13 for the original
 					// Now it's Sonic's abilities turn!
 					// THOK!
-					fixed_t actionspd = max(player->normalspeed, player->speed);
+					fixed_t actionspd = max(FixedMul(player->actionspd, player->mo->scale), player->speed);
+					
 					if (!(player->pflags & PF_THOKKED) || (player->charflags & SF_MULTIABILITY))
 					{
 						// Catapult the player
-						P_InstaThrust(player->mo, player->mo->angle, FixedMul(actionspd*11/10, player->mo->scale));
+						P_InstaThrust(player->mo, player->mo->angle, actionspd);
 
 						if (player->charability == CA_HOMINGTHOK)
 						{
@@ -5308,11 +5295,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 							}
 							player->pflags &= ~PF_NOJUMPDAMAGE;
 						}
-						else if (!(player->pflags & PF_THOKKED))
-						{
-							player->pflags &= ~PF_JUMPED;
-							P_DoJump(player, false);
-						}
 
 						player->drawangle = player->mo->angle;
 
@@ -5323,18 +5305,28 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 
 						player->pflags &= ~(PF_SPINNING|PF_STARTDASH);
 						player->pflags |= PF_THOKKED;
-
-						// Change localangle to match for simple controls? (P.S. chalupa)
-						// disabled because it seemed to disorient people and Z-targeting exists now
-						/*if (!demoplayback)
-						{
-							if (player == &players[consoleplayer] && cv_cam_turnfacingability[0].value > 0 && !(PLAYER1INPUTDOWN(GC_TURNLEFT) || PLAYER1INPUTDOWN(GC_TURNRIGHT)))
-								P_SetPlayerAngle(player, player->mo->angle);;
-							else if (player == &players[secondarydisplayplayer] && cv_cam_turnfacingability[1].value > 0 && !(PLAYER2INPUTDOWN(GC_TURNLEFT) || PLAYER2INPUTDOWN(GC_TURNRIGHT)))
-								P_SetPlayerAngle(player, player->mo->angle);
-						}*/
 					}
 					break;
+
+				case CA_JUMPTHOK: //Hybrid jumpthok
+					
+					if (!player->secondjump)
+					{
+						player->pflags &= ~PF_JUMPED;
+						P_DoJump(player, false);
+						if (player->dashmode >= DASHMODE_THRESHOLD || player->charflags & SF_MULTIABILITY)
+						{
+							P_InstaThrust(player->mo, player->mo->angle, max(FixedMul(player->normalspeed*11/10, player->mo->scale), player->speed*11/10));
+							P_SpawnThokMobj(player);
+							S_StartSound(player->mo, sfx_thok);
+						}
+						else
+							S_StartSound(player->mo, sfx_jump);
+
+						player->pflags &= ~(PF_SPINNING|PF_STARTDASH);
+						player->secondjump = 2;
+					}
+					break;				
 
 				case CA_FLY:
 				case CA_SWIM:
@@ -5431,15 +5423,13 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					}
 					break;
 				case CA_TWINSPIN:
-					if (!(player->pflags & PF_THOKKED) || player->charflags & SF_MULTIABILITY)
+					if (!(player->weapondelay) || player->charflags & SF_MULTIABILITY)
 						P_DoTwinSpin(player);
 					break;
 				default:
 					break;
 			}
 		}
-		else if ((!(player->charflags & SF_NOSHIELDABILITY)) && ((player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND && !player->powers[pw_super] && !LUA_HookPlayer(player, HOOK(ShieldSpecial))))
-			P_DoJumpShield(player);
 	}
 
 	// Force stop pt2
@@ -5646,8 +5636,7 @@ static void P_2dMovement(player_t *player)
 	angle_t movepushangle = 0;
 	fixed_t normalspd = FixedMul(player->normalspeed*5/6, player->mo->scale);
 
-	player->runspeed = normalspd-(2<<FRACBITS);
-	player->mo->friction = FRACUNIT;
+	player->runspeed = (player->runspeed > player->normalspeed) ? player->runspeed : normalspd-(2<<FRACBITS);
 
 	cmd = &player->cmd;
 
@@ -5802,10 +5791,17 @@ static void P_3dMovement(player_t *player)
 	fixed_t oldMagnitude, newMagnitude;
 	vector3_t totalthrust;
 
-	player->runspeed = player->normalspeed-(2<<FRACBITS);
+	player->runspeed = (player->runspeed > player->normalspeed) ? player->runspeed : player->normalspeed-(2<<FRACBITS);
 	player->thrustfactor = 3;
 	player->accelstart = 230;
 	player->acceleration = 50;
+
+	if (strcmp(skins[player->skin].name, "adventuresonic") == 0)
+	{
+		normalspd = player->normalspeed;
+		player->runspeed = skins[player->skin].runspeed;
+		player->jumpfactor = FRACUNIT;
+	}
 
 	totalthrust.x = totalthrust.y = 0; // I forget if this is needed
 	totalthrust.z = FRACUNIT*P_MobjFlip(player->mo)/3; // A bit of extra push-back on slopes
@@ -5908,11 +5904,7 @@ static void P_3dMovement(player_t *player)
 		acceleration = 62;
 
 	if (player->mo->movefactor != FRACUNIT) // Friction-scaled acceleration
-	{
 		acceleration = FixedMul(acceleration, player->mo->movefactor);
-		if (leveltime%2 == 0 && !spin)
-			topspeed = normalspd;
-	}
 
 	// Forward movement
 	if (player->climbing)
@@ -6037,6 +6029,7 @@ static void P_3dMovement(player_t *player)
 			player->mo->momy = tempmomy + player->cmomy;
 		}
 	}
+	player->mo->friction = ORIG_FRICTION; //katsy: reset player friction AFTER movement code
 }
 
 //
@@ -7779,7 +7772,10 @@ void P_MovePlayer(player_t *player)
 	// This was done in Sonic 3 & Knuckles, but has been missed in Sonic Mania and the Taxman/Stealth mobile remakes. Thanks to NeoHazard for his 2017 blogpost on the matter, because this oversight otherwise almost made it all the way to 2.2's release.
 	//https://s3unlocked.blogspot.com/2017/12/over-threshold.html
 	if (player->powers[pw_super])
-		runspd = FixedMul(runspd, 5*FRACUNIT/3);
+		runspd = FixedMul(runspd, 7*FRACUNIT/5);
+
+	if ((player->charflags & SF_DASHMODE) && player->dashmode >= DASHMODE_THRESHOLD)
+		runspd >>= 1;
 
 	// Control relinquishing stuff!
 	if ((player->powers[pw_carry] == CR_BRAKGOOP)
@@ -7960,9 +7956,6 @@ void P_MovePlayer(player_t *player)
 		P_3dMovement(player);
 	}
 
-	if (maptol & TOL_2D)
-		runspd = FixedMul(runspd, 2*FRACUNIT/3);
-
 	P_SkidStuff(player);
 
 	/////////////////////////
@@ -7976,17 +7969,16 @@ void P_MovePlayer(player_t *player)
 			P_SetPlayerMobjState (player->mo, S_PLAY_DASH);
 		// If the player is moving fast enough,
 		// break into a run!
-		else if (player->speed >= runspd && player->panim == PA_WALK && !player->skidtime
-		&& (onground || ((player->charability == CA_FLOAT || player->charability == CA_SLOWFALL) && player->secondjump == 1) || player->powers[pw_super]))
+		else if (player->speed >= runspd && player->panim == PA_WALK && !player->skidtime)
 		{
-			if (!onground)
-				P_SetPlayerMobjState(player->mo, S_PLAY_FLOAT_RUN);
-			else
+			if (onground)
 				P_SetPlayerMobjState(player->mo, S_PLAY_RUN);
+			else if (player->secondjump)
+				P_SetPlayerMobjState(player->mo, S_PLAY_FLOAT_RUN);
 		}
 
 		// Floating at slow speeds has its own special animation.
-		else if ((((player->charability == CA_FLOAT || player->charability == CA_SLOWFALL) && player->secondjump == 1) || player->powers[pw_super]) && player->panim == PA_IDLE && !onground)
+		else if (player->panim == PA_IDLE && !onground)
 			P_SetPlayerMobjState (player->mo, S_PLAY_FLOAT);
 
 		// Otherwise, just walk.
@@ -8001,11 +7993,11 @@ void P_MovePlayer(player_t *player)
 
 	// If your running animation is playing, and you're
 	// going too slow, switch back to the walking frames.
-	if (player->panim == PA_RUN && player->speed < runspd)
+	if (player->panim == PA_RUN || player->mo->state-states == S_PLAY_DASH)
 	{
-		if (!onground && (((player->charability == CA_FLOAT || player->charability == CA_SLOWFALL) && player->secondjump == 1) || player->powers[pw_super]))
-			P_SetPlayerMobjState(player->mo, S_PLAY_FLOAT);
-		else
+		if (!onground)
+			P_SetPlayerMobjState(player->mo, (player->secondjump) ? S_PLAY_FLOAT : S_PLAY_WALK);
+		else if (player->speed < runspd)
 			P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
 	}
 
@@ -8019,7 +8011,7 @@ void P_MovePlayer(player_t *player)
 	}
 
 	// If Springing (or nojumpspinning), but travelling DOWNWARD, change back!
-	if ((player->panim == PA_SPRING && P_MobjFlip(player->mo)*player->mo->momz < 0)
+	if (((player->panim == PA_SPRING || player->mo->state-states == S_PLAY_WALK) && P_MobjFlip(player->mo)*player->mo->momz < 0)
 		|| ((((player->charflags & SF_NOJUMPSPIN) && (player->pflags & PF_JUMPED) && player->panim == PA_JUMP))
 			&& (P_MobjFlip(player->mo)*player->mo->momz < 0)))
 		P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
@@ -8088,12 +8080,12 @@ void P_MovePlayer(player_t *player)
 
 		if (player->mo->eflags & MFE_VERTICALFLIP)
 		{
-			if (player->mo->momz > FixedMul(2*FRACUNIT, player->mo->scale))
+			if (player->mo->momz > FixedMul(3*FRACUNIT, player->mo->scale))
 				player->mo->momz -= FixedMul(3*(FRACUNIT/4), player->mo->scale);
 		}
 		else
 		{
-			if (player->mo->momz < FixedMul(-2*FRACUNIT, player->mo->scale))
+			if (player->mo->momz < FixedMul(-3*FRACUNIT, player->mo->scale))
 				player->mo->momz += FixedMul(3*(FRACUNIT/4), player->mo->scale);
 		}
 
@@ -8315,7 +8307,8 @@ void P_MovePlayer(player_t *player)
 				P_SetPlayerMobjState(player->mo, player->mo->state->nextstate);
 				player->mo->momx = FixedMul(player->mo->momx, FRACUNIT*221/222);
 				player->mo->momy = FixedMul(player->mo->momy, FRACUNIT*221/222);
-				player->powers[pw_tailsfly]--;
+				if (!player->powers[pw_super])
+					player->powers[pw_tailsfly]--;
 				player->fly1--;
 			}
 
@@ -12089,25 +12082,25 @@ void P_PlayerThink(player_t *player)
 	{
 		tic_t prevdashmode = dashmode;
 		boolean above = player->speed >= FixedMul(player->runspeed, player->mo->scale);
-		boolean below = player->speed <= FixedMul(player->runspeed/2, player->mo->scale);
-		boolean notfloating = P_IsObjectOnGround(player->mo);
+		boolean below = player->speed <= FixedMul(skins[player->skin].normalspeed*9/14, player->mo->scale);
+		boolean notfloating = (P_IsObjectOnGround(player->mo) || (player->mo->eflags & MFE_JUSTHITFLOOR));
 
-		if ((above && notfloating) || (player->pflags & PF_STARTDASH))
+		if (above && notfloating)
 		{
 			if (dashmode < DASHMODE_MAX)
-				dashmode = (player->dashspeed >= player->maxdash) ? DASHMODE_THRESHOLD : dashmode+1; // Counter. Adds 1 to dash mode per tic in top speed.
+				dashmode = (player->speed > FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) ? DASHMODE_THRESHOLD : dashmode+1; // Counter. Adds 1 to dash mode per tic in top speed.
 			if (dashmode == DASHMODE_THRESHOLD) // This isn't in the ">=" equation because it'd cause the sound to play infinitely.
 			{
 				S_StartSound(player->mo, (player->charflags & SF_MACHINE) ? sfx_kc4d : sfx_cdfm40); // If the player enters dashmode, play this sound on the the tic it starts.
 				dashmode = DASHMODE_MAX;
 			}
 		}
-		else if (below && notfloating && !(player->pflags & PF_SPINNING))
+		else if (below && (notfloating || dashmode < DASHMODE_THRESHOLD))
 		{
 			if (dashmode > 3)
 			{
 				dashmode -= 3; // Rather than lose it all, it gently counts back down!
-				if ((dashmode+3) >= DASHMODE_THRESHOLD && dashmode < DASHMODE_THRESHOLD)
+				if ((player->charflags & SF_MACHINE) && (dashmode+3 >= DASHMODE_THRESHOLD) && (dashmode < DASHMODE_THRESHOLD))
 					S_StartSound(player->mo, sfx_kc65);
 			}
 			else
@@ -12119,15 +12112,17 @@ void P_PlayerThink(player_t *player)
 			if (prevdashmode >= DASHMODE_THRESHOLD)
 			{
 				player->normalspeed = skins[player->skin].normalspeed; // Reset to default if not capable of entering dash mode.
+				player->jumpfactor = skins[player->skin].jumpfactor;
+				player->runspeed = skins[player->skin].runspeed;
 			}
 		}
 		else if (notfloating) // Activate dash mode if we're on the ground.
 		{
-			if (player->normalspeed < skins[player->skin].normalspeed*3/2) // If the player normalspeed is not currently at normalspeed*3/2 in dash mode, add speed each tic
-				player->normalspeed += FRACUNIT/6; // Enter Dash Mode smoothly.
+			if (player->normalspeed < FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) // If the player normalspeed is not currently at normalspeed*3/2 in dash mode, add speed each tic
+				player->normalspeed += FRACUNIT/12; // Enter Dash Mode smoothly.
 		}
 
-		if (player->speed > skins[player->skin].normalspeed*7/5)
+		if (player->speed > FixedMul(skins[player->skin].normalspeed*7/5, player->mo->scale))
 		{
 			mobj_t *ghost = P_SpawnGhostMobj(player->mo); // Spawns afterimages
 			ghost->fuse = 2; // Makes the images fade quickly
@@ -12141,7 +12136,9 @@ void P_PlayerThink(player_t *player)
 		{
 			player->normalspeed = skins[player->skin].normalspeed;
 			player->jumpfactor = skins[player->skin].jumpfactor;
-			S_StartSound(player->mo, sfx_kc65);
+			player->runspeed = skins[player->skin].runspeed;
+			if (player->charflags & SF_MACHINE)
+				S_StartSound(player->mo, sfx_kc65);
 		}
 		dashmode = 0;
 	}

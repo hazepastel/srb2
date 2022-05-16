@@ -376,7 +376,7 @@ boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 					}
 					else if ((player->panim == PA_RUN) || (player->panim == PA_DASH))
 					{
-						if (speed > 52<<FRACBITS)
+						if (speed > 252*(FRACUNIT/5))
 							mobj->tics = 1;
 						else
 							mobj->tics = 2;
@@ -1648,10 +1648,8 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 		if (((player->pflags & PF_GLIDING) && !player->skidtime) || ((player->pflags & PF_SPINNING) && P_IsObjectOnGround(mo)))
 			return;
 
-		if (P_MobjFlip(mo)*mo->momz < 0 && (mo->state-states == S_PLAY_WALK))
-			P_SetPlayerMobjState(mo, S_PLAY_FALL);
-		else if (mo->state-states == S_PLAY_RUN && !P_IsObjectOnGround(mo))
-			P_SetPlayerMobjState(mo, S_PLAY_WALK);
+		if (twodlevel || (mo->flags2 & MF2_TWOD))
+			mo->friction = FRACUNIT;
 		
 		if (abs(player->rmomx) < FixedMul(STOPSPEED, mo->scale)
 		&& abs(player->rmomy) < FixedMul(STOPSPEED, mo->scale)
@@ -1665,7 +1663,7 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 			mo->momx = player->cmomx;
 			mo->momy = player->cmomy;
 		}
-		else if (!(mo->eflags & MFE_SPRUNG) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
+		else if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
 		{
 			if (oldx == mo->x && oldy == mo->y) // didn't go anywhere
 			{
@@ -1677,8 +1675,6 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 				mo->momx = FixedMul(mo->momx, mo->friction);
 				mo->momy = FixedMul(mo->momy, mo->friction);
 			}
-
-			mo->friction = ORIG_FRICTION;
 		}
 	}
 	else
@@ -3228,7 +3224,7 @@ boolean P_CanRunOnWater(player_t *player, ffloor_t *rover)
 	boolean doifit = flip ? (surfaceheight - player->mo->floorz >= player->mo->height) : (player->mo->ceilingz - surfaceheight >= player->mo->height);
 
 	if (!player->powers[pw_carry] && !player->homing
-		&& ((player->powers[pw_super] || player->charflags & SF_RUNONWATER || player->dashmode >= DASHMODE_THRESHOLD) && doifit)
+		&& ((player->powers[pw_super] || player->charflags & SF_RUNONWATER || player->speed > FixedMul(252*(FRACUNIT/5), player->mo->scale)) && doifit)
 		&& (rover->flags & FF_SWIMMABLE) && !(player->pflags & PF_SPINNING) && player->speed > FixedMul(player->runspeed, player->mo->scale)
 		&& !(player->pflags & PF_SLIDING)
 		&& abs(playerbottom - surfaceheight) < FixedMul(30*FRACUNIT, player->mo->scale))
