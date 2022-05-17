@@ -2372,6 +2372,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 					{
 						player->pflags = (player->pflags|PF_SPINNING) & ~PF_THOKKED & ~PF_GLIDING;
 						P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
+						S_StartSound(player->mo, sfx_spin);
 					}
 					else
 					{
@@ -8182,8 +8183,8 @@ void P_MovePlayer(player_t *player)
 			else
 			{
 				player->pflags |= PF_THOKKED;
-				player->mo->momx >>= 2;
-				player->mo->momy >>= 2;
+				player->mo->momx /= 3;
+				player->mo->momy /= 3;
 				P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
 			}
 		}
