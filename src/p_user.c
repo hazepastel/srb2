@@ -2331,7 +2331,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 	{
 		if (dorollstuff)
 		{
-			if ((player->charability2 == CA2_SPINDASH) && !((player->pflags & (PF_SPINNING|PF_THOKKED)) == PF_THOKKED) && !(player->charability == CA_THOK && player->secondjump)
+			if ((player->charability2 == CA2_SPINDASH) && !((player->pflags & (PF_SPINNING|PF_THOKKED)) == PF_THOKKED)
 			&& (player->cmd.buttons & BT_SPIN) && (FixedHypot(player->mo->momx, player->mo->momy) > (5*player->mo->scale)))
 				player->pflags = (player->pflags|PF_SPINNING) & ~PF_THOKKED;
 			else if (!(player->pflags & PF_STARTDASH))
@@ -2368,10 +2368,18 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 			{
 				if (dorollstuff)
 				{
-					player->skidtime = TICRATE;
-					P_SetPlayerMobjState(player->mo, S_PLAY_GLIDE);
-					P_SpawnSkidDust(player, player->mo->radius, true); // make sure the player knows they landed
-					player->mo->tics = -1;
+					if ((player->cmd.buttons & BT_SPIN) && (FixedHypot(player->mo->momx, player->mo->momy) > (5*player->mo->scale)))
+					{
+						player->pflags = (player->pflags|PF_SPINNING) & ~PF_THOKKED & ~PF_GLIDING;
+						P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
+					}
+					else
+					{
+						player->skidtime = TICRATE;
+						P_SetPlayerMobjState(player->mo, S_PLAY_GLIDE);
+						P_SpawnSkidDust(player, player->mo->radius, true); // make sure the player knows they landed
+						player->mo->tics = -1;
+					}
 				}
 				else if (!player->skidtime)
 					player->pflags &= ~PF_GLIDING;
@@ -2404,7 +2412,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 				{
 					mobjtype_t type = player->revitem;
 					P_SetPlayerMobjState(player->mo, S_PLAY_MELEE_LANDING);
-					player->mo->tics = TICRATE/4;
+					player->mo->tics = (1+TICRATE)/4;
 					S_StartSound(player->mo, sfx_s3k8b);
 					player->pflags |= PF_FULLSTASIS;
 
@@ -8094,6 +8102,9 @@ void P_MovePlayer(player_t *player)
 			
 			if (player->mo->eflags & MFE_UNDERWATER)
 				timefactor >>= 1;
+
+			if (player->speed > FixedMul(player->normalspeed*2, player->mo->scale))
+				timefactor = 0;
 
 			if (in2d)
 			{
