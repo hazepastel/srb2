@@ -2404,7 +2404,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 				{
 					mobjtype_t type = player->revitem;
 					P_SetPlayerMobjState(player->mo, S_PLAY_MELEE_LANDING);
-					player->mo->tics = TICRATE/2;
+					player->mo->tics = TICRATE/4;
 					S_StartSound(player->mo, sfx_s3k8b);
 					player->pflags |= PF_FULLSTASIS;
 
@@ -4671,51 +4671,47 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 			case CA2_GUNSLINGER:
 				if (!player->mo->momz && onground && !player->weapondelay && canstand)
 				{
-					if (player->speed > FixedMul(10<<FRACBITS, player->mo->scale))
-					{}
-					else
+					mobj_t *lockon = P_LookForEnemies(player, false, true);
+					if (lockon)
 					{
-						mobj_t *lockon = P_LookForEnemies(player, false, true);
-						if (lockon)
+						if (P_IsLocalPlayer(player)) // Only display it on your own view.
 						{
-							if (P_IsLocalPlayer(player)) // Only display it on your own view.
-							{
-								mobj_t *visual = P_SpawnMobj(lockon->x, lockon->y, lockon->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
-								P_SetTarget(&visual->target, lockon);
-							}
+							mobj_t *visual = P_SpawnMobj(lockon->x, lockon->y, lockon->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
+							P_SetTarget(&visual->target, lockon);
+							P_SetMobjStateNF(visual, visual->info->spawnstate+2);
 						}
-						if ((cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
-						{
-							mobj_t *bullet;
+					}
+					if ((cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
+					{
+						mobj_t *bullet;
 
-							P_SetPlayerMobjState(player->mo, S_PLAY_FIRE);
+						P_SetPlayerMobjState(player->mo, S_PLAY_FIRE);
 
 #define zpos(posmo) (posmo->z + (posmo->height - mobjinfo[player->revitem].height)/2)
-							if (lockon)
+						if (lockon)
+						{
+							player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockon->x, lockon->y);
+							bullet = P_SpawnPointMissile(player->mo, lockon->x, lockon->y, zpos(lockon), player->revitem, player->mo->x, player->mo->y, zpos(player->mo));
+							if (!demoplayback || P_ControlStyle(player) == CS_LMAOGALOG)
+								P_SetPlayerAngle(player, player->mo->angle);
+						}
+						else
+						{
+							bullet = P_SpawnPointMissile(player->mo, player->mo->x + P_ReturnThrustX(NULL, player->mo->angle, FRACUNIT), player->mo->y + P_ReturnThrustY(NULL, player->mo->angle, FRACUNIT), zpos(player->mo), player->revitem, player->mo->x, player->mo->y, zpos(player->mo));
+							if (bullet)
 							{
-								player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockon->x, lockon->y);
-								bullet = P_SpawnPointMissile(player->mo, lockon->x, lockon->y, zpos(lockon), player->revitem, player->mo->x, player->mo->y, zpos(player->mo));
-								if (!demoplayback || P_ControlStyle(player) == CS_LMAOGALOG)
-									P_SetPlayerAngle(player, player->mo->angle);
+								bullet->flags &= ~MF_NOGRAVITY;
+								bullet->momx >>= 1;
+								bullet->momy >>= 1;
 							}
-							else
-							{
-								bullet = P_SpawnPointMissile(player->mo, player->mo->x + P_ReturnThrustX(NULL, player->mo->angle, FRACUNIT), player->mo->y + P_ReturnThrustY(NULL, player->mo->angle, FRACUNIT), zpos(player->mo), player->revitem, player->mo->x, player->mo->y, zpos(player->mo));
-								if (bullet)
-								{
-									bullet->flags &= ~MF_NOGRAVITY;
-									bullet->momx >>= 1;
-									bullet->momy >>= 1;
-								}
-							}
-							player->drawangle = player->mo->angle;
+						}
+						player->drawangle = player->mo->angle;
 #undef zpos
 
-							player->mo->momx >>= 1;
-							player->mo->momy >>= 1;
-							player->pflags |= PF_SPINDOWN;
-							P_SetWeaponDelay(player, TICRATE/2);
-						}
+						player->mo->momx >>= 1;
+						player->mo->momy >>= 1;
+						player->pflags |= PF_SPINDOWN;
+						P_SetWeaponDelay(player, TICRATE/2);
 					}
 				}
 				break;
@@ -4726,41 +4722,27 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				{
 					P_ResetPlayer(player);
 					player->pflags |= PF_THOKKED;
-#if 0
-					if ((player->charability == CA_TWINSPIN) && (player->speed > FixedMul(player->runspeed, player->mo->scale)))
-					{
-						P_DoJump(player, false);
-						player->pflags &= ~PF_STARTJUMP;
-						player->mo->momz = FixedMul(player->mo->momz, 3*FRACUNIT/2); // NOT 1.5 times the jump height, but 2.25 times.
-						P_SetPlayerMobjState(player->mo, S_PLAY_TWINSPIN);
-						S_StartSound(player->mo, sfx_s3k8b);
-					}
+
+					player->mo->z += P_MobjFlip(player->mo);
+					P_SetObjectMomZ(player->mo, player->mindash, false);
+					if (P_MobjFlip(player->mo)*player->mo->pmomz > 0)
+						player->mo->momz += player->mo->pmomz; // Add the platform's momentum to your jump.
 					else
-#endif
+						player->mo->pmomz = 0;
+					if (player->mo->eflags & MFE_UNDERWATER)
+						player->mo->momz >>= 1;
+
+					if (player->speed < FixedMul(player->maxdash, player->mo->scale))
 					{
-						player->mo->z += P_MobjFlip(player->mo);
-						P_SetObjectMomZ(player->mo, player->mindash, false);
-						if (P_MobjFlip(player->mo)*player->mo->pmomz > 0)
-							player->mo->momz += player->mo->pmomz; // Add the platform's momentum to your jump.
-						else
-							player->mo->pmomz = 0;
-						if (player->mo->eflags & MFE_UNDERWATER)
-							player->mo->momz >>= 1;
-#if 0
-						if (FixedMul(player->speed, FINECOSINE(((player->mo->angle - R_PointToAngle2(0, 0, player->rmomx, player->rmomy)) >> ANGLETOFINESHIFT) & FINEMASK)) < FixedMul(player->maxdash, player->mo->scale))
-#else
-						if (player->speed < FixedMul(player->maxdash, player->mo->scale))
-#endif
-						{
-							if (player->panim == PA_IDLE)
-								player->drawangle = player->mo->angle;
-							P_InstaThrust(player->mo, player->drawangle, FixedMul(player->maxdash, player->mo->scale));
-						}
-						player->mo->momx += player->cmomx;
-						player->mo->momy += player->cmomy;
-						P_SetPlayerMobjState(player->mo, S_PLAY_MELEE);
-						S_StartSound(player->mo, sfx_s3k42);
+						if (player->panim == PA_IDLE)
+							player->drawangle = player->mo->angle;
+						P_InstaThrust(player->mo, player->drawangle, FixedMul(player->maxdash, player->mo->scale));
 					}
+					player->mo->momx += player->cmomx;
+					player->mo->momy += player->cmomy;
+					P_SetPlayerMobjState(player->mo, S_PLAY_MELEE);
+					S_StartSound(player->mo, sfx_s3k42);
+
 					player->pflags |= PF_SPINDOWN;
 				}
 				break;
@@ -5514,14 +5496,14 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 
 		if ((!(gametyperules & GTR_TEAMFLAGS) || !player->gotflag) && !player->exiting)
 		{
-			if (player->secondjump == 1 && player->charability != CA_DOUBLEJUMP && player->charability != CA_THOK)
+			if (player->secondjump == 1 && (player->charability == CA_FLOAT || player->charability == CA_SLOWFALL))
 			{
 				fixed_t potentialmomz;
 				if (player->charability == CA_SLOWFALL)
 					potentialmomz = -gravity*4;
 				else
-					potentialmomz = ((player->speed < 10*player->mo->scale)
-					? (player->speed - 10*player->mo->scale)/5
+					potentialmomz = ((player->speed < 18*player->mo->scale)
+					? (player->speed - 18*player->mo->scale)/3
 					: 0);
 				if (P_MobjFlip(player->mo)*player->mo->momz < potentialmomz)
 					player->mo->momz = P_MobjFlip(player->mo)*potentialmomz;
@@ -5534,7 +5516,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		player->pflags &= ~PF_JUMPDOWN;
 
 		// Repeat abilities, but not double jump!
-		if (player->secondjump == 1 && player->charability != CA_DOUBLEJUMP && player->charability != CA_AIRDRILL && player->charability != CA_THOK)
+		if (player->secondjump == 1 && (player->charability == CA_FLOAT || player->charability == CA_SLOWFALL))
 		{
 			if (player->charflags & SF_MULTIABILITY)
 			{
@@ -7995,10 +7977,10 @@ void P_MovePlayer(player_t *player)
 	// going too slow, switch back to the walking frames.
 	if (player->panim == PA_RUN || player->mo->state-states == S_PLAY_DASH)
 	{
-		if (!onground)
-			P_SetPlayerMobjState(player->mo, (player->secondjump) ? S_PLAY_FLOAT : S_PLAY_WALK);
-		else if (player->speed < runspd)
+		if (!onground && !player->secondjump)
 			P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
+		else if (player->speed < runspd)
+			P_SetPlayerMobjState(player->mo, (player->secondjump) ? S_PLAY_FLOAT : S_PLAY_WALK);
 	}
 
 	// Correct floating when ending up on the ground.
@@ -8069,14 +8051,17 @@ void P_MovePlayer(player_t *player)
 	if (player->pflags & PF_GLIDING)
 	{
 		mobj_t *mo = player->mo; // seriously why isn't this at the top of the function hngngngng
-		fixed_t glidespeed = player->normalspeed+(4<<FRACBITS);
+		fixed_t glidespeed = player->actionspd;
 		fixed_t momx = mo->momx - player->cmomx, momy = mo->momy - player->cmomy;
 		angle_t angle, moveangle = R_PointToAngle2(0, 0, momx, momy);
 		boolean swimming = mo->state - states == S_PLAY_SWIM;
 		boolean in2d = mo->flags2 & MF2_TWOD || twodlevel;
 
 		if (player->powers[pw_super] || player->powers[pw_sneakers])
-			glidespeed = player->normalspeed*5/3;
+			glidespeed <<= 1;
+
+		if (player->mo->eflags & MFE_UNDERWATER)
+			glidespeed >>= 1;
 
 		if (player->mo->eflags & MFE_VERTICALFLIP)
 		{
@@ -8102,13 +8087,17 @@ void P_MovePlayer(player_t *player)
 			angle_t anglediff = angle - moveangle;
 			fixed_t accelfactor = 4*FRACUNIT - 3*FINECOSINE((anglediff >> ANGLETOFINESHIFT) & FINEMASK);
 			fixed_t speed, scale = mo->scale;
+			fixed_t timefactor = player->glidetime*7100;
+
+			if (player->speed < FixedMul(player->normalspeed+(4<<FRACBITS), player->mo->scale))
+				timefactor <<= 1;
+			
+			if (player->mo->eflags & MFE_UNDERWATER)
+				timefactor >>= 1;
 
 			if (in2d)
 			{
-				if (mo->eflags & MFE_UNDERWATER)
-					speed = FixedMul((glidespeed>>1) + player->glidetime*1250, scale);
-				else
-					speed = FixedMul(glidespeed + player->glidetime*2500, scale);
+				speed = FixedMul(glidespeed + timefactor, scale);
 				P_InstaThrust(mo, angle, speed);
 			}
 			else if (swimming)
@@ -8120,7 +8109,7 @@ void P_MovePlayer(player_t *player)
 				else
 					anglediff = anglediff >> 3;
 
-				minspeed = FixedMul((glidespeed>>1) + player->glidetime*1250, scale); // underwater-specific
+				minspeed = FixedMul(glidespeed + timefactor, scale); // underwater-specific
 				speed = FixedHypot(momx, momy) - abs(P_ReturnThrustY(mo, anglediff, mo->scale));
 
 				if (speed < minspeed)
@@ -8137,10 +8126,7 @@ void P_MovePlayer(player_t *player)
 			{
 				fixed_t newMagnitude, oldMagnitude = R_PointToDist2(momx, momy, 0, 0);
 
-				if (mo->eflags & MFE_UNDERWATER)
-					speed = FixedMul((glidespeed>>1) + player->glidetime*1250, scale);
-				else
-					speed = FixedMul(glidespeed + player->glidetime*2500, scale);
+				speed = FixedMul(glidespeed + timefactor, scale);
 
 				P_Thrust(mo, angle, FixedMul(accelfactor, scale));
 
@@ -12078,7 +12064,7 @@ void P_PlayerThink(player_t *player)
 
 #define dashmode player->dashmode
 	// Dash mode - thanks be to VelocitOni
-	if ((player->charflags & SF_DASHMODE) && !player->gotflag && !player->powers[pw_carry] && !player->exiting && !(maptol & TOL_NIGHTS) && !metalrecording) // woo, dashmode! no nights tho.
+	if ((player->charflags & SF_DASHMODE) && !player->gotflag && (player->powers[pw_carry] != CR_ROLLOUT) && !player->exiting && !(maptol & TOL_NIGHTS) && !P_PlayerInPain(player) && (player->playerstate == PST_LIVE))
 	{
 		tic_t prevdashmode = dashmode;
 		boolean above = player->speed >= FixedMul(player->runspeed, player->mo->scale);
@@ -12137,7 +12123,7 @@ void P_PlayerThink(player_t *player)
 			player->normalspeed = skins[player->skin].normalspeed;
 			player->jumpfactor = skins[player->skin].jumpfactor;
 			player->runspeed = skins[player->skin].runspeed;
-			if (player->charflags & SF_MACHINE)
+			if ((player->charflags & SF_MACHINE) && (player->playerstate == PST_LIVE))
 				S_StartSound(player->mo, sfx_kc65);
 		}
 		dashmode = 0;

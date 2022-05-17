@@ -11465,6 +11465,7 @@ void P_SpawnPlayer(INT32 playernum)
 		p->dashmode = 0;
 		p->normalspeed = skins[p->skin].normalspeed;
 		p->jumpfactor = skins[p->skin].jumpfactor;
+		p->runspeed = skins[p->skin].runspeed;
 	}
 
 	// Clear lastlinehit and lastsidehit
