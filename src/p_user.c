@@ -4523,7 +4523,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 	}
 	player->mo->eflags &= ~MFE_APPLYPMOMZ;
 
-	player->pflags |= P_GetJumpFlags(player);;
+	player->pflags |= P_GetJumpFlags(player);
 	player->pflags &= ~PF_SPINNING;
 
 	if (soundandstate)
@@ -4583,7 +4583,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 			return;
 	}
 
-	canstand = (!player->mo->standingslope || (player->mo->standingslope->flags & SL_NOPHYSICS) || abs(player->mo->standingslope->zdelta) < FRACUNIT/2);
+	canstand = (!player->mo->standingslope || (player->mo->standingslope->flags & SL_NOPHYSICS));
 
 	///////////////////////////////
 	// ability-specific behavior //
@@ -4595,8 +4595,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 			case CA2_SPINDASH: // Spinning and Spindashing
 				 // Start revving
 				if ((cmd->buttons & BT_SPIN) && (player->speed < FixedMul(5<<FRACBITS, player->mo->scale) || player->mo->state - states == S_PLAY_GLIDE_LANDING)
-					&& !player->mo->momz && onground && !(player->pflags & (PF_SPINDOWN|PF_SPINNING))
-						&& canstand)
+					&& !player->mo->momz && onground && !(player->pflags & (PF_SPINDOWN|PF_SPINNING)))
 				{
 					player->mo->momx = player->cmomx;
 					player->mo->momy = player->cmomy;
@@ -4678,7 +4677,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if (!player->mo->momz && onground && !player->weapondelay && canstand)
+				if (!player->mo->momz && onground && !player->weapondelay)
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)
@@ -4726,8 +4725,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				break;
 			case CA2_MELEE: // Melee attack
 				if (player->panim != PA_ABILITY2 && (cmd->buttons & BT_SPIN)
-				&& !player->mo->momz && onground && !(player->pflags & PF_SPINDOWN)
-				&& canstand)
+				&& !player->mo->momz && onground && !(player->pflags & PF_SPINDOWN))
 				{
 					P_ResetPlayer(player);
 					player->pflags |= PF_THOKKED;
@@ -5776,21 +5774,15 @@ static void P_3dMovement(player_t *player)
 	angle_t movepushangle, movepushsideangle; // Analog
 	INT32 topspeed, acceleration;
 	fixed_t movepushforward = 0, movepushside = 0;
-	fixed_t normalspd = FixedMul(player->normalspeed+(4<<FRACBITS), player->mo->scale);
+	fixed_t normalspd = FixedMul(player->normalspeed, player->mo->scale);
 	controlstyle_e controlstyle;
 	boolean spin = ((onground = P_IsObjectOnGround(player->mo)) && (player->pflags & PF_SPINNING) && (player->rmomx || player->rmomy) && !(player->pflags & PF_STARTDASH));
 	fixed_t oldMagnitude, newMagnitude;
 	vector3_t totalthrust;
 
-	player->runspeed = (player->runspeed > player->normalspeed) ? player->runspeed : player->normalspeed-(2<<FRACBITS);
-	player->thrustfactor = 3;
-	player->accelstart = 230;
-	player->acceleration = 50;
-
 	if (strcmp(skins[player->skin].name, "adventuresonic") == 0)
 	{
 		normalspd = player->normalspeed;
-		player->runspeed = skins[player->skin].runspeed;
 		player->jumpfactor = FRACUNIT;
 	}
 
@@ -5877,13 +5869,19 @@ static void P_3dMovement(player_t *player)
 
 		if (player->powers[pw_super] || player->powers[pw_sneakers])
 		{
-			topspeed = max(5*normalspd/3, FixedDiv(player->speed, player->mo->friction));
-			acceleration = player->thrustfactor*(player->accelstart*3/2 + (FixedDiv(player->speed, player->mo->scale)>>FRACBITS) * player->acceleration);
+			topspeed = 5*normalspd/3;
+			if (P_GetPlayerControlDirection(player) == 1)
+				acceleration = P_IsObjectOnGround(player->mo) ? 800 : 700; //+200 to each stat
+			else
+				acceleration = P_IsObjectOnGround(player->mo) ? 2600 : 700;
 		}
 		else
 		{
-			topspeed = max(normalspd, FixedDiv(player->speed, player->mo->friction));
-			acceleration = player->thrustfactor*(player->accelstart + (FixedDiv(player->speed, player->mo->scale)>>FRACBITS) * player->acceleration);
+			topspeed = normalspd;
+			if (P_GetPlayerControlDirection(player) == 1)
+				acceleration = P_IsObjectOnGround(player->mo) ? 600 : 500; //player->groundmove, player->airmove
+			else
+				acceleration = P_IsObjectOnGround(player->mo) ? 2400 : 500; //player->brakemove, player->airmove
 		}
 
 	}
@@ -5891,11 +5889,16 @@ static void P_3dMovement(player_t *player)
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
 
+	if ((player->mo->movefactor != FRACUNIT) && onground) // friction scaled acceleration
+	{
+		if (P_GetPlayerControlDirection(player) == 1)
+			acceleration += FixedMul(300<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+		else
+			acceleration -= FixedMul(600<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+	}
+
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
 		acceleration = 62;
-
-	if (player->mo->movefactor != FRACUNIT) // Friction-scaled acceleration
-		acceleration = FixedMul(acceleration, player->mo->movefactor);
 
 	// Forward movement
 	if (player->climbing)
@@ -5918,7 +5921,7 @@ static void P_3dMovement(player_t *player)
 		if (player->pflags & PF_STARTDASH)
 			movepushforward = 0;
 		else if (spin)
-			movepushforward = min(0, movepushforward*2/3);
+			movepushforward >>= 2;
 
 		movepushforward = FixedMul(movepushforward, player->mo->scale);
 
@@ -5950,7 +5953,7 @@ static void P_3dMovement(player_t *player)
 			if (player->pflags & PF_STARTDASH)
 				movepushside = 0;
 			else if (spin)
-				movepushside = movepushside*2/3;
+				movepushside >>= 2;
 
 			movepushsideangle = controldirection;
 
@@ -5967,7 +5970,7 @@ static void P_3dMovement(player_t *player)
 		if (player->pflags & PF_STARTDASH)
 			movepushside = 0;
 		else if (spin)
-			movepushside = movepushside*2/3;
+			movepushside >>= 2;
 
 		// Finally move the player now that their speed/direction has been decided.
 		movepushside = FixedMul(movepushside, player->mo->scale);
@@ -5990,6 +5993,29 @@ static void P_3dMovement(player_t *player)
 			if (thrustangle > ANGLE_90 && thrustangle < ANGLE_270) {
 				P_QuantizeMomentumToSlope(&totalthrust, player->mo->standingslope);
 			}
+		}
+	}
+
+	if (totalthrust.x || totalthrust.y) //turning (modified from cobaltbw code)
+	{
+		fixed_t ang1 = AngleFixed(R_PointToAngle2(0, 0, player->rmomx,  player->rmomy));
+		fixed_t ang2 = AngleFixed(R_PointToAngle2(0, 0, totalthrust.x, totalthrust.y));
+		fixed_t angdiff = ang2 - ang1;
+		if (angdiff >= 180 * FRACUNIT)
+			angdiff -= 360 * FRACUNIT;
+		else if (angdiff <= -180 * FRACUNIT)
+			angdiff += 360 * FRACUNIT;
+	
+		if (abs(angdiff) > FRACUNIT && abs(angdiff) < FRACUNIT * 135)
+		{
+			fixed_t newang = ang1;
+			fixed_t turnspd = FixedMul(3<<FRACBITS, player->mo->movefactor);
+			if (angdiff > 0)
+				newang += min(angdiff/2, turnspd);
+			else
+				newang -= min(-angdiff/2, turnspd);
+			player->mo->momx = P_ReturnThrustX(player->mo, FixedAngle(newang), player->speed) + player->cmomx;
+			player->mo->momy = P_ReturnThrustY(player->mo, FixedAngle(newang), player->speed) + player->cmomy;
 		}
 	}
 

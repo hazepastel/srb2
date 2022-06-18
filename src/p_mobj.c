@@ -1596,7 +1596,7 @@ void P_CheckGravity(mobj_t *mo, boolean affect)
 //
 // P_SceneryXYFriction
 //
-static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
+static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldz)
 {
 	I_Assert(mo != NULL);
 	I_Assert(!P_MobjWasRemoved(mo));
@@ -1609,12 +1609,12 @@ static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 	}
 	else
 	{
-		if ((oldx == mo->x) && (oldy == mo->y)) // didn't go anywhere
+		/*if ((oldx == mo->x) && (oldy == mo->y)) // didn't go anywhere
 		{
 			mo->momx = FixedMul(mo->momx,ORIG_FRICTION);
 			mo->momy = FixedMul(mo->momy,ORIG_FRICTION);
 		}
-		else
+		else*/
 		{
 			mo->momx = FixedMul(mo->momx,mo->friction);
 			mo->momy = FixedMul(mo->momy,mo->friction);
@@ -1635,7 +1635,7 @@ static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 //
 // adds friction on the xy plane
 //
-static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
+static void P_XYFriction(mobj_t *mo, fixed_t oldz)
 {
 	player_t *player;
 
@@ -1654,7 +1654,7 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 		if (abs(player->rmomx) < FixedMul(STOPSPEED, mo->scale)
 		&& abs(player->rmomy) < FixedMul(STOPSPEED, mo->scale)
 		&& (!(player->cmd.forwardmove && !(twodlevel || mo->flags2 & MF2_TWOD)) && !player->cmd.sidemove && !(player->pflags & PF_SPINNING))
-		&& !(player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/2))
+		&& !(player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4))
 		&& P_IsObjectOnGround(mo))
 		{
 			// if in a walking frame, stop moving
@@ -1663,22 +1663,29 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldx, fixed_t oldy)
 			mo->momx = player->cmomx;
 			mo->momy = player->cmomy;
 		}
-		else if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
+		else if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (mo->friction != FRACUNIT) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
 		{
-			if (oldx == mo->x && oldy == mo->y) // didn't go anywhere
+			if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
+			&& mo->z < oldz) //don't apply friction if we're going downhill
+				return;
+			if (P_GetPlayerControlDirection(player) != 1)
 			{
-				mo->momx = FixedMul(mo->momx, ORIG_FRICTION);
-				mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
+				if (mo->momx)
+					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT : FRACUNIT>>2);
+				if (mo->momy)
+					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT : FRACUNIT>>2);
 			}
-			else
-			{
-				mo->momx = FixedMul(mo->momx, mo->friction);
-				mo->momy = FixedMul(mo->momy, mo->friction);
+			else if ((P_ControlStyle(player) == CS_SIMPLE) && (player->cmd.forwardmove < 20) && (player->speed > FixedMul(player->normalspeed/2, mo->scale)))
+			{ // deceleration for sharp turns and walking backwards in automatic mode only
+				if (mo->momx)
+					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
+				if (mo->momy)
+					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
 			}
 		}
 	}
 	else
-		P_SceneryXYFriction(mo, oldx, oldy);
+		P_SceneryXYFriction(mo, oldz);
 }
 
 static void P_PushableCheckBustables(mobj_t *mo)
@@ -1802,7 +1809,7 @@ void P_XYMovement(mobj_t *mo)
 {
 	player_t *player;
 	fixed_t xmove, ymove;
-	fixed_t oldx, oldy; // reducing bobbing/momentum on ice when up against walls
+	fixed_t oldx, oldy, oldz; // reducing bobbing/momentum on ice when up against walls
 	boolean moved;
 	pslope_t *oldslope = NULL;
 	vector3_t slopemom = {0,0,0};
@@ -1835,6 +1842,7 @@ void P_XYMovement(mobj_t *mo)
 
 	oldx = mo->x;
 	oldy = mo->y;
+	oldz = mo->z;
 
 	if (mo->flags & MF_NOCLIPHEIGHT)
 		mo->standingslope = NULL;
@@ -2098,7 +2106,7 @@ void P_XYMovement(mobj_t *mo)
 		&& !(player))
 		return; // no friction when airborne
 
-	P_XYFriction(mo, oldx, oldy);
+	P_XYFriction(mo, oldz);
 }
 
 void P_RingXYMovement(mobj_t *mo)
@@ -2112,13 +2120,14 @@ void P_RingXYMovement(mobj_t *mo)
 
 void P_SceneryXYMovement(mobj_t *mo)
 {
-	fixed_t oldx, oldy; // reducing bobbing/momentum on ice when up against walls
+	fixed_t oldx, oldy, oldz; // reducing bobbing/momentum on ice when up against walls
 
 	I_Assert(mo != NULL);
 	I_Assert(!P_MobjWasRemoved(mo));
 
 	oldx = mo->x;
 	oldy = mo->y;
+	oldz = mo->z;
 
 	if (!P_SceneryTryMove(mo, mo->x + mo->momx, mo->y + mo->momy))
 		P_SlideMove(mo);
@@ -2129,7 +2138,7 @@ void P_SceneryXYMovement(mobj_t *mo)
 	if (mo->flags & MF_NOCLIPHEIGHT)
 		return; // no frictions for objects that can pass through floors
 
-	P_SceneryXYFriction(mo, oldx, oldy);
+	P_SceneryXYFriction(mo, oldz);
 }
 
 //

@@ -910,29 +910,26 @@ void P_ButteredSlope(mobj_t *mo)
 	if (mo->flags & (MF_NOCLIPHEIGHT|MF_NOGRAVITY))
 		return; // don't slide down slopes if you can't touch them or you're not affected by gravity
 
+	thrust = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 13/5 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
+
 	if (mo->player)
 	{
 		if (mo->player->pflags & PF_STARTDASH)
-			return; //Park on slope if charging spindash
+			return; //park on slope if charging spindash
 
-		if (abs(mo->standingslope->zdelta) < FRACUNIT/2 && !(mo->player->rmomx || mo->player->rmomy))
-			return; // Allow the player to stand still on slopes below a certain steepness
+		if (mo->player->panim == PA_IDLE)
+			return; //stand on slope if met conditions
+
+		if (mo->player->pflags & PF_SPINNING)
+		{
+			fixed_t spinadd = 0;
+			spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 6/5 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
+			thrust += spinadd;
+		}
 	}
 
-	thrust = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 5/2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
-
-	if (mo->player && (mo->player->pflags & PF_SPINNING))
-	{
-		fixed_t spinadd = 0;
-		spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 3/2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
-		thrust += spinadd;
-	}
-
-	// Let's get the gravity strength for the object...
+	// get the gravity strength for the object
 	thrust = FixedMul(thrust, abs(P_GetMobjGravity(mo)));
-
-	// ... and its friction against the ground for good measure (divided by original friction to keep behaviour for normal slopes the same).
-	thrust = FixedMul(thrust, FixedDiv(mo->friction, ORIG_FRICTION));
 
 	P_Thrust(mo, mo->standingslope->xydirection, thrust);
 }
