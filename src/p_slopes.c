@@ -910,7 +910,7 @@ void P_ButteredSlope(mobj_t *mo)
 	if (mo->flags & (MF_NOCLIPHEIGHT|MF_NOGRAVITY))
 		return; // don't slide down slopes if you can't touch them or you're not affected by gravity
 
-	thrust = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 13/5 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
+	thrust = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
 
 	if (mo->player)
 	{
@@ -923,7 +923,7 @@ void P_ButteredSlope(mobj_t *mo)
 		if (mo->player->pflags & PF_SPINNING)
 		{
 			fixed_t spinadd = 0;
-			spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 6/5 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
+			spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 3/2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
 			thrust += spinadd;
 		}
 	}

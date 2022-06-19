@@ -1596,7 +1596,7 @@ void P_CheckGravity(mobj_t *mo, boolean affect)
 //
 // P_SceneryXYFriction
 //
-static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldz)
+static void P_SceneryXYFriction(mobj_t *mo)
 {
 	I_Assert(mo != NULL);
 	I_Assert(!P_MobjWasRemoved(mo));
@@ -1609,12 +1609,6 @@ static void P_SceneryXYFriction(mobj_t *mo, fixed_t oldz)
 	}
 	else
 	{
-		/*if ((oldx == mo->x) && (oldy == mo->y)) // didn't go anywhere
-		{
-			mo->momx = FixedMul(mo->momx,ORIG_FRICTION);
-			mo->momy = FixedMul(mo->momy,ORIG_FRICTION);
-		}
-		else*/
 		{
 			mo->momx = FixedMul(mo->momx,mo->friction);
 			mo->momy = FixedMul(mo->momy,mo->friction);
@@ -1675,17 +1669,10 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldz)
 				if (mo->momy)
 					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT : FRACUNIT>>2);
 			}
-			else if ((P_ControlStyle(player) == CS_SIMPLE) && (player->cmd.forwardmove < 20) && (player->speed > FixedMul(player->normalspeed/2, mo->scale)))
-			{ // deceleration for sharp turns and walking backwards in automatic mode only
-				if (mo->momx)
-					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
-				if (mo->momy)
-					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
-			}
 		}
 	}
 	else
-		P_SceneryXYFriction(mo, oldz);
+		P_SceneryXYFriction(mo);
 }
 
 static void P_PushableCheckBustables(mobj_t *mo)
@@ -1809,7 +1796,7 @@ void P_XYMovement(mobj_t *mo)
 {
 	player_t *player;
 	fixed_t xmove, ymove;
-	fixed_t oldx, oldy, oldz; // reducing bobbing/momentum on ice when up against walls
+	fixed_t oldz; //for slopes
 	boolean moved;
 	pslope_t *oldslope = NULL;
 	vector3_t slopemom = {0,0,0};
@@ -1840,8 +1827,6 @@ void P_XYMovement(mobj_t *mo)
 	xmove = mo->momx;
 	ymove = mo->momy;
 
-	oldx = mo->x;
-	oldy = mo->y;
 	oldz = mo->z;
 
 	if (mo->flags & MF_NOCLIPHEIGHT)
@@ -2120,14 +2105,8 @@ void P_RingXYMovement(mobj_t *mo)
 
 void P_SceneryXYMovement(mobj_t *mo)
 {
-	fixed_t oldx, oldy, oldz; // reducing bobbing/momentum on ice when up against walls
-
 	I_Assert(mo != NULL);
 	I_Assert(!P_MobjWasRemoved(mo));
-
-	oldx = mo->x;
-	oldy = mo->y;
-	oldz = mo->z;
 
 	if (!P_SceneryTryMove(mo, mo->x + mo->momx, mo->y + mo->momy))
 		P_SlideMove(mo);
@@ -2138,7 +2117,7 @@ void P_SceneryXYMovement(mobj_t *mo)
 	if (mo->flags & MF_NOCLIPHEIGHT)
 		return; // no frictions for objects that can pass through floors
 
-	P_SceneryXYFriction(mo, oldz);
+	P_SceneryXYFriction(mo);
 }
 
 //

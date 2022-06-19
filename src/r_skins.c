@@ -120,17 +120,17 @@ static void Sk_SetDefaultValue(skin_t *skin)
 	skin->prefoppositecolor = 0; // use tables
 
 	skin->normalspeed = 36<<FRACBITS;
-	skin->runspeed = 34<<FRACBITS;
+	skin->runspeed = 28<<FRACBITS;
 	skin->thrustfactor = 3;
-	skin->accelstart = 230;
+	skin->accelstart = 200;
 	skin->acceleration = 50;
 
 	skin->ability = CA_NONE;
 	skin->ability2 = CA2_SPINDASH;
 	skin->jumpfactor = FRACUNIT;
 	skin->actionspd = 40<<FRACBITS;
-	skin->mindash = 25<<FRACBITS;
-	skin->maxdash = 70<<FRACBITS;
+	skin->mindash = 24<<FRACBITS;
+	skin->maxdash = 72<<FRACBITS;
 
 	skin->radius = mobjinfo[MT_PLAYER].radius;
 	skin->height = mobjinfo[MT_PLAYER].height;

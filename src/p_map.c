@@ -289,24 +289,13 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-#ifndef SPRINGSPIN
-			object->player->powers[pw_justsprung] = 5;
-			if (horizspeed)
-				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
-			else if (P_MobjFlip(object) == P_MobjFlip(spring))
-				object->player->powers[pw_justsprung] |= (1<<15);
-#else
-			object->player->powers[pw_justsprung] = 15;
+			if (spring->info->painchance == 0)
+				object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(vertispeed/FRACUNIT) : (TICRATE)+((horizspeed/3)/FRACUNIT);
 			if (horizspeed)
 				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
 			else
-			{
 				if (abs(object->player->rmomx) > object->scale || abs(object->player->rmomy) > object->scale)
 					object->player->drawangle = R_PointToAngle2(0, 0, object->player->rmomx, object->player->rmomy);
-				if (P_MobjFlip(object) == P_MobjFlip(spring))
-					object->player->powers[pw_justsprung] |= (1<<15);
-			}
-#endif
 		}
 
 		if ((horizspeed && vertispeed) || (object->player && object->player->homing)) // Mimic SA
