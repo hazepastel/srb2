@@ -1100,6 +1100,7 @@ void P_ResetPlayer(player_t *player)
 	player->onconveyor = 0;
 	player->skidtime = 0;
 	player->shieldactive = 0;
+	player->fly1 = 0;
 	if (player-players == consoleplayer && botingame)
 		CV_SetValue(&cv_analog[1], true);
 }
@@ -2395,8 +2396,6 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 					player->pflags |= PF_STASIS;
 					if (player->speed > FixedMul(player->runspeed, player->mo->scale))
 						player->skidtime += player->mo->tics;
-					player->mo->momx = ((player->mo->momx - player->cmomx)/2) + player->cmomx;
-					player->mo->momy = ((player->mo->momy - player->cmomy)/2) + player->cmomy;
 					if (player->powers[pw_super])
 					{
 						P_Earthquake(player->mo, player->mo, 256*FRACUNIT);
@@ -4677,7 +4676,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if (!player->mo->momz && onground && !player->weapondelay)
+				if (!player->weapondelay && !player->powers[pw_carry])
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)
@@ -4716,8 +4715,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						player->drawangle = player->mo->angle;
 #undef zpos
 
-						player->mo->momx >>= 1;
-						player->mo->momy >>= 1;
+						P_Thrust(player->mo, player->mo->angle, -(player->speed/3));
 						player->pflags |= PF_SPINDOWN;
 						P_SetWeaponDelay(player, TICRATE/2);
 					}
@@ -4995,7 +4993,10 @@ static void P_DoTwinSpin(player_t *player)
 	S_StartSound(player->mo, sfx_s3k42);
 	player->mo->frame = 0;
 	P_SetPlayerMobjState(player->mo, S_PLAY_TWINSPIN);
-	player->weapondelay = TICRATE*5/8;
+	if (player->charflags & SF_MULTIABILITY)
+		player->weapondelay = TICRATE*5/7;
+	else
+		player->pflags |= PF_THOKKED;
 }
 
 //
@@ -5156,33 +5157,31 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		}
 		else if ((cmd->buttons & BT_SPIN))
 		{
-			if (!(player->pflags & PF_JUMPED) && (player->powers[pw_justsprung]) && !(player->pflags & PF_THOKKED))
-			{
-				player->powers[pw_justsprung] = 0;
-				player->pflags |= P_GetJumpFlags(player);
-				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
-			}
-			else if (!(player->pflags & PF_SPINDOWN) && P_SuperReady(player) && !(player->pflags & PF_THOKKED))
+			if (!(player->pflags & PF_SPINDOWN) && P_SuperReady(player) && !(player->pflags & PF_THOKKED))
 			{
 				// If you can turn super and aren't already,
 				// and you don't have a shield, do it!
 				P_DoSuperTransformation(player, false);
 				return;
 			}
-			if (!LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
+			else if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
 				switch (player->charability)
 				{
 					case CA_TELEKINESIS:
 						if (!(player->pflags & (PF_THOKKED|PF_SPINDOWN)) || (player->charflags & SF_MULTIABILITY))
 						{
+							player->powers[pw_justsprung] = 0;
 							P_Telekinesis(player,
 								-FixedMul(player->actionspd, player->mo->scale), // -ve thrust (pulling towards player)
 								FixedMul(384*FRACUNIT, player->mo->scale));
 						}
 						break;
 					case CA_TWINSPIN:
-						if ((player->charability2 == CA2_MELEE && !(player->pflags & PF_SPINDOWN) && !player->weapondelay) || player->charflags & SF_MULTIABILITY)
+						if ((player->charability2 == CA2_MELEE && !(player->pflags & (PF_THOKKED|PF_SPINDOWN))) || (player->charflags & SF_MULTIABILITY && !player->weapondelay))
+						{
+							player->powers[pw_justsprung] = 0;
 							P_DoTwinSpin(player);
+						}
 						break;
 					default:
 						break;
@@ -5261,7 +5260,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 			{
 				player->powers[pw_justsprung] = 0;
 				player->pflags |= P_GetJumpFlags(player);
-				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
+				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP); //this intentionally also activates with no ability
 			}
 				
 			if (!LUA_HookPlayer(player, HOOK(AbilitySpecial)))
@@ -5336,7 +5335,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					{
 						P_SetPlayerMobjState(player->mo, S_PLAY_FLY); // Change to the flying animation
 
-						player->powers[pw_tailsfly] = 3*TICRATE; // Set the fly timer
+						player->powers[pw_tailsfly] = 4*TICRATE; // Set the fly timer
 
 						player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE|PF_SPINNING|PF_STARTDASH);
 						if (player->bot == BOT_2PAI)
@@ -5421,7 +5420,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					}
 					break;
 				case CA_TWINSPIN:
-					if (!(player->weapondelay) || player->charflags & SF_MULTIABILITY)
+					if (!(player->pflags & PF_THOKKED) || player->charflags & SF_MULTIABILITY)
 						P_DoTwinSpin(player);
 					break;
 				default:
@@ -5438,10 +5437,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		{
 			player->mo->momx = player->mo->momy = player->mo->momz = 0;
 			player->mo->angle = player->drawangle = cmd->angleturn<<16;
-			if (player->dashmode >= DASHMODE_THRESHOLD)
-			{
-				player->dashmode = DASHMODE_MAX+3; // reverse dashmode decay
-			}
 		}
 		else
 		{
@@ -5880,7 +5875,7 @@ static void P_3dMovement(player_t *player)
 			if (P_GetPlayerControlDirection(player) == 1)
 				acceleration = 800; //+200 to each stat
 			else
-				acceleration = P_IsObjectOnGround(player->mo) ? 2600 : 800;
+				acceleration = P_IsObjectOnGround(player->mo) ? 2500 : 800;
 		}
 		else
 		{
@@ -5888,20 +5883,26 @@ static void P_3dMovement(player_t *player)
 			if (P_GetPlayerControlDirection(player) == 1)
 				acceleration = 600;
 			else
-				acceleration = P_IsObjectOnGround(player->mo) ? 2400 : 600; //ground brake, air brake
+				acceleration = P_IsObjectOnGround(player->mo) ? 2300 : 600; //ground brake, air brake
 		}
 
 	}
 
+	if ((player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL) || (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2))
+		acceleration = 400;
+
+	if (player->fly1)
+		topspeed = (player->powers[pw_super] || player->powers[pw_sneakers]) ? 10*normalspd/9 : 2*normalspd/3;
+
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
 
-	if ((player->mo->movefactor != FRACUNIT) && onground) // friction scaled acceleration
+	if ((player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) && onground) // friction scaled acceleration
 	{
 		if (P_GetPlayerControlDirection(player) == 1)
-			acceleration += FixedMul(300<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+			acceleration += FixedDiv(250<<FRACBITS, player->mo->movefactor)/FRACUNIT;
 		else
-			acceleration -= FixedMul(600<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+			acceleration -= FixedDiv(500<<FRACBITS, player->mo->movefactor)/FRACUNIT;
 	}
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
@@ -6017,6 +6018,8 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(3<<FRACBITS, player->mo->movefactor);
+			if (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2)
+				turnspd >>= 1;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
 			else
@@ -7739,8 +7742,6 @@ static void P_SkidStuff(player_t *player)
 			player->pflags |= PF_STASIS;
 			if (player->speed > FixedMul(player->runspeed, player->mo->scale))
 				player->skidtime += player->mo->tics;
-			player->mo->momx = ((player->mo->momx - player->cmomx)/2) + player->cmomx;
-			player->mo->momy = ((player->mo->momy - player->cmomy)/2) + player->cmomy;
 		}
 		// Didn't stop yet? Skid FOREVER!
 		else if (player->skidtime == 1)
@@ -7815,16 +7816,13 @@ void P_MovePlayer(player_t *player)
 	// This was done in Sonic 3 & Knuckles, but has been missed in Sonic Mania and the Taxman/Stealth mobile remakes. Thanks to NeoHazard for his 2017 blogpost on the matter, because this oversight otherwise almost made it all the way to 2.2's release.
 	//https://s3unlocked.blogspot.com/2017/12/over-threshold.html
 	if (player->powers[pw_super])
-		runspd = FixedMul(runspd, 7*FRACUNIT/5);
-
-	if ((player->charflags & SF_DASHMODE) && player->dashmode >= DASHMODE_THRESHOLD)
-		runspd >>= 1;
+		runspd = FixedMul(runspd, 5*FRACUNIT/3);
 
 	// Control relinquishing stuff!
 	if ((player->powers[pw_carry] == CR_BRAKGOOP)
 	|| (player->pflags & PF_GLIDING && player->skidtime)
 	|| (player->charability2 == CA2_GUNSLINGER && player->panim == PA_ABILITY2)
-	|| (player->charability2 == CA2_MELEE && player->mo->state-states == S_PLAY_MELEE_LANDING))
+	|| (player->charability2 == CA2_MELEE && player->mo->state-states == S_PLAY_MELEE_LANDING && P_IsObjectOnGround(player->mo)))
 		player->pflags |= PF_FULLSTASIS;
 	else if (player->powers[pw_nocontrol])
 	{
@@ -8115,11 +8113,11 @@ void P_MovePlayer(player_t *player)
 		fixed_t glidespeed = player->actionspd;
 		fixed_t momx = mo->momx - player->cmomx, momy = mo->momy - player->cmomy;
 		angle_t angle, moveangle = R_PointToAngle2(0, 0, momx, momy);
-		boolean swimming = mo->state - states == S_PLAY_SWIM;
+		//boolean swimming = mo->state - states == S_PLAY_SWIM;
 		boolean in2d = mo->flags2 & MF2_TWOD || twodlevel;
 
 		if (player->powers[pw_super] || player->powers[pw_sneakers])
-			glidespeed <<= 1;
+			glidespeed = player->actionspd*12/5;
 
 		if (player->mo->eflags & MFE_UNDERWATER)
 			glidespeed >>= 1;
@@ -8138,10 +8136,8 @@ void P_MovePlayer(player_t *player)
 		// Strafing while gliding.
 		if ((P_ControlStyle(player) & CS_LMAOGALOG) || in2d)
 			angle = mo->angle;
-		else if (swimming)
-			angle = mo->angle + R_PointToAngle2(0, 0, cmd->forwardmove<<FRACBITS, -cmd->sidemove<<FRACBITS);
 		else
-			angle = mo->angle - FixedAngle(cmd->sidemove * FRACUNIT);
+			angle = mo->angle + R_PointToAngle2(0, 0, cmd->forwardmove<<FRACBITS, -cmd->sidemove<<FRACBITS);
 
 		if (!player->skidtime) // TODO: make sure this works in 2D!
 		{
@@ -8156,7 +8152,7 @@ void P_MovePlayer(player_t *player)
 			if (player->mo->eflags & MFE_UNDERWATER)
 				timefactor >>= 1;
 
-			if (player->speed > FixedMul(player->normalspeed*2, player->mo->scale))
+			if (player->speed > FixedMul(player->normalspeed*47/36, player->mo->scale))
 				timefactor = 0;
 
 			if (in2d)
@@ -8235,8 +8231,8 @@ void P_MovePlayer(player_t *player)
 			else
 			{
 				player->pflags |= PF_THOKKED;
-				player->mo->momx /= 3;
-				player->mo->momy /= 3;
+				player->mo->momx >>= 1;
+				player->mo->momy >>= 1;
 				P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
 			}
 		}
@@ -8354,8 +8350,13 @@ void P_MovePlayer(player_t *player)
 
 			if (player->fly1)
 			{
+				fixed_t flyspd = player->normalspeed*2/3;
+				if (player->powers[pw_super] || player->powers[pw_sneakers])
+					flyspd = player->normalspeed*10/9;
+
 				P_SetPlayerMobjState(player->mo, player->mo->state->nextstate);
-				if (player->speed > FixedMul(player->normalspeed, player->mo->scale))
+
+				if (player->speed > FixedMul(flyspd, player->mo->scale))
 				{
 					if (player->mo->momx)
 						player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
@@ -8389,7 +8390,10 @@ void P_MovePlayer(player_t *player)
 		{
 			// Tails-gets-tired Stuff
 			if (player->panim == PA_ABILITY && player->mo->state-states != S_PLAY_FLY_TIRED)
+			{
 				P_SetPlayerMobjState(player->mo, S_PLAY_FLY_TIRED);
+				player->fly1 = 0;
+			}
 
 			if (player->charability == CA_FLY && (leveltime % 10 == 0)
 				&& player->mo->state-states == S_PLAY_FLY_TIRED
@@ -11335,8 +11339,12 @@ static void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 	P_SetThingPosition(fume);
 
 	// If dashmode is high enough, spawn a trail
-	if (player->normalspeed >= skins[player->skin].normalspeed*2)
-		P_SpawnGhostMobj(fume);
+	if (fume->extravalue1)
+	{
+		mobj_t *ghost = P_SpawnGhostMobj(fume);
+		ghost->fuse = TICRATE/7;
+	}
+		
 }
 
 //
@@ -11886,7 +11894,7 @@ void P_PlayerThink(player_t *player)
 		{
 			boolean currentlyonground = P_IsObjectOnGround(player->mo);
 
-			if (player->powers[pw_noautobrake])
+			if (currentlyonground || player->powers[pw_noautobrake])
 				;
 			else if (!player->powers[pw_carry] && !player->powers[pw_nocontrol]
 			&& ((player->pflags & (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE|PF_STASIS)) == (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE))
@@ -11894,25 +11902,8 @@ void P_PlayerThink(player_t *player)
 			&& (player->rmomx || player->rmomy)
 			&& (!player->capsule || (player->capsule->reactiontime != (player-players)+1)))
 			{
-				fixed_t acceleration = (player->accelstart + (FixedDiv(player->speed, player->mo->scale)>>FRACBITS) * player->acceleration) * player->thrustfactor * 20;
+				fixed_t acceleration = FRACUNIT>>1;
 				angle_t moveAngle = R_PointToAngle2(0, 0, player->rmomx, player->rmomy);
-
-				if (!currentlyonground)
-					acceleration /= 2;
-				// fake skidding! see P_SkidStuff for reference on conditionals
-				else if (!player->skidtime && !(player->mo->eflags & MFE_GOOWATER) && !(player->pflags & (PF_JUMPED|PF_SPINNING|PF_SLIDING)) && !(player->charflags & SF_NOSKID) && P_AproxDistance(player->mo->momx, player->mo->momy) >= FixedMul(player->runspeed, player->mo->scale)) // modified from player->runspeed/2 'cuz the skid was just TOO frequent ngl
-				{
-					if (player->mo->state-states != S_PLAY_SKID)
-						P_SetPlayerMobjState(player->mo, S_PLAY_SKID);
-					player->mo->tics = player->skidtime = (player->mo->movefactor == FRACUNIT) ? TICRATE/2 : (FixedDiv(35<<(FRACBITS-1), FixedSqrt(player->mo->movefactor)))>>FRACBITS;
-
-					if (P_IsLocalPlayer(player)) // the sound happens way more frequently now, so give co-op players' ears a brake...
-						S_StartSound(player->mo, sfx_skid);
-				}
-
-				if (player->mo->movefactor != FRACUNIT) // Friction-scaled acceleration...
-					acceleration = FixedMul(acceleration<<FRACBITS, player->mo->movefactor)>>FRACBITS;
-
 				P_Thrust(player->mo, moveAngle, FixedMul(-acceleration, player->mo->scale));
 			}
 
@@ -12132,20 +12123,19 @@ void P_PlayerThink(player_t *player)
 	{
 		tic_t prevdashmode = dashmode;
 		boolean above = player->speed >= FixedMul(player->runspeed, player->mo->scale);
-		boolean below = player->speed <= FixedMul(skins[player->skin].normalspeed*9/14, player->mo->scale);
 		boolean notfloating = (P_IsObjectOnGround(player->mo) || (player->mo->eflags & MFE_JUSTHITFLOOR));
 
 		if (above && notfloating)
 		{
 			if (dashmode < DASHMODE_MAX)
-				dashmode = (player->speed > FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) ? DASHMODE_THRESHOLD : dashmode+1; // Counter. Adds 1 to dash mode per tic in top speed.
-			if (dashmode == DASHMODE_THRESHOLD) // This isn't in the ">=" equation because it'd cause the sound to play infinitely.
+				dashmode = (player->speed >= FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) ? dashmode+2 : dashmode+1; // Counter. Adds 1 to dash mode per tic in top speed.
+			if (dashmode >= DASHMODE_THRESHOLD && dashmode < DASHMODE_MAX)
 			{
 				S_StartSound(player->mo, (player->charflags & SF_MACHINE) ? sfx_kc4d : sfx_cdfm40); // If the player enters dashmode, play this sound on the the tic it starts.
 				dashmode = DASHMODE_MAX;
 			}
 		}
-		else if (below && (notfloating || dashmode < DASHMODE_THRESHOLD))
+		else if (!above && (notfloating || dashmode < DASHMODE_THRESHOLD))
 		{
 			if (dashmode > 3)
 			{
@@ -12172,7 +12162,7 @@ void P_PlayerThink(player_t *player)
 				player->normalspeed += FRACUNIT/12; // Enter Dash Mode smoothly.
 		}
 
-		if (player->speed > FixedMul(skins[player->skin].normalspeed*7/5, player->mo->scale))
+		if (dashmode == DASHMODE_MAX && player->speed > FixedMul(52<<FRACBITS, player->mo->scale))
 		{
 			mobj_t *ghost = P_SpawnGhostMobj(player->mo); // Spawns afterimages
 			ghost->fuse = 2; // Makes the images fade quickly

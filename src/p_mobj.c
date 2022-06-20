@@ -1665,9 +1665,9 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldz)
 			if (P_GetPlayerControlDirection(player) != 1)
 			{
 				if (mo->momx)
-					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT : FRACUNIT>>2);
+					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT*3/2 : FRACUNIT*3/8);
 				if (mo->momy)
-					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT : FRACUNIT>>2);
+					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT*3/2 : FRACUNIT*3/8);
 			}
 		}
 	}
