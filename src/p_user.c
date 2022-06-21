@@ -2820,10 +2820,10 @@ static void P_CheckBouncySectors(player_t *player)
 				if (abs(momentum.z) < (bouncestrength*2))
 					goto bouncydone;
 
-				if (momentum.z > FixedMul(24*FRACUNIT, player->mo->scale)) //half of the default player height
-					momentum.z = FixedMul(24*FRACUNIT, player->mo->scale);
-				else if (momentum.z < -FixedMul(24*FRACUNIT, player->mo->scale))
-					momentum.z = -FixedMul(24*FRACUNIT, player->mo->scale);
+				if (momentum.z > FixedMul(40<<FRACBITS, player->mo->scale)) //half of the default player height
+					momentum.z = FixedMul(40<<FRACBITS, player->mo->scale);
+				else if (momentum.z < -FixedMul(40<<FRACBITS, player->mo->scale))
+					momentum.z = -FixedMul(40<<FRACBITS, player->mo->scale);
 
 				if (slope)
 					P_QuantizeMomentumToSlope(&momentum, slope);
@@ -5783,10 +5783,7 @@ static void P_3dMovement(player_t *player)
 	vector3_t totalthrust;
 
 	if (strcmp(skins[player->skin].name, "adventuresonic") == 0)
-	{
-		normalspd = player->normalspeed;
 		player->jumpfactor = FRACUNIT;
-	}
 
 	totalthrust.x = totalthrust.y = 0; // I forget if this is needed
 	totalthrust.z = FRACUNIT*P_MobjFlip(player->mo)/3; // A bit of extra push-back on slopes
@@ -5849,12 +5846,6 @@ static void P_3dMovement(player_t *player)
 	// Calculate player's speed
 	player->speed = FixedHypot(player->rmomx, player->rmomy);
 
-	// When sliding, don't allow forward/back
-	if (player->pflags & PF_SLIDING)
-		cmd->forwardmove = 0;
-	else if (onground && player->mo->state == states+S_PLAY_PAIN)
-		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
-
 	player->aiming = cmd->aiming<<FRACBITS;
 
 	// Set the player speeds.
@@ -5896,6 +5887,9 @@ static void P_3dMovement(player_t *player)
 
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
+
+	else if (onground && player->mo->state == states+S_PLAY_PAIN)
+		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
 
 	if ((player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) && onground) // friction scaled acceleration
 	{
@@ -5986,6 +5980,26 @@ static void P_3dMovement(player_t *player)
 		totalthrust.x += P_ReturnThrustX(player->mo, movepushsideangle, movepushside);
 		totalthrust.y += P_ReturnThrustY(player->mo, movepushsideangle, movepushside);
 	}
+
+	// sliding movement
+	if (player->pflags & PF_SLIDING)
+	{
+		player->mo->momx = FixedMul(player->mo->momx, 23*FRACUNIT/25);
+		player->mo->momy = FixedMul(player->mo->momy, 23*FRACUNIT/25);
+		if (totalthrust.x)
+		{
+			totalthrust.x >>= 1;
+			player->mo->momx += totalthrust.x;
+		}
+		if (totalthrust.y)
+		{
+			totalthrust.y >>= 1;
+			player->mo->momy += totalthrust.y;
+		}
+		return;
+	}
+	else if (player->mo->state == states+S_PLAY_PAIN && onground)
+		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
 
 	if ((totalthrust.x || totalthrust.y)
 		&& player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && abs(player->mo->standingslope->zdelta) > FRACUNIT/2) {
@@ -12122,7 +12136,7 @@ void P_PlayerThink(player_t *player)
 	if ((player->charflags & SF_DASHMODE) && !player->gotflag && (player->powers[pw_carry] != CR_ROLLOUT) && !player->exiting && !(maptol & TOL_NIGHTS) && !P_PlayerInPain(player) && (player->playerstate == PST_LIVE))
 	{
 		tic_t prevdashmode = dashmode;
-		boolean above = player->speed >= FixedMul(player->runspeed, player->mo->scale);
+		boolean above = (player->speed >= FixedMul(player->runspeed, player->mo->scale)) || (player->pflags & PF_STARTDASH);
 		boolean notfloating = (P_IsObjectOnGround(player->mo) || (player->mo->eflags & MFE_JUSTHITFLOOR));
 
 		if (above && notfloating)
