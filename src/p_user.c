@@ -4676,7 +4676,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if (!player->weapondelay && !player->powers[pw_carry])
+				if ((onground || (player->pflags & PF_JUMPED) || player->powers[pw_justsprung]) && !(player->pflags & PF_THOKKED) && !player->weapondelay && !player->powers[pw_carry])
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)
@@ -4715,7 +4715,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						player->drawangle = player->mo->angle;
 #undef zpos
 
-						P_Thrust(player->mo, player->mo->angle, -(player->speed/3));
+						P_Thrust(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), -(player->speed/3));
 						player->pflags |= PF_SPINDOWN;
 						P_SetWeaponDelay(player, TICRATE/2);
 					}
