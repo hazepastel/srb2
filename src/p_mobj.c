@@ -1629,7 +1629,7 @@ static void P_SceneryXYFriction(mobj_t *mo)
 //
 // adds friction on the xy plane
 //
-static void P_XYFriction(mobj_t *mo, fixed_t oldz)
+boolean P_XYFriction(mobj_t *mo, fixed_t oldz)
 {
 	player_t *player;
 
@@ -1637,10 +1637,20 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldz)
 	I_Assert(!P_MobjWasRemoved(mo));
 
 	player = mo->player;
+
+	if (mo->flags & MF_NOCLIPHEIGHT)
+		return false; // no frictions for objects that can pass through floors
+
 	if (player) // valid only if player avatar
 	{
-		if (((player->pflags & PF_GLIDING) && !player->skidtime) || ((player->pflags & PF_SPINNING) && P_IsObjectOnGround(mo)))
-			return;
+		if (player->homing) // no friction for homing
+			return false;
+
+		if (player->powers[pw_carry] == CR_NIGHTSMODE)
+			return false; // no friction for NiGHTS players
+
+		if (((player->pflags & PF_GLIDING) && !player->skidtime) || (player->pflags & PF_SPINNING))
+			return false;
 
 		if (twodlevel || (mo->flags2 & MF2_TWOD))
 			mo->friction = FRACUNIT;
@@ -1656,23 +1666,34 @@ static void P_XYFriction(mobj_t *mo, fixed_t oldz)
 				P_SetPlayerMobjState(mo, S_PLAY_STND);
 			mo->momx = player->cmomx;
 			mo->momy = player->cmomy;
+			return false;
 		}
-		else if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (mo->friction != FRACUNIT) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
+		if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (mo->friction != FRACUNIT) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
 		{
 			if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
 			&& mo->z < oldz) //don't apply friction if we're going downhill
-				return;
-			if (P_GetPlayerControlDirection(player) != 1)
-			{
-				if (mo->momx)
-					mo->momx -= P_ReturnThrustX(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT*3/2 : FRACUNIT*3/8);
-				if (mo->momy)
-					mo->momy -= P_ReturnThrustY(mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (mo->friction <= ORIG_FRICTION) ? FRACUNIT*3/2 : FRACUNIT*3/8);
-			}
+				return false;
+			else
+				return true;
 		}
+		else
+			return false;
 	}
 	else
+	{
+		if (mo->flags & MF_MISSILE || mo->flags2 & MF2_SKULLFLY || mo->type == MT_SHELL || mo->type == MT_VULTURE || mo->type == MT_PENGUINATOR)
+			return false; // no friction for missiles ever
+
+		if ((mo->type == MT_BIGTUMBLEWEED || mo->type == MT_LITTLETUMBLEWEED)
+		&& (mo->standingslope && abs(mo->standingslope->zdelta) > FRACUNIT>>8)) // Special exception for tumbleweeds on slopes
+			return false;
+
+		if (((!(mo->eflags & MFE_VERTICALFLIP) && mo->z > mo->floorz) || (mo->eflags & MFE_VERTICALFLIP && mo->z+mo->height < mo->ceilingz)))
+			return false; // no friction when airborne
+
 		P_SceneryXYFriction(mo);
+		return true;
+	}
 }
 
 static void P_PushableCheckBustables(mobj_t *mo)
@@ -2071,27 +2092,8 @@ void P_XYMovement(mobj_t *mo)
 		P_SetThingPosition(mo);
 	}
 
-	if (mo->flags & MF_NOCLIPHEIGHT)
-		return; // no frictions for objects that can pass through floors
-
-	if (mo->flags & MF_MISSILE || mo->flags2 & MF2_SKULLFLY || mo->type == MT_SHELL || mo->type == MT_VULTURE || mo->type == MT_PENGUINATOR)
-		return; // no friction for missiles ever
-
-	if (player && player->homing) // no friction for homing
-		return;
-
-	if (player && player->powers[pw_carry] == CR_NIGHTSMODE)
-		return; // no friction for NiGHTS players
-
-	if ((mo->type == MT_BIGTUMBLEWEED || mo->type == MT_LITTLETUMBLEWEED)
-			&& (mo->standingslope && abs(mo->standingslope->zdelta) > FRACUNIT>>8)) // Special exception for tumbleweeds on slopes
-		return;
-
-	if (((!(mo->eflags & MFE_VERTICALFLIP) && mo->z > mo->floorz) || (mo->eflags & MFE_VERTICALFLIP && mo->z+mo->height < mo->ceilingz))
-		&& !(player))
-		return; // no friction when airborne
-
-	P_XYFriction(mo, oldz);
+	if (!player) //player friction handled elsewhere
+		P_XYFriction(mo, oldz);
 }
 
 void P_RingXYMovement(mobj_t *mo)

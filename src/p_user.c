@@ -44,6 +44,8 @@
 #include "m_cheat.h"
 // Thok camera snap (ctrl-f "chalupa")
 #include "g_input.h"
+//friction nonsense
+#include "p_mobj.h"
 
 #ifdef HW3SOUND
 #include "hardware/hw3sound.h"
@@ -2820,10 +2822,10 @@ static void P_CheckBouncySectors(player_t *player)
 				if (abs(momentum.z) < (bouncestrength*2))
 					goto bouncydone;
 
-				if (momentum.z > FixedMul(40<<FRACBITS, player->mo->scale)) //half of the default player height
-					momentum.z = FixedMul(40<<FRACBITS, player->mo->scale);
-				else if (momentum.z < -FixedMul(40<<FRACBITS, player->mo->scale))
-					momentum.z = -FixedMul(40<<FRACBITS, player->mo->scale);
+				if (momentum.z > FixedMul(34<<FRACBITS, player->mo->scale))
+					momentum.z = FixedMul(34<<FRACBITS, player->mo->scale);
+				else if (momentum.z < -FixedMul(34<<FRACBITS, player->mo->scale))
+					momentum.z = -FixedMul(34<<FRACBITS, player->mo->scale);
 
 				if (slope)
 					P_QuantizeMomentumToSlope(&momentum, slope);
@@ -5098,7 +5100,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 						// Flame burst
 						case SH_FLAMEAURA:
 							player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-							P_Thrust(player->mo, player->mo->angle, FixedMul(30*FRACUNIT - FixedSqrt(FixedDiv(player->speed, player->mo->scale)), player->mo->scale));
+							P_Thrust(player->mo, player->mo->angle, max(FixedMul(45<<FRACBITS, player->mo->scale)-player->speed, FixedMul((45<<FRACBITS) - FixedSqrt(FixedDiv(player->speed*20, player->mo->scale)), player->mo->scale)));
 							player->drawangle = player->mo->angle;
 							player->pflags &= ~PF_NOJUMPDAMAGE;
 							P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
@@ -5335,7 +5337,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					{
 						P_SetPlayerMobjState(player->mo, S_PLAY_FLY); // Change to the flying animation
 
-						player->powers[pw_tailsfly] = 4*TICRATE; // Set the fly timer
+						player->powers[pw_tailsfly] = (player->bot) ? 3*TICRATE : 4*TICRATE; // Set the fly timer
 
 						player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE|PF_SPINNING|PF_STARTDASH);
 						if (player->bot == BOT_2PAI)
@@ -5724,8 +5726,8 @@ static void P_2dMovement(player_t *player)
 
 	if (player->powers[pw_super] || player->powers[pw_sneakers])
 	{
-		topspeed = 5*normalspd/3;
-		acceleration = 800;
+		topspeed = FixedMul(normalspd, 5*FRACUNIT/3);
+		acceleration = 760;
 	}
 	else
 	{
@@ -5782,8 +5784,7 @@ static void P_3dMovement(player_t *player)
 	fixed_t oldMagnitude, newMagnitude;
 	vector3_t totalthrust;
 
-	if (strcmp(skins[player->skin].name, "adventuresonic") == 0)
-		player->jumpfactor = FRACUNIT;
+	static fixed_t oldz = 0;
 
 	totalthrust.x = totalthrust.y = 0; // I forget if this is needed
 	totalthrust.z = FRACUNIT*P_MobjFlip(player->mo)/3; // A bit of extra push-back on slopes
@@ -5849,38 +5850,38 @@ static void P_3dMovement(player_t *player)
 	player->aiming = cmd->aiming<<FRACBITS;
 
 	// Set the player speeds.
-	if (player->pflags & PF_SLIDING)
+	if (onground)
 	{
-		normalspd = FixedMul(40<<FRACBITS, player->mo->scale);
-		acceleration = player->thrustfactor*(player->accelstart + (FixedDiv(player->speed, player->mo->scale)>>FRACBITS) * player->acceleration);
-		topspeed = normalspd;
+		acceleration = 1280;
+
+		if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
+		&& player->mo->z < oldz)
+			acceleration >>= 1;
+		else if (player->mo->friction > ORIG_FRICTION)
+			acceleration >>= 2;
+
+		if (player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) // friction scaled acceleration
+			acceleration += FixedDiv(130<<FRACBITS, player->mo->movefactor)/FRACUNIT;
 	}
 	else
+		acceleration = 600;
+
+	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
 	{
-		if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
-			normalspd >>= 1;
-
-		if (player->powers[pw_super] || player->powers[pw_sneakers])
-		{
-			topspeed = 5*normalspd/3;
-			if (P_GetPlayerControlDirection(player) == 1)
-				acceleration = 800; //+200 to each stat
-			else
-				acceleration = P_IsObjectOnGround(player->mo) ? 2500 : 800;
-		}
-		else
-		{
-			topspeed = normalspd;
-			if (P_GetPlayerControlDirection(player) == 1)
-				acceleration = 600;
-			else
-				acceleration = P_IsObjectOnGround(player->mo) ? 2300 : 600; //ground brake, air brake
-		}
-
+		normalspd >>= 1;
+		acceleration -= 110;
 	}
 
-	if ((player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL) || (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2))
-		acceleration = 400;
+	if (player->powers[pw_super] || player->powers[pw_sneakers])
+	{
+		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
+		acceleration += 120;
+	}
+
+	topspeed = normalspd; //set normal top speed
+
+	if (player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL)
+		acceleration = 470;
 
 	if (player->fly1)
 		topspeed = (player->powers[pw_super] || player->powers[pw_sneakers]) ? 10*normalspd/9 : 2*normalspd/3;
@@ -5890,14 +5891,6 @@ static void P_3dMovement(player_t *player)
 
 	else if (onground && player->mo->state == states+S_PLAY_PAIN)
 		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
-
-	if ((player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) && onground) // friction scaled acceleration
-	{
-		if (P_GetPlayerControlDirection(player) == 1)
-			acceleration += FixedDiv(250<<FRACBITS, player->mo->movefactor)/FRACUNIT;
-		else
-			acceleration -= FixedDiv(500<<FRACBITS, player->mo->movefactor)/FRACUNIT;
-	}
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
 		acceleration = 62;
@@ -5981,24 +5974,8 @@ static void P_3dMovement(player_t *player)
 		totalthrust.y += P_ReturnThrustY(player->mo, movepushsideangle, movepushside);
 	}
 
-	// sliding movement
-	if (player->pflags & PF_SLIDING)
-	{
-		player->mo->momx = FixedMul(player->mo->momx, 23*FRACUNIT/25);
-		player->mo->momy = FixedMul(player->mo->momy, 23*FRACUNIT/25);
-		if (totalthrust.x)
-		{
-			totalthrust.x >>= 1;
-			player->mo->momx += totalthrust.x;
-		}
-		if (totalthrust.y)
-		{
-			totalthrust.y >>= 1;
-			player->mo->momy += totalthrust.y;
-		}
-		return;
-	}
-	else if (player->mo->state == states+S_PLAY_PAIN && onground)
+	// pain landing
+	if (player->mo->state == states+S_PLAY_PAIN && onground && !(player->pflags & PF_SLIDING))
 		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
 
 	if ((totalthrust.x || totalthrust.y)
@@ -6043,11 +6020,17 @@ static void P_3dMovement(player_t *player)
 		}
 	}
 
-	if ((P_GetPlayerControlDirection(player) == 1) && (player->cmd.forwardmove < 20) && !spin)
+	if (P_XYFriction(player->mo, oldz))
 	{
 		angle_t moveangle = R_PointToAngle2(0, 0, player->rmomx,  player->rmomy);
-		fixed_t deceleration = FixedMul(FRACUNIT>>1, player->mo->movefactor);
+		fixed_t deceleration = FixedMul(FRACUNIT*3/2, player->mo->movefactor);
 		fixed_t dx; fixed_t dy;
+
+		if (!onground)
+			deceleration /= 3;
+		else if (player->mo->friction > ORIG_FRICTION)
+			deceleration >>= 2;
+
 		deceleration = min(deceleration, player->speed);
 		//Get deceleration vector
 		dx = -P_ReturnThrustX(player->mo, moveangle, deceleration);
@@ -6089,6 +6072,7 @@ static void P_3dMovement(player_t *player)
 			player->mo->momy = tempmomy + player->cmomy;
 		}
 	}
+	oldz = player->mo->z;
 	player->mo->friction = ORIG_FRICTION; //katsy: reset player friction AFTER movement code
 }
 
