@@ -5631,6 +5631,8 @@ static void P_2dMovement(player_t *player)
 	angle_t movepushangle = 0;
 	fixed_t normalspd = FixedMul(player->normalspeed*8/9, player->mo->scale);
 
+	static fixed_t oldz = 0;
+
 	cmd = &player->cmd;
 
 	if (player->exiting || player->pflags & PF_STASIS)
@@ -5671,7 +5673,7 @@ static void P_2dMovement(player_t *player)
 	player->rmomx = player->mo->momx - player->cmomx;
 	player->rmomy = player->mo->momy - player->cmomy;
 
-	// Calculates player's speed based on absolute-value-of-a-number formula
+	// calculate player's speed
 	player->speed = abs(player->rmomx);
 
 	if (player->pflags & PF_GLIDING)
@@ -5716,30 +5718,56 @@ static void P_2dMovement(player_t *player)
 			movepushangle = player->mo->angle;
 	}
 
-	// Do not let the player control movement if not onground.
 	onground = P_IsObjectOnGround(player->mo);
 
 	player->aiming = cmd->aiming<<FRACBITS;
 
-	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
-		normalspd >>= 1;
-
-	if (player->powers[pw_super] || player->powers[pw_sneakers])
-	{
-		topspeed = FixedMul(normalspd, 5*FRACUNIT/3);
+	// set player speeds
+	if (player->pflags & PF_SLIDING)
 		acceleration = 760;
+	else if (onground)
+	{
+		acceleration = 600;
+
+		if (player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) // friction scaled acceleration
+			acceleration += FixedDiv(130<<FRACBITS, player->mo->movefactor)/FRACUNIT;
 	}
 	else
 	{
-		topspeed = normalspd;
-		acceleration = 600;
+		if (player->speed > normalspd)
+			acceleration = 800;
+		else
+			acceleration = 600;
 	}
+
+	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
+	{
+		normalspd >>= 1;
+		acceleration -= 110;
+	}
+
+	if (player->powers[pw_super] || player->powers[pw_sneakers])
+	{
+		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
+		acceleration += 120;
+	}
+
+	topspeed = normalspd; //set normal top speed
+
+	if (player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL)
+		acceleration = 470;
+
+	if (player->fly1)
+		topspeed = (player->powers[pw_super] || player->powers[pw_sneakers]) ? 10*normalspd/9 : 2*normalspd/3;
+
+	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
+		acceleration = 62;
 
 //////////////////////////////////////
 	if (player->climbing)
 	{
 		if (cmd->forwardmove != 0)
-			P_SetObjectMomZ(player->mo, FixedDiv(cmd->forwardmove*FRACUNIT, player->powers[pw_super] ? 5*FRACUNIT : 15*FRACUNIT>>1), false); // 2/3 while super
+			P_SetObjectMomZ(player->mo, FixedDiv(cmd->forwardmove*FRACUNIT, player->powers[pw_super] ? 6*FRACUNIT : 8*FRACUNIT), false); // -2 while super
 
 		player->mo->momx = 0;
 	}
@@ -5748,15 +5776,9 @@ static void P_2dMovement(player_t *player)
 	{
 		movepushforward = abs(cmd->sidemove * acceleration);
 
-
-		// Allow a bit of movement while spinning
+		// Allow a bit of no movement while spinning, as a treat
 		if ((player->pflags & PF_SPINNING) && onground)
-		{
-			if (!(player->pflags & PF_STARTDASH))
-				movepushforward = movepushforward/48;
-			else
-				movepushforward = 0;
-		}
+			movepushforward = 0;
 
 		movepushforward = FixedMul(movepushforward, player->mo->scale);
 		if (player->rmomx < topspeed && cmd->sidemove > 0) // Sonic's Speed
@@ -5764,11 +5786,14 @@ static void P_2dMovement(player_t *player)
 		else if (player->rmomx > -topspeed && cmd->sidemove < 0)
 			P_Thrust(player->mo, movepushangle, movepushforward);
 
-		if (((player->rmomx < 0) && (cmd->sidemove > 0)) || ((player->rmomx > 0) && (cmd->sidemove < 0)))
-			player->mo->momx = player->mo->momx*27/30;
+		if (P_XYFriction(player->mo, oldz) && (((player->rmomx < 0) && (cmd->sidemove > 0)) || ((player->rmomx > 0) && (cmd->sidemove < 0))))
+			player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FRACUNIT*3/2 : FRACUNIT/2);
 	}
-	else if (cmd->sidemove == 0 && player->rmomx && onground && !(player->pflags & PF_SPINNING))
-		player->mo->momx = player->mo->momx*27/30;
+	else if (cmd->sidemove == 0 && player->rmomx && P_XYFriction(player->mo, oldz))
+		player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FRACUNIT*3/2 : FRACUNIT/2);
+
+	oldz = player->mo->z;
+	player->mo->friction = ORIG_FRICTION;
 }
 
 //#define OLD_MOVEMENT_CODE 1
@@ -5844,18 +5869,20 @@ static void P_3dMovement(player_t *player)
 	player->rmomx = player->mo->momx - player->cmomx;
 	player->rmomy = player->mo->momy - player->cmomy;
 
-	// Calculate player's speed
+	// calculate player's speed
 	player->speed = FixedHypot(player->rmomx, player->rmomy);
 
 	player->aiming = cmd->aiming<<FRACBITS;
 
-	// Set the player speeds.
-	if (onground)
+	// set player speeds
+	if (player->pflags & PF_SLIDING)
+		acceleration = 760;
+	else if (onground)
 	{
 		acceleration = 1280;
 
 		if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
-		&& player->mo->z < oldz)
+		&& (P_MobjFlip(player->mo)*player->mo->z) < oldz)
 			acceleration >>= 1;
 		else if (player->mo->friction > ORIG_FRICTION)
 			acceleration >>= 2;
@@ -5864,7 +5891,12 @@ static void P_3dMovement(player_t *player)
 			acceleration += FixedDiv(130<<FRACBITS, player->mo->movefactor)/FRACUNIT;
 	}
 	else
-		acceleration = 600;
+	{
+		if (player->speed > normalspd)
+			acceleration = 800;
+		else
+			acceleration = 600;
+	}
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
 	{
@@ -5888,9 +5920,6 @@ static void P_3dMovement(player_t *player)
 
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
-
-	else if (onground && player->mo->state == states+S_PLAY_PAIN)
-		P_SetPlayerMobjState(player->mo, S_PLAY_WALK);
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
 		acceleration = 62;

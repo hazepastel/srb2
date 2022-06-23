@@ -1627,7 +1627,7 @@ static void P_SceneryXYFriction(mobj_t *mo)
 //
 // P_XYFriction
 //
-// adds friction on the xy plane
+// returns whether to add friction on the xy plane
 //
 boolean P_XYFriction(mobj_t *mo, fixed_t oldz)
 {
@@ -1651,9 +1651,6 @@ boolean P_XYFriction(mobj_t *mo, fixed_t oldz)
 
 		if (((player->pflags & PF_GLIDING) && !player->skidtime) || (player->pflags & PF_SPINNING))
 			return false;
-
-		if (twodlevel || (mo->flags2 & MF2_TWOD))
-			mo->friction = FRACUNIT;
 		
 		if (abs(player->rmomx) < FixedMul(STOPSPEED, mo->scale)
 		&& abs(player->rmomy) < FixedMul(STOPSPEED, mo->scale)
@@ -1671,7 +1668,7 @@ boolean P_XYFriction(mobj_t *mo, fixed_t oldz)
 		if (!(mo->eflags & MFE_SPRUNG) && !(P_PlayerInPain(player)) && (mo->friction != FRACUNIT) && (P_IsObjectOnGround(mo) || player->cmd.forwardmove || player->cmd.sidemove))
 		{
 			if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
-			&& mo->z < oldz) //don't apply friction if we're going downhill
+			&& (P_MobjFlip(mo)*mo->z) < oldz) //don't apply friction if we're going downhill
 				return false;
 			else
 				return true;
