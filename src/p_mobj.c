@@ -1488,7 +1488,7 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 	{
 		if ((mo->player->pflags & PF_GLIDING)
 		|| (mo->player->charability == CA_FLY && mo->player->panim == PA_ABILITY))
-			gravityadd = gravityadd/2; // less gravity while flying/gliding
+			gravityadd = gravityadd*2/3; // less gravity while flying/gliding
 
 		if (mo->player->panim != PA_SPRING && mo->player->panim != PA_FALL && (P_MobjFlip(mo)*mo->momz > FixedMul(20<<FRACBITS, mo->scale)))
 			gravityadd = gravityadd*4/3; // increase gravity to counter slope rocketing

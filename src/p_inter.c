@@ -467,7 +467,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 
 			if ((P_MobjFlip(toucher)*toucher->momz < 0) && (elementalpierce != 1))
 			{
-				if (!(player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2))
+				if (!(player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2 && !(player->pflags & PF_JUMPED)))
 				{
 					fixed_t setmomz = -toucher->momz; // Store this, momz get changed by P_DoJump within P_DoBubbleBounce
 

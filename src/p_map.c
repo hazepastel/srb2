@@ -1681,7 +1681,7 @@ static boolean PIT_CheckThing(mobj_t *thing)
 				&& (flipval*(*momz) < 0) // monitor is on the floor and you're going down, or on the ceiling and you're going up
 				&& (elementalpierce != 1)) // you're not piercing through the monitor...
 				{
-					if (!(player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2))
+					if (!(player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2 && !(player->pflags & PF_JUMPED)))
 					{
 						fixed_t setmomz = -*momz; // Store this, momz get changed by P_DoJump within P_DoBubbleBounce
 

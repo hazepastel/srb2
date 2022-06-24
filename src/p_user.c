@@ -8152,12 +8152,12 @@ void P_MovePlayer(player_t *player)
 		if (player->mo->eflags & MFE_VERTICALFLIP)
 		{
 			if (player->mo->momz > FixedMul(3*FRACUNIT, player->mo->scale))
-				player->mo->momz -= FixedMul(3*(FRACUNIT/4), player->mo->scale);
+				player->mo->momz -= FixedMul(FRACUNIT, player->mo->scale);
 		}
 		else
 		{
 			if (player->mo->momz < FixedMul(-3*FRACUNIT, player->mo->scale))
-				player->mo->momz += FixedMul(3*(FRACUNIT/4), player->mo->scale);
+				player->mo->momz += FixedMul(FRACUNIT, player->mo->scale);
 		}
 
 		// Strafing while gliding.
@@ -8404,14 +8404,8 @@ void P_MovePlayer(player_t *player)
 				S_StartSound(player->mo, sfx_putput);
 
 			// Descend
-			if (cmd->buttons & BT_SPIN && !(player->pflags & PF_STASIS) && !player->exiting && !(player->mo->eflags & MFE_GOOWATER))
-				if (P_MobjFlip(player->mo)*player->mo->momz > -FixedMul(5*actionspd, player->mo->scale))
-				{
-					if (player->fly1 > 2)
-						player->fly1 = 2;
-					P_SetObjectMomZ(player->mo, -actionspd/2, true);
-				}
-
+			if (cmd->buttons & BT_SPIN && !(player->fly1) && !(player->pflags & PF_STASIS) && !player->exiting && !(player->mo->eflags & MFE_GOOWATER))
+				player->mo->momz += P_GetMobjGravity(player->mo)/3;
 		}
 		else
 		{
@@ -12568,7 +12562,7 @@ void P_PlayerAfterThink(player_t *player)
 				// tracer is what you're hanging onto....
 				player->mo->momx = (chain->x - player->mo->x)*2;
 				player->mo->momy = (chain->y - player->mo->y)*2;
-				player->mo->momz = (chain->z - (player->mo->height-chain->height/2) - player->mo->z)*5/2;
+				player->mo->momz = (chain->z - (player->mo->height-chain->height/2) - player->mo->z)*3;
 				P_TeleportMove(player->mo, chain->x, chain->y, chain->z - (player->mo->height-chain->height/2));
 				if (!player->powers[pw_flashing]) // handle getting hurt
 				{
