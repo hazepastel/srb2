@@ -10090,12 +10090,18 @@ void P_MobjThinker(mobj_t *mobj)
 	if (mobj->flags & MF_HYBRID)
 	{
 		if (!mobj->hybridtics)
-			mobj->hybridtics = 5;
-		// If we're placed over a deathpit, we want our thinker to stay on
-		if ((GETSECSPECIAL(mobj->subsector->sector->special, 1) == 6) || (GETSECSPECIAL(mobj->subsector->sector->special, 1) == 7))
-			;
+		{
+			// If we're placed over a deathpit, we want our thinker to stay on
+			if ((GETSECSPECIAL(mobj->subsector->sector->special, 1) == 6) || (GETSECSPECIAL(mobj->subsector->sector->special, 1) == 7))
+			{
+				mobj->flags &= ~MF_HYBRID;
+				return;
+			}
+			else
+				mobj->hybridtics = TICRATE;
+		}
 		// Count down only when not moving
-		else if (!mobj->momx && !mobj->momy && !mobj->momz) 
+		if (!mobj->momx && !mobj->momy && !mobj->momz) 
 			mobj->hybridtics -= 1;
 		if (mobj->hybridtics == 1)
 		{
