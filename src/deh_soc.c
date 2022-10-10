@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2021 by Sonic Team Junior.
+// Copyright (C) 1999-2022 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -2687,10 +2687,10 @@ void readhuditem(MYFILE *f, INT32 num)
 			}
 			else if (fastcmp(word, "F"))
 			{
-				hudinfo[num].f = i;
+				hudinfo[num].f = get_number(word2);
 			}
 			else
-				deh_warning("Level header %d: unknown word '%s'", num, word);
+				deh_warning("HUD item %d: unknown word '%s'", num, word);
 		}
 	} while (!myfeof(f)); // finish when the line is empty
 
@@ -3307,7 +3307,7 @@ static void readcondition(UINT8 set, UINT32 id, char *word2)
 		else
 			re = atoi(params[1]);
 
-		if (re < 0 || re >= NUMMAPS)
+		if (re <= 0 || re > NUMMAPS)
 		{
 			deh_warning("Level number %d out of range (1 - %d)", re, NUMMAPS);
 			return;
@@ -3327,7 +3327,7 @@ static void readcondition(UINT8 set, UINT32 id, char *word2)
 		else
 			x1 = (INT16)atoi(params[1]);
 
-		if (x1 < 0 || x1 >= NUMMAPS)
+		if (x1 <= 0 || x1 > NUMMAPS)
 		{
 			deh_warning("Level number %d out of range (1 - %d)", re, NUMMAPS);
 			return;
@@ -3362,7 +3362,7 @@ static void readcondition(UINT8 set, UINT32 id, char *word2)
 		else
 			x1 = (INT16)atoi(params[1]);
 
-		if (x1 < 0 || x1 >= NUMMAPS)
+		if (x1 <= 0 || x1 > NUMMAPS)
 		{
 			deh_warning("Level number %d out of range (1 - %d)", re, NUMMAPS);
 			return;

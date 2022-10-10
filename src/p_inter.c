@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2021 by Sonic Team Junior.
+// Copyright (C) 1999-2022 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -470,14 +470,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				if (!(player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2))
 				{
 					fixed_t setmomz = -toucher->momz; // Store this, momz get changed by P_DoJump within P_DoBubbleBounce
-					
+
 					if (elementalpierce == 2) // Reset bubblewrap, part 1
 						P_DoBubbleBounce(player);
 					toucher->momz = setmomz;
 					if (elementalpierce == 2) // Reset bubblewrap, part 2
 					{
 						boolean underwater = toucher->eflags & MFE_UNDERWATER;
-							
+
 						if (underwater)
 							toucher->momz /= 2;
 						toucher->momz -= (toucher->momz/(underwater ? 8 : 4)); // Cap the height!
@@ -738,12 +738,11 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 		// Secret emblem thingy
 		case MT_EMBLEM:
 			{
-				if (demoplayback || (player->bot && player->bot != BOT_MPAI))
+				if (demoplayback || (player->bot && player->bot != BOT_MPAI) || special->health <= 0 || special->health > MAXEMBLEMS)
 					return;
 				emblemlocations[special->health-1].collected = true;
 
 				M_UpdateUnlockablesAndExtraEmblems();
-
 				G_SaveGameData();
 				break;
 			}
@@ -763,6 +762,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 //				return;
 			{
 				UINT8 flagteam = (special->type == MT_REDFLAG) ? 1 : 2;
+				sectorspecialflags_t specialflag = (special->type == MT_REDFLAG) ? SSF_REDTEAMBASE : SSF_BLUETEAMBASE;
 				const char *flagtext;
 				char flagcolor;
 				char plname[MAXPLAYERNAME+4];
@@ -792,7 +792,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 						special->fuse = 1;
 						special->flags2 |= MF2_JUSTATTACKED;
 
-						if (!P_PlayerTouchingSectorSpecial(player, 4, 2 + flagteam))
+						if (!P_PlayerTouchingSectorSpecialFlag(player, specialflag))
 						{
 							CONS_Printf(M_GetText("%s returned the %c%s%c to base.\n"), plname, flagcolor, flagtext, 0x80);
 
@@ -1381,19 +1381,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			return;
 		case MT_AXE:
 			{
-				line_t junk;
 				thinker_t  *th;
 				mobj_t *mo2;
 
 				if (player->bot && player->bot != BOT_MPAI)
 					return;
-					
-				// Initialize my junk
-				junk.tags.tags = NULL;
-				junk.tags.count = 0;
 
-				Tag_FSet(&junk.tags, LE_AXE);
-				EV_DoElevator(&junk, bridgeFall, false);
+				if (special->spawnpoint)
+					EV_DoElevator(special->spawnpoint->args[0], NULL, bridgeFall);
 
 				// scan the remaining thinkers to find koopa
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
@@ -1442,7 +1437,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 // Misc touchables //
 // *************** //
 		case MT_STARPOST:
-			P_TouchStarPost(special, player, special->spawnpoint && (special->spawnpoint->options & MTF_OBJECTSPECIAL));
+			P_TouchStarPost(special, player, special->spawnpoint && special->spawnpoint->args[1]);
 			return;
 
 		case MT_FAKEMOBILE:
@@ -1617,7 +1612,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 
 				if (special->tracer && !(special->tracer->flags2 & MF2_STRONGBOX))
 					macespin = true;
-				
+
 				if (macespin ? (player->powers[pw_ignorelatch] & (1<<15)) : (player->powers[pw_ignorelatch]))
 					return;
 
@@ -2776,7 +2771,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 
 		case MT_BLASTEXECUTOR:
 			if (target->spawnpoint)
-				P_LinedefExecute(target->spawnpoint->angle, (source ? source : inflictor), target->subsector->sector);
+				P_LinedefExecute(target->spawnpoint->args[0], (source ? source : inflictor), target->subsector->sector);
 			break;
 
 		case MT_SPINBOBERT:

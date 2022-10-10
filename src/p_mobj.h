@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2021 by Sonic Team Junior.
+// Copyright (C) 1999-2022 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -118,7 +118,7 @@ typedef enum
 	// Don't apply gravity (every tic); object will float, keeping current height
 	//  or changing it actively.
 	MF_NOGRAVITY        = 1<<9,
-	// This object is an ambient sound.
+	// This object is an ambient sound. Obsolete, but keep this around for backwards compatibility.
 	MF_AMBIENT          = 1<<10,
 	// Slide this object when it hits a wall.
 	MF_SLIDEME          = 1<<11,
@@ -253,7 +253,7 @@ typedef enum
 	MFE_FORCENOSUPER		= 1<<13,
 	// Makes an object use super sprites where they wouldn't have otherwise and vice-versa
 	MFE_REVERSESUPER		= MFE_FORCESUPER|MFE_FORCENOSUPER
-	
+
 	// free: to and including 1<<15
 } mobjeflag_t;
 

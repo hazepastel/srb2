@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2021 by Sonic Team Junior.
+// Copyright (C) 1999-2022 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -245,7 +245,8 @@ typedef enum
 	CR_MINECART,
 	CR_ROLLOUT,
 	CR_PTERABYTE,
-	CR_DUSTDEVIL
+	CR_DUSTDEVIL,
+	CR_FAN
 } carrytype_t; // pw_carry
 
 // Player powers. (don't edit this comment)
