@@ -9407,26 +9407,6 @@ static boolean P_MobjRegularThink(mobj_t *mobj)
 
 	switch (mobj->type)
 	{
-	case MT_WALLSPIKEBASE:
-		if (!mobj->target)
-		{
-			P_RemoveMobj(mobj);
-			return false;
-		}
-		mobj->frame = (mobj->frame & ~FF_FRAMEMASK)|(mobj->target->frame & FF_FRAMEMASK);
-#if 0
-		if (mobj->angle != mobj->target->angle + ANGLE_90) // reposition if not the correct angle
-		{
-			mobj_t* target = mobj->target; // shortcut
-			const fixed_t baseradius = target->radius - (target->scale/2); //FixedMul(FRACUNIT/2, target->scale);
-			P_UnsetThingPosition(mobj);
-			mobj->x = target->x - P_ReturnThrustX(target, target->angle, baseradius);
-			mobj->y = target->y - P_ReturnThrustY(target, target->angle, baseradius);
-			P_SetThingPosition(mobj);
-			mobj->angle = target->angle + ANGLE_90;
-		}
-#endif
-		break;
 	case MT_FALLINGROCK:
 		// Despawn rocks here in case zmovement code can't do so (blame slopes)
 		if (!mobj->momx && !mobj->momy && !mobj->momz
