@@ -10111,11 +10111,6 @@ static boolean P_FuseThink(mobj_t *mobj)
 		break;
 	case MT_METALSONIC_BATTLE:
 		break; // don't remove
-	case MT_SPIKE:
-	case MT_WALLSPIKE:
-		P_SetMobjState(mobj, mobj->state->nextstate);
-		mobj->fuse = mobj->spawnpoint ? mobj->spawnpoint->args[0] : mobj->info->speed;
-		break;
 	case MT_NIGHTSCORE:
 		P_RemoveMobj(mobj);
 		return false;
@@ -13140,15 +13135,12 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 	case MT_SPIKE:
 		// Pop up spikes!
 		if (mthing->args[0])
-		{
-			mobj->flags &= ~MF_SCENERY;
 			mobj->fuse = mthing->args[1];
-		}
 		else
 			mobj->flags |= MF_HYBRID;
 		if (mthing->args[2] & TMSF_RETRACTED)
 			P_SetMobjState(mobj, mobj->info->meleestate);
-		// no collision for spikes if the ambush flag is checked
+		// no collision for spikes if the intangible flag is checked
 		if ((mthing->args[2] & TMSF_INTANGIBLE) || metalrecording)
 		{
 			P_UnsetThingPosition(mobj);
@@ -13160,21 +13152,12 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 	case MT_WALLSPIKE:
 		// Pop up spikes!
 		if (mthing->args[0])
-		{
-			mobj->flags &= ~MF_SCENERY;
 			mobj->fuse = mthing->args[1];
-		}
+		else
+			mobj->flags |= MF_HYBRID;
 		if (mthing->args[2] & TMSF_RETRACTED)
 			P_SetMobjState(mobj, mobj->info->meleestate);
-		// Use per-thing collision for spikes unless the intangible flag is checked.
-		if (!(mthing->args[2] & TMSF_INTANGIBLE) && !metalrecording)
-			mobj->fuse = (16 - mthing->extrainfo)*((mthing->angle/360) + mobj->info->speed)/16;
-			if (mthing->options & MTF_EXTRA)
-				P_SetMobjState(mobj, mobj->info->meleestate);
-		}
-		else
-			mobj->flags |= MF_NOTHINK;
-		// no collision for spikes if the ambush flag is checked
+		// no collision for spikes if the intangible flag is checked
 		if ((mthing->args[2] & TMSF_INTANGIBLE || metalrecording)
 		{
 			P_UnsetThingPosition(mobj);
