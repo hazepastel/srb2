@@ -13158,7 +13158,7 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 		if (mthing->args[2] & TMSF_RETRACTED)
 			P_SetMobjState(mobj, mobj->info->meleestate);
 		// no collision for spikes if the intangible flag is checked
-		if ((mthing->args[2] & TMSF_INTANGIBLE || metalrecording)
+		if ((mthing->args[2] & TMSF_INTANGIBLE) || metalrecording)
 		{
 			P_UnsetThingPosition(mobj);
 			mobj->flags |= (MF_NOBLOCKMAP|MF_NOCLIPHEIGHT);
