@@ -2292,19 +2292,10 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 			{
 				if (dorollstuff)
 				{
-					if ((player->cmd.buttons & BT_SPIN) && (FixedHypot(player->mo->momx, player->mo->momy) > (5*player->mo->scale)))
-					{
-						player->pflags = (player->pflags|PF_SPINNING) & ~PF_THOKKED & ~PF_GLIDING;
-						P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
-						S_StartSound(player->mo, sfx_spin);
-					}
-					else
-					{
-						player->skidtime = TICRATE;
-						P_SetPlayerMobjState(player->mo, S_PLAY_GLIDE);
-						P_SpawnSkidDust(player, player->mo->radius, true); // make sure the player knows they landed
-						player->mo->tics = -1;
-					}
+					player->skidtime = TICRATE;
+					P_SetPlayerMobjState(player->mo, S_PLAY_GLIDE);
+					P_SpawnSkidDust(player, player->mo->radius, true); // make sure the player knows they landed
+					player->mo->tics = -1;
 				}
 				else if (!player->skidtime)
 					player->pflags &= ~PF_GLIDING;
@@ -4289,7 +4280,6 @@ void P_DoJump(player_t *player, boolean soundandstate)
 {
 #define default 37*(FRACUNIT/5)
 	fixed_t factor;
-	fixed_t startingz = P_MobjFlip(player->mo)*player->mo->momz;
 	const fixed_t dist6 = FixedMul(FixedDiv(player->speed, player->mo->scale), player->actionspd)/20;
 
 	if (player->pflags & PF_JUMPSTASIS)
@@ -4297,9 +4287,6 @@ void P_DoJump(player_t *player, boolean soundandstate)
 
 	if (!player->jumpfactor)
 		return;
-	
-	if (player->pflags & PF_BOUNCING)
-		startingz = 0;
 
 	if (player->climbing)
 	{
@@ -4410,16 +4397,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			}
 		}
 		else
-		{
 			player->mo->momz = default; // Default jump momentum.
-			if (player->charability == CA_JUMPBOOST && onground)
-			{
-				if (player->charflags & SF_MULTIABILITY)
-					player->mo->momz += FixedMul(FRACUNIT/4, dist6);
-				else
-					player->mo->momz += FixedMul(FRACUNIT/8, dist6);
-			}
-		}
 
 		// Reduce player momz by 58.5% when underwater.
 		if (player->mo->eflags & MFE_UNDERWATER)
@@ -4433,7 +4411,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 	if (player->charflags & SF_MULTIABILITY && player->charability == CA_DOUBLEJUMP && (player->actionspd >> FRACBITS) != -1)
 		factor -= max(0, player->secondjump * player->jumpfactor / ((player->actionspd >> FRACBITS) + 1)); // Reduce the jump height each time
 
-	P_SetObjectMomZ(player->mo, max(startingz, FixedMul(factor, player->mo->momz)), false); // Custom height
+	P_SetObjectMomZ(player->mo, FixedMul(factor, player->mo->momz), false); // Custom height
 
 	// set just an eensy above the ground
 	if (player->mo->eflags & MFE_VERTICALFLIP)
@@ -5272,6 +5250,10 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 							player->pflags |= PF_THOKKED;
 						else
 							player->pflags |= (PF_THOKKED|PF_CANCARRY);
+
+						if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
+							P_SetObjectMomZ(player->mo, 6<<FRACBITS, false);
+						player->fly1 = TICRATE/3;
 					}
 					break;
 				case CA_GLIDEANDCLIMB:
@@ -5664,8 +5646,8 @@ static void P_2dMovement(player_t *player)
 	{
 		acceleration = 600;
 
-		if (player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) // friction scaled acceleration
-			acceleration += FixedDiv(130<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+		if (player->mo->friction > ORIG_FRICTION) // friction scaled acceleration
+			acceleration /= 3;
 	}
 	else
 	{
@@ -5810,11 +5792,9 @@ static void P_3dMovement(player_t *player)
 		if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
 		&& (P_MobjFlip(player->mo)*player->mo->z) < oldz)
 			acceleration >>= 1;
-		else if (player->mo->friction > ORIG_FRICTION)
-			acceleration >>= 2;
 
-		if (player->mo->movefactor && (player->mo->movefactor < FRACUNIT)) // friction scaled acceleration
-			acceleration += FixedDiv(130<<FRACBITS, player->mo->movefactor)/FRACUNIT;
+		if (player->mo->friction > ORIG_FRICTION) // friction scaled acceleration
+			acceleration /= 3;
 	}
 	else
 	{
@@ -5871,7 +5851,7 @@ static void P_3dMovement(player_t *player)
 		if (player->pflags & PF_STARTDASH)
 			movepushforward = 0;
 		else if (spin)
-			movepushforward >>= 2;
+			movepushforward >>= 1;
 
 		movepushforward = FixedMul(movepushforward, player->mo->scale);
 
@@ -5903,7 +5883,7 @@ static void P_3dMovement(player_t *player)
 			if (player->pflags & PF_STARTDASH)
 				movepushside = 0;
 			else if (spin)
-				movepushside >>= 2;
+				movepushside >>= 1;
 
 			movepushsideangle = controldirection;
 
@@ -5920,7 +5900,7 @@ static void P_3dMovement(player_t *player)
 		if (player->pflags & PF_STARTDASH)
 			movepushside = 0;
 		else if (spin)
-			movepushside >>= 2;
+			movepushside >>= 1;
 
 		// Finally move the player now that their speed/direction has been decided.
 		movepushside = FixedMul(movepushside, player->mo->scale);
@@ -5966,6 +5946,8 @@ static void P_3dMovement(player_t *player)
 			fixed_t turnspd = FixedMul(3<<FRACBITS, player->mo->movefactor);
 			if (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2)
 				turnspd >>= 1;
+			else if (spin)
+				turnspd -= FRACUNIT>>1;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
 			else
@@ -8333,9 +8315,15 @@ void P_MovePlayer(player_t *player)
 				&& !player->spectator)
 				S_StartSound(player->mo, sfx_putput);
 
-			// Descend
-			if (cmd->buttons & BT_SPIN && !(player->fly1) && !(player->pflags & PF_STASIS) && !player->exiting && !(player->mo->eflags & MFE_GOOWATER))
-				player->mo->momz += P_GetMobjGravity(player->mo)/3;
+			// Flight cancel
+			if (cmd->buttons & BT_SPIN && !(player->fly1) && !(player->pflags & PF_SPINDOWN) && !(player->pflags & PF_STASIS) && !player->exiting)
+			{
+				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
+				player->powers[pw_tailsfly] = 0;
+				player->pflags |= PF_JUMPED;
+				if (P_MobjFlip(player->mo)*player->mo->momz > 0)
+					player->mo->momz = 0;
+			}
 		}
 		else
 		{
@@ -8354,12 +8342,12 @@ void P_MovePlayer(player_t *player)
 		}
 	}
 
-	// End your chain if you're on the ground or climbing a wall.
+	// End your chain if you're on the ground while not rolling, or climbing a wall.
 	// But not if invincible! Allow for some crazy long chains with it.
 	// Also keep in mind the PF_JUMPED check.
 	// If we lacked this, stepping up while jumping up would reset score.
 	// (for instance, when climbing up off a wall.)
-	if ((onground || player->climbing) && !(player->pflags & PF_JUMPED) && player->powers[pw_invulnerability] <= 1)
+	if (((onground  && !(player->pflags & PF_SPINNING)) || player->climbing) && !(player->pflags & PF_JUMPED) && !(player->pflags & PF_STARTDASH) && player->powers[pw_invulnerability] <= 1)
 		P_ResetScore(player);
 
 	// Show the "THOK!" graphic when spinning quickly across the ground. (even applies to non-spinners, in the case of zoom tubes)
@@ -12094,7 +12082,7 @@ void P_PlayerThink(player_t *player)
 		else if (notfloating) // Activate dash mode if we're on the ground.
 		{
 			if (player->normalspeed < FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) // If the player normalspeed is not currently at normalspeed*3/2 in dash mode, add speed each tic
-				player->normalspeed += FRACUNIT/12; // Enter Dash Mode smoothly.
+				player->normalspeed += FRACUNIT/9; // Enter Dash Mode smoothly.
 		}
 
 		if (dashmode == DASHMODE_MAX && player->speed > FixedMul(52<<FRACBITS, player->mo->scale))

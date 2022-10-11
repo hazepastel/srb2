@@ -137,6 +137,8 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 	UINT8 strong = 0;
 
 	vertispeed = vertispeed*19/16; //gravity adjustment
+	if (vertispeed && horizspeed)
+		horizspeed = horizspeed*19/16; //also buff this, but only for diagonals
 
 	// Object was already sprung this tic
 	if (object->eflags & MFE_SPRUNG)
@@ -289,8 +291,7 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-			if (spring->info->painchance == 0)
-				object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(vertispeed/FRACUNIT) : (TICRATE)+((horizspeed/3)/FRACUNIT);
+			object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
 			if (horizspeed)
 				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
 			else
@@ -520,6 +521,7 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 				P_ResetPlayer(p);
 				if (p->panim != PA_FALL)
 					P_SetPlayerMobjState(object, S_PLAY_FALL);
+				p->powers[pw_justsprung] = abs(speed)/FRACUNIT;
 			}
 			break;
 		default:

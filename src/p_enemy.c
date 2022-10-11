@@ -13502,7 +13502,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 		{ //Player on the top of the tornado.
 			P_ResetPlayer(player);
 			thing->z = dustdevil->z + dustdevil->height;
-			thrust = 21*FRACUNIT;
+			thrust = 23*FRACUNIT;
 			player->powers[pw_carry] = CR_NONE;
 			player->powers[pw_nocontrol] = 0;
 			P_SetTarget(&thing->tracer, NULL);
