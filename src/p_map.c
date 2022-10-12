@@ -291,7 +291,8 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-			object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
+			if (spring->info->painchance != 3)
+				object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
 			if (horizspeed)
 				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
 			else

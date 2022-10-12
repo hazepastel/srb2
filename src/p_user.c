@@ -2500,7 +2500,7 @@ static boolean P_PlayerCanBust(player_t *player, ffloor_t *rover)
 	case BT_TOUCH: // Shatters on contact
 		return true;
 	case BT_SPINBUST: // Can be busted by spinning (either from jumping or spindashing)
-		if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_STARTDASH))
+		if (player->pflags & PF_SPINNING)
 			return true;
 
 		if ((player->pflags & PF_JUMPED) && !(player->pflags & PF_NOJUMPDAMAGE))
@@ -2508,8 +2508,8 @@ static boolean P_PlayerCanBust(player_t *player, ffloor_t *rover)
 
 		/* FALLTHRU */
 	case BT_REGULAR:
-		// Spinning (and not jumping)
-		if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_JUMPED))
+		// Spinning
+		if (player->pflags & PF_SPINNING)
 			return true;
 
 		// Passive wall breaking
@@ -5243,7 +5243,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					{
 						P_SetPlayerMobjState(player->mo, S_PLAY_FLY); // Change to the flying animation
 
-						player->powers[pw_tailsfly] = (player->bot) ? 3*TICRATE : 4*TICRATE; // Set the fly timer
+						player->powers[pw_tailsfly] = TICRATE*24/7; // Set the fly timer
 
 						player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE|PF_SPINNING|PF_STARTDASH);
 						if (player->bot == BOT_2PAI)
@@ -5704,10 +5704,10 @@ static void P_2dMovement(player_t *player)
 			P_Thrust(player->mo, movepushangle, movepushforward);
 
 		if (P_XYFriction(player->mo, oldz) && (((player->rmomx < 0) && (cmd->sidemove > 0)) || ((player->rmomx > 0) && (cmd->sidemove < 0))))
-			player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FRACUNIT*3/2 : FRACUNIT/2);
+			player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FixedMul(FRACUNIT*3/2, player->mo->scale) : FixedMul(FRACUNIT/2, player->mo->scale));
 	}
 	else if (cmd->sidemove == 0 && player->rmomx && P_XYFriction(player->mo, oldz))
-		player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FRACUNIT*3/2 : FRACUNIT/2);
+		player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FixedMul(FRACUNIT*3/2, player->mo->scale) : FixedMul(FRACUNIT/2, player->mo->scale));
 
 	oldz = player->mo->z;
 	player->mo->friction = ORIG_FRICTION;
@@ -5970,8 +5970,8 @@ static void P_3dMovement(player_t *player)
 
 		deceleration = min(deceleration, player->speed);
 		//Get deceleration vector
-		dx = -P_ReturnThrustX(player->mo, moveangle, deceleration);
-		dy = -P_ReturnThrustY(player->mo, moveangle, deceleration);		
+		dx = -P_ReturnThrustX(player->mo, moveangle, FixedMul(deceleration, player->mo->scale));
+		dy = -P_ReturnThrustY(player->mo, moveangle, FixedMul(deceleration, player->mo->scale));		
 		//Apply thrust vector
 		if (totalthrust.x || totalthrust.y)
 		{
@@ -8298,9 +8298,9 @@ void P_MovePlayer(player_t *player)
 				if (player->speed > FixedMul(flyspd, player->mo->scale))
 				{
 					if (player->mo->momx)
-						player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
+						player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FixedMul(FRACUNIT>>1, player->mo->scale));
 					if (player->mo->momy)
-						player->mo->momy -= P_ReturnThrustY(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FRACUNIT>>1);
+						player->mo->momy -= P_ReturnThrustY(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FixedMul(FRACUNIT>>1, player->mo->scale));
 				}
 				if (!player->powers[pw_super])
 					player->powers[pw_tailsfly]--;
