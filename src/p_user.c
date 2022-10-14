@@ -5818,7 +5818,7 @@ static void P_3dMovement(player_t *player)
 		acceleration = 470;
 
 	if (player->fly1)
-		topspeed = (player->powers[pw_super] || player->powers[pw_sneakers]) ? 10*normalspd/9 : 2*normalspd/3;
+		topspeed = 2*normalspd/3;
 
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
@@ -8288,8 +8288,6 @@ void P_MovePlayer(player_t *player)
 			if (player->fly1)
 			{
 				fixed_t flyspd = player->normalspeed*2/3;
-				if (player->powers[pw_super] || player->powers[pw_sneakers])
-					flyspd = player->normalspeed*10/9;
 
 				P_SetPlayerMobjState(player->mo, player->mo->state->nextstate);
 
