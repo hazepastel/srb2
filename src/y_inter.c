@@ -566,9 +566,9 @@ void Y_IntermissionDrawer(void)
 		{
 			if (LUA_HudEnabled(hud_intermissiontitletext))
 			{
-				const char *ringtext = "\x82" "50 rings, no shield";
-				const char *tut1text = "\x82" "press " "\x80" "spin";
-				const char *tut2text = "\x82" "mid-" "\x80" "jump";
+				const char *ringtext = "\x83" "get 50 rings";
+				const char *tut1text = "\x83" "press fire";
+				const char *tut2text = "\x83" "button";
 				ttheight = 8;
 				V_DrawLevelTitle(data.spec.passedx1 + xoffset1, ttheight, 0, data.spec.passed1);
 				ttheight += V_LevelNameHeight(data.spec.passed3) + 2;

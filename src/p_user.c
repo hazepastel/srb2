@@ -4248,6 +4248,8 @@ static void P_DoSuperStuff(player_t *player)
 			P_SpawnShieldOrb(player);
 		}
 	}
+	else if ((player->cmd.buttons & BT_ATTACK) && !(player->pflags & PF_ATTACKDOWN) && P_SuperReady(player))
+		P_DoSuperTransformation(player, false);
 }
 
 //
@@ -4260,9 +4262,9 @@ boolean P_SuperReady(player_t *player)
 	if (!player->powers[pw_super]
 	&& !player->powers[pw_invulnerability]
 	&& !player->powers[pw_tailsfly]
+	&& !player->powers[pw_carry]
 	&& (player->charflags & SF_SUPER)
-	&& (player->pflags & PF_JUMPED)
-	&& !(player->powers[pw_shield] & SH_NOSTACK)
+	&& !(player->pflags & PF_THOKKED)
 	&& !(maptol & TOL_NIGHTS)
 	&& ALL7EMERALDS(emeralds)
 	&& (player->rings >= 50))
@@ -5065,14 +5067,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		}
 		else if ((cmd->buttons & BT_SPIN))
 		{
-			if (!(player->pflags & PF_SPINDOWN) && P_SuperReady(player) && !(player->pflags & PF_THOKKED))
-			{
-				// If you can turn super and aren't already,
-				// and you don't have a shield, do it!
-				P_DoSuperTransformation(player, false);
-				return;
-			}
-			else if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
+			if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
 				switch (player->charability)
 				{
 					case CA_TELEKINESIS:
@@ -5784,7 +5779,7 @@ static void P_3dMovement(player_t *player)
 
 	// set player speeds
 	if (player->pflags & PF_SLIDING)
-		acceleration = 760;
+		acceleration = 550;
 	else if (onground)
 	{
 		acceleration = 1280;
@@ -5813,7 +5808,7 @@ static void P_3dMovement(player_t *player)
 	if (player->powers[pw_super] || player->powers[pw_sneakers])
 	{
 		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
-		acceleration += 120;
+		acceleration += 140;
 	}
 
 	topspeed = normalspd; //set normal top speed
@@ -5944,10 +5939,12 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(3<<FRACBITS, player->mo->movefactor);
+			if (spin)
+				turnspd -= FRACUNIT>>1;
+			else if (!onground)
+				turnspd -= FRACUNIT>>2;
 			if (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2)
 				turnspd >>= 1;
-			else if (spin)
-				turnspd -= FRACUNIT>>1;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
 			else
