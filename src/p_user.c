@@ -5637,13 +5637,13 @@ static void P_2dMovement(player_t *player)
 
 	// set player speeds
 	if (player->pflags & PF_SLIDING)
-		acceleration = 760;
+		acceleration = 990;
 	else if (onground)
 	{
 		acceleration = 600;
 
 		if (player->mo->friction > ORIG_FRICTION) // friction scaled acceleration
-			acceleration /= 3;
+			acceleration -= 200;
 	}
 	else
 	{
@@ -5662,7 +5662,7 @@ static void P_2dMovement(player_t *player)
 	if (player->powers[pw_super] || player->powers[pw_sneakers])
 	{
 		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
-		acceleration += 120;
+		acceleration += 140;
 	}
 
 	topspeed = normalspd; //set normal top speed
@@ -5671,7 +5671,7 @@ static void P_2dMovement(player_t *player)
 		acceleration = 470;
 
 	if (player->fly1)
-		topspeed = (player->powers[pw_super] || player->powers[pw_sneakers]) ? 10*normalspd/9 : 2*normalspd/3;
+		topspeed = 2*normalspd/3;
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
 		acceleration = 62;
@@ -5703,7 +5703,13 @@ static void P_2dMovement(player_t *player)
 			player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FixedMul(FRACUNIT*3/2, player->mo->scale) : FixedMul(FRACUNIT/2, player->mo->scale));
 	}
 	else if (cmd->sidemove == 0 && player->rmomx && P_XYFriction(player->mo, oldz))
-		player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground) ? FixedMul(FRACUNIT*3/2, player->mo->scale) : FixedMul(FRACUNIT/2, player->mo->scale));
+		player->mo->momx -= P_ReturnThrustX(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), (onground && (player->mo->friction <= ORIG_FRICTION)) ? FixedMul(FRACUNIT*3/2, player->mo->scale) : FixedMul(FRACUNIT/2, player->mo->scale));
+
+	if (player->rmomy && onground)
+	{
+		player->mo->momy = 0;
+		player->rmomy = 0;
+	}
 
 	oldz = player->mo->z;
 	player->mo->friction = ORIG_FRICTION;
@@ -5780,7 +5786,7 @@ static void P_3dMovement(player_t *player)
 
 	// set player speeds
 	if (player->pflags & PF_SLIDING)
-		acceleration = 550;
+		acceleration = 990;
 	else if (onground)
 	{
 		acceleration = 1280;
@@ -8042,15 +8048,13 @@ void P_MovePlayer(player_t *player)
 		player->pflags &= ~PF_BOUNCING;
 	}
 
-	// Glide MOMZ
-	// AKA my own gravity. =)
+	// glide stuff
 	if (player->pflags & PF_GLIDING)
 	{
-		mobj_t *mo = player->mo; // seriously why isn't this at the top of the function hngngngng
+		mobj_t *mo = player->mo;
 		fixed_t glidespeed = player->actionspd;
 		fixed_t momx = mo->momx - player->cmomx, momy = mo->momy - player->cmomy;
 		angle_t angle, moveangle = R_PointToAngle2(0, 0, momx, momy);
-		//boolean swimming = mo->state - states == S_PLAY_SWIM;
 		boolean in2d = mo->flags2 & MF2_TWOD || twodlevel;
 
 		if (player->powers[pw_super] || player->powers[pw_sneakers])
@@ -8097,7 +8101,7 @@ void P_MovePlayer(player_t *player)
 				speed = FixedMul(glidespeed + timefactor, scale);
 				P_InstaThrust(mo, angle, speed);
 			}
-			else //if (swimming)
+			else
 			{
 				fixed_t minspeed;
 
@@ -8106,7 +8110,7 @@ void P_MovePlayer(player_t *player)
 				else
 					anglediff = anglediff >> 3;
 
-				minspeed = FixedMul(glidespeed + timefactor, scale); // underwater-specific
+				minspeed = FixedMul(glidespeed + timefactor, scale);
 				speed = FixedHypot(momx, momy) - abs(P_ReturnThrustY(mo, anglediff, mo->scale));
 
 				if (speed < minspeed)
@@ -8119,38 +8123,6 @@ void P_MovePlayer(player_t *player)
 				mo->momx = P_ReturnThrustX(mo, moveangle + anglediff, speed) + player->cmomx;
 				mo->momy = P_ReturnThrustY(mo, moveangle + anglediff, speed) + player->cmomy;
 			}
-			/*else
-			{
-				fixed_t newMagnitude, oldMagnitude = R_PointToDist2(momx, momy, 0, 0);
-
-				speed = FixedMul(glidespeed + timefactor, scale);
-
-				P_Thrust(mo, angle, FixedMul(accelfactor, scale));
-
-				newMagnitude = R_PointToDist2(player->mo->momx - player->cmomx, player->mo->momy - player->cmomy, 0, 0);
-				if (newMagnitude > speed)
-				{
-					fixed_t tempmomx, tempmomy;
-					if (oldMagnitude > speed)
-					{
-						if (newMagnitude > oldMagnitude)
-						{
-							tempmomx = FixedMul(FixedDiv(player->mo->momx - player->cmomx, newMagnitude), oldMagnitude);
-							tempmomy = FixedMul(FixedDiv(player->mo->momy - player->cmomy, newMagnitude), oldMagnitude);
-							player->mo->momx = tempmomx + player->cmomx;
-							player->mo->momy = tempmomy + player->cmomy;
-						}
-						// else do nothing
-					}
-					else
-					{
-						tempmomx = FixedMul(FixedDiv(player->mo->momx - player->cmomx, newMagnitude), speed);
-						tempmomy = FixedMul(FixedDiv(player->mo->momy - player->cmomy, newMagnitude), speed);
-						player->mo->momx = tempmomx + player->cmomx;
-						player->mo->momy = tempmomy + player->cmomy;
-					}
-				}
-			}*/
 		}
 
 		player->glidetime++;

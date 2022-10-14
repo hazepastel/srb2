@@ -1065,6 +1065,7 @@ boolean F_IntroResponder(event_t *event)
 // =========
 static const char *credits[] = {
 	"\1Sonic Robo Blast 2",
+	"\1rphys edition",
 	"\1Credits",
 	"",
 	"\1Game Design",
@@ -1081,6 +1082,7 @@ static const char *credits[] = {
 	"Sally \"TehRealSalt\" Cochenour",
 	"Gregor \"Oogaland\" Dick",
 	"Callum Dickinson",
+	"Shane \"CobaltBW\" Ellis",
 	"Scott \"Graue\" Feeney",
 	"Victor \"SteelT\" Fuentes",
 	"Nathan \"Jazz\" Giroux",
@@ -1093,7 +1095,7 @@ static const char *credits[] = {
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"\"Kaito Sinclaire\"",
 	"\"Kalaron\"", // Coded some of Sryder13's collection of OpenGL fixes, especially fog
-	"Ronald \"Furyhunter\" Kinard", // The SDL2 port
+	"Ronald \"Eidolon\" Kinard", // The SDL2 port, uncapped
 	"\"Lat'\"", // SRB2-CHAT, the chat window from Kart
 	"\"LZA\"",
 	"Matthew \"Shuffle\" Marsalko",
@@ -1108,6 +1110,7 @@ static const char *credits[] = {
 	"Tasos \"tatokis\" Sahanidis", // Corrected C FixedMul, making 64-bit builds netplay compatible
 	"Riku \"Ors\" Salminen", // Demo consistency improvements
 	"Jonas \"MascaraSnake\" Sauer",
+	"Fainche \"katsy\" Shear",
 	"Wessel \"sphere\" Smit",
 	"\"SSNTails\"",
 	"\"Varren\"",
@@ -1138,6 +1141,7 @@ static const char *credits[] = {
 	"Kepa \"Nev3r\" Iceta",
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"William \"GuyWithThePie\" Kloppenberg",
+	"\"Krabs\"",
 	"Alice \"Alacroix\" de Lemos",
 	"Logan \"Hyperchaotix\" McCloud",
 	"Alexander \"DrTapeworm\" Moench-Ford",
@@ -1148,6 +1152,7 @@ static const char *credits[] = {
 	"Wessel \"sphere\" Smit",
 	"David \"Instant Sonic\" Spencer Jr.",
 	"\"SSNTails\"",
+	"\"SuperPhanto\""
 	"Daniel \"Inazuma\" Trinh",
 	"\"VelocitOni\"",
 	"Jarrett \"JEV3\" Voight",
@@ -1441,9 +1446,6 @@ boolean F_CreditResponder(event_t *event)
 			key = KEY_RIGHTARROW;
 			break;
 	}
-
-	if (!(timesBeaten) && !(netgame || multiplayer) && !cv_debug)
-		return false;
 
 	if (event->type != ev_keydown)
 		return false;
