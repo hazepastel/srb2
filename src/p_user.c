@@ -2520,6 +2520,10 @@ static boolean P_PlayerCanBust(player_t *player, ffloor_t *rover)
 		if (player->powers[pw_super])
 			return true;
 
+		// Flame shield
+		if ((player->pflags & PF_SHIELDABILITY) && ((player->powers[pw_shield] & SH_NOSTACK) == SH_FLAMEAURA))
+			return true;
+
 		// Dashmode
 		if ((player->charflags & (SF_DASHMODE|SF_MACHINE)) == (SF_DASHMODE|SF_MACHINE) && player->dashmode >= DASHMODE_THRESHOLD)
 			return true;
@@ -4988,7 +4992,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 						case SH_BUBBLEWRAP:
 							{
 								boolean elem = ((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL);
-								player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+								player->pflags |= PF_JUMPED|PF_THOKKED|PF_SHIELDABILITY;
 								if (elem)
 								{
 									player->mo->momx = player->mo->momy = 0;
@@ -5008,7 +5012,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 							}
 						// Flame burst
 						case SH_FLAMEAURA:
-							player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+							player->pflags |= PF_JUMPED|PF_THOKKED|PF_SHIELDABILITY;
 							P_Thrust(player->mo, player->mo->angle, max(FixedMul(45<<FRACBITS, player->mo->scale)-player->speed, FixedMul((45<<FRACBITS) - FixedSqrt(FixedDiv(player->speed*20, player->mo->scale)), player->mo->scale)));
 							player->drawangle = player->mo->angle;
 							player->pflags &= ~PF_NOJUMPDAMAGE;
@@ -5059,13 +5063,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		else if (player->pflags & (PF_GLIDING|PF_SLIDING|PF_SHIELDABILITY)) // If the player has used an ability previously
 			;
 		else if (P_PlayerShieldThink(player, cmd, lockonthok, visual))
-		{
-			if (!(player->pflags & PF_JUMPED) && (player->powers[pw_justsprung]) && !(player->pflags & PF_THOKKED))
-			{
-				player->powers[pw_justsprung] = 0;
-				player->pflags |= P_GetJumpFlags(player);
-			}
-		}
+			player->pflags |= PF_JUMPED;
 		else if ((cmd->buttons & BT_SPIN))
 		{
 			if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
