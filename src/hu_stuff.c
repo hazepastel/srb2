@@ -852,7 +852,7 @@ void HU_Ticker(void)
 	hu_tick++;
 	hu_tick &= 7; // currently only to blink chat input cursor
 
-	if (PLAYER1INPUTDOWN(GC_SCORES))
+	if (G_PlayerInputDown(0, GC_SCORES))
 		hu_showscores = !chat_on;
 	else
 		hu_showscores = false;
@@ -1015,26 +1015,6 @@ boolean HU_Responder(event_t *ev)
 		return false;
 
 	// only KeyDown events now...
-
-	/*// Shoot, to prevent P1 chatting from ruining the game for everyone else, it's either:
-	// A. completely disallow opening chat entirely in online splitscreen
-	// or B. iterate through all controls to make sure it's bound to player 1 before eating
-	// You can see which one I chose.
-	// (Unless if you're sharing a keyboard, since you probably establish when you start chatting that you have dibs on it...)
-	// (Ahhh, the good ol days when I was a kid who couldn't afford an extra USB controller...)
-
-	if (ev->key >= KEY_MOUSE1)
-	{
-		INT32 i;
-		for (i = 0; i < NUM_GAMECONTROLS; i++)
-		{
-			if (gamecontrol[i][0] == ev->key || gamecontrol[i][1] == ev->key)
-				break;
-		}
-
-		if (i == NUM_GAMECONTROLS)
-			return false;
-	}*/	//We don't actually care about that unless we get splitscreen netgames. :V
 
 	c = (INT32)ev->key;
 
@@ -1288,7 +1268,7 @@ static void HU_drawMiniChat(void)
 
 				V_DrawChatCharacter(x + dx + 2, y+dy, msg[j] |V_SNAPTOBOTTOM|V_SNAPTOLEFT|V_MONOSPACE|transflag, true, colormap);
 				dx += charwidth;
-				
+
 				if (dx >= boxw-charwidth-2)
 				{
 					dx = 0;
@@ -1539,9 +1519,9 @@ static void HU_DrawChat(void)
 				else if ((n == 1) && !(w_chat[3] == '0') && (!((i == 1) || ((i >= 10) && (i <= 19)))))
 					continue;
 				else if ((n == 2) && !(w_chat[3] == '0') && (!((i == 2) || ((i >= 20) && (i <= 29)))))
-					continue; 
+					continue;
 				else if ((n == 3) && !(w_chat[3] == '0') && (!((i == 3) || ((i >= 30) && (i <= 31)))))
-					continue; 
+					continue;
 				else	// general case.
 					if (i != n) continue;
 			}
