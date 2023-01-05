@@ -465,7 +465,6 @@ typedef struct player_s
 	tic_t exiting; // Exitlevel timer
 
 	UINT8 homing; // Are you homing?
-	fixed_t shieldactive; // for holding shield related values
 	tic_t dashmode; // counter for dashmode ability
 
 	tic_t skidtime; // Skid timer

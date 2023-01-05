@@ -1096,7 +1096,6 @@ void P_ResetPlayer(player_t *player)
 	player->powers[pw_tailsfly] = 0;
 	player->onconveyor = 0;
 	player->skidtime = 0;
-	player->shieldactive = 0;
 	player->fly1 = 0;
 	if (player-players == consoleplayer && botingame)
 		CV_SetValue(&cv_analog[1], true);
@@ -1905,7 +1904,6 @@ void P_SwitchShield(player_t *player, UINT16 shieldtype)
 		{
 			player->pflags &= ~(PF_SPINNING|PF_SHIELDABILITY); // They'll still have PF_THOKKED...
 			player->homing = 0;
-			player->shieldactive = 0;
 		}
 
 		player->powers[pw_shield] = shieldtype|(player->powers[pw_shield] & SH_STACK);
@@ -4953,8 +4951,8 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 			// Force stop
 			if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE)
 			{
-				player->shieldactive = FixedHypot(player->rmomx, player->rmomy)+1;
 				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+				player->mo->momx = player->mo->momy = player->mo->momz = 0;
 				S_StartSound(player->mo, sfx_ngskid);
 			}
 			else
@@ -5332,22 +5330,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 				default:
 					break;
 			}
-		}
-	}
-
-	// Force stop pt2
-	if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE
-	&& player->shieldactive)
-	{
-		if (player->pflags & PF_SHIELDABILITY && cmd->buttons & BT_SPIN)
-		{
-			player->mo->momx = player->mo->momy = player->mo->momz = 0;
-			player->mo->angle = player->drawangle = cmd->angleturn<<16;
-		}
-		else
-		{
-			P_Thrust(player->mo, player->mo->angle, player->shieldactive);
-			player->shieldactive = 0;
 		}
 	}
 
