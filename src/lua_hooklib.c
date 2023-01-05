@@ -14,6 +14,7 @@
 #include "doomstat.h"
 #include "p_mobj.h"
 #include "g_game.h"
+#include "g_input.h"
 #include "r_skins.h"
 #include "b_bot.h"
 #include "z_zone.h"
@@ -641,7 +642,29 @@ int LUA_HookKey(event_t *event, int hook_type)
 	return hook.status;
 }
 
-void LUA_HookHUD(int hook_type)
+int  LUA_HookGamepadButton(event_t *event, int hook_type)
+{
+	Hook_State hook;
+	if (prepare_hook(&hook, false, hook_type))
+	{
+		LUA_PushUserdata(gL, &gamepads[event->which], META_GAMEPAD);
+		lua_pushstring(gL, gamepad_button_names[event->key]);
+		call_hooks(&hook, 1, res_true);
+	}
+	return hook.status;
+}
+
+void LUA_HookGamepadEvent(UINT8 which, int hook_type)
+{
+	Hook_State hook;
+	if (prepare_hook(&hook, 0, hook_type))
+	{
+		LUA_PushUserdata(gL, &gamepads[which], META_GAMEPAD);
+		call_hooks(&hook, 0, res_none);
+	}
+}
+
+void LUA_HookHUD(int hook_type, huddrawlist_h list)
 {
 	const hook_t * map = &hudHookIds[hook_type];
 	Hook_State hook;
@@ -650,12 +673,15 @@ void LUA_HookHUD(int hook_type)
 		start_hook_stack();
 		begin_hook_values(&hook);
 
-		LUA_SetHudHook(hook_type);
+		LUA_SetHudHook(hook_type, list);
 
 		hud_running = true; // local hook
 		init_hook_call(&hook, 0, res_none);
 		call_mapped(&hook, map);
 		hud_running = false;
+
+		lua_pushnil(gL);
+		lua_setfield(gL, LUA_REGISTRYINDEX, "HUD_DRAW_LIST");
 	}
 }
 
