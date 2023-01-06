@@ -159,7 +159,9 @@ typedef enum
 	MF_GRENADEBOUNCE    = 1<<28,
 	// Run the action thinker on spawn.
 	MF_RUNSPAWNFUNC     = 1<<29,
-	// free: 1<<30 and 1<<31
+	// Hybrid thinker: delayed netsafe MF_NOTHINK which shuts it thinker off if the object is not in motion
+	MF_HYBRID           = 1<<30,
+	// free: 1<<31
 } mobjflag_t;
 
 typedef enum
@@ -358,6 +360,8 @@ typedef struct mobj_s
 	INT32 reactiontime; // If not 0, don't attack yet.
 
 	INT32 threshold; // If >0, the target will be chased no matter what.
+
+	INT8 hybridtics; // Tics spent in hyrbid thinker state
 
 	// Additional info record for player avatars only.
 	// Only valid if type == MT_PLAYER

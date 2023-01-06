@@ -7831,6 +7831,48 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 		if (P_MobjFlip(mobj)*mobj->momz < mobj->info->speed)
 			mobj->momz = P_MobjFlip(mobj)*mobj->info->speed;
 		break;
+	case MT_SPIKE:
+		if (mobj->fuse)
+		{
+			mobj->fuse--;
+			break;
+		}
+		P_SetMobjState(mobj, mobj->state->nextstate);
+		mobj->fuse = mobj->info->speed;
+		if (mobj->spawnpoint)
+			mobj->fuse += mobj->spawnpoint->angle;
+		break;
+	case MT_WALLSPIKE:
+		if (mobj->fuse)
+		{
+			mobj->fuse--;
+			break;
+		}
+		P_SetMobjState(mobj, mobj->state->nextstate);
+		mobj->fuse = mobj->info->speed;
+		if (mobj->spawnpoint)
+			mobj->fuse += (mobj->spawnpoint->angle / 360);
+		break;
+	case MT_WALLSPIKEBASE:
+		if (!mobj->target)
+		{
+			P_RemoveMobj(mobj);
+			return;
+		}
+		mobj->frame = (mobj->frame & ~FF_FRAMEMASK)|(mobj->target->frame & FF_FRAMEMASK);
+#if 0
+		if (mobj->angle != mobj->target->angle + ANGLE_90) // reposition if not the correct angle
+		{
+			mobj_t* target = mobj->target; // shortcut
+			const fixed_t baseradius = target->radius - (target->scale/2); //FixedMul(FRACUNIT/2, target->scale);
+			P_UnsetThingPosition(mobj);
+			mobj->x = target->x - P_ReturnThrustX(target, target->angle, baseradius);
+			mobj->y = target->y - P_ReturnThrustY(target, target->angle, baseradius);
+			P_SetThingPosition(mobj);
+			mobj->angle = target->angle + ANGLE_90;
+		}
+#endif
+		break;
 	case MT_ROCKCRUMBLE1:
 	case MT_ROCKCRUMBLE2:
 	case MT_ROCKCRUMBLE3:
@@ -9343,26 +9385,6 @@ static boolean P_MobjRegularThink(mobj_t *mobj)
 
 	switch (mobj->type)
 	{
-	case MT_WALLSPIKEBASE:
-		if (!mobj->target)
-		{
-			P_RemoveMobj(mobj);
-			return false;
-		}
-		mobj->frame = (mobj->frame & ~FF_FRAMEMASK)|(mobj->target->frame & FF_FRAMEMASK);
-#if 0
-		if (mobj->angle != mobj->target->angle + ANGLE_90) // reposition if not the correct angle
-		{
-			mobj_t* target = mobj->target; // shortcut
-			const fixed_t baseradius = target->radius - (target->scale/2); //FixedMul(FRACUNIT/2, target->scale);
-			P_UnsetThingPosition(mobj);
-			mobj->x = target->x - P_ReturnThrustX(target, target->angle, baseradius);
-			mobj->y = target->y - P_ReturnThrustY(target, target->angle, baseradius);
-			P_SetThingPosition(mobj);
-			mobj->angle = target->angle + ANGLE_90;
-		}
-#endif
-		break;
 	case MT_FALLINGROCK:
 		// Despawn rocks here in case zmovement code can't do so (blame slopes)
 		if (!mobj->momx && !mobj->momy && !mobj->momz
@@ -10047,11 +10069,6 @@ static boolean P_FuseThink(mobj_t *mobj)
 		break;
 	case MT_METALSONIC_BATTLE:
 		break; // don't remove
-	case MT_SPIKE:
-	case MT_WALLSPIKE:
-		P_SetMobjState(mobj, mobj->state->nextstate);
-		mobj->fuse = mobj->spawnpoint ? mobj->spawnpoint->args[0] : mobj->info->speed;
-		break;
 	case MT_NIGHTSCORE:
 		P_RemoveMobj(mobj);
 		return false;
@@ -10160,6 +10177,33 @@ void P_MobjThinker(mobj_t *mobj)
 				// fade out when nearing the end of fuse...
 				mobj->frame = (mobj->frame & ~FF_TRANSMASK) | (((NUMTRANSMAPS-1) - mobj->fuse / 2) << FF_TRANSSHIFT);
 		}
+	}
+
+	// Hybrid thinker
+	if (mobj->flags & MF_HYBRID)
+	{
+		if (!mobj->hybridtics)
+		{
+			// If we're placed over a deathpit, we want our thinker to stay on
+			if ((GETSECSPECIAL(mobj->subsector->sector->special, 1) == 6) || (GETSECSPECIAL(mobj->subsector->sector->special, 1) == 7))
+			{
+				mobj->flags &= ~MF_HYBRID;
+				return;
+			}
+			else
+				mobj->hybridtics = TICRATE;
+		}
+		// Count down only when not moving
+		if (!mobj->momx && !mobj->momy && !mobj->momz) 
+			mobj->hybridtics -= 1;
+		if (mobj->hybridtics == 1)
+		{
+			mobj->hybridtics = 0;
+			mobj->flags |= MF_NOTHINK;
+			return;
+		}
+		P_SceneryThinker(mobj);
+		return;
 	}
 
 	// Special thinker for scenery objects
@@ -13057,36 +13101,34 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 	case MT_SPIKE:
 		// Pop up spikes!
 		if (mthing->args[0])
-		{
-			mobj->flags &= ~MF_SCENERY;
 			mobj->fuse = mthing->args[1];
-		}
+		else
+			mobj->flags |= MF_HYBRID;
 		if (mthing->args[2] & TMSF_RETRACTED)
 			P_SetMobjState(mobj, mobj->info->meleestate);
-		// Use per-thing collision for spikes unless the intangible flag is checked.
-		if (!(mthing->args[2] & TMSF_INTANGIBLE) && !metalrecording)
+		// no collision for spikes if the intangible flag is checked
+		if ((mthing->args[2] & TMSF_INTANGIBLE) || metalrecording)
 		{
 			P_UnsetThingPosition(mobj);
-			mobj->flags &= ~(MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIPHEIGHT);
-			mobj->flags |= MF_SOLID;
+			mobj->flags |= (MF_NOBLOCKMAP|MF_NOCLIPHEIGHT);
+			mobj->flags &= ~MF_SOLID;
 			P_SetThingPosition(mobj);
 		}
 		break;
 	case MT_WALLSPIKE:
 		// Pop up spikes!
 		if (mthing->args[0])
-		{
-			mobj->flags &= ~MF_SCENERY;
 			mobj->fuse = mthing->args[1];
-		}
+		else
+			mobj->flags |= MF_HYBRID;
 		if (mthing->args[2] & TMSF_RETRACTED)
 			P_SetMobjState(mobj, mobj->info->meleestate);
-		// Use per-thing collision for spikes unless the intangible flag is checked.
-		if (!(mthing->args[2] & TMSF_INTANGIBLE) && !metalrecording)
+		// no collision for spikes if the intangible flag is checked
+		if ((mthing->args[2] & TMSF_INTANGIBLE) || metalrecording)
 		{
 			P_UnsetThingPosition(mobj);
-			mobj->flags &= ~(MF_NOBLOCKMAP | MF_NOCLIPHEIGHT);
-			mobj->flags |= MF_SOLID;
+			mobj->flags |= (MF_NOBLOCKMAP|MF_NOCLIPHEIGHT);
+			mobj->flags &= ~MF_SOLID;
 			P_SetThingPosition(mobj);
 		}
 		// spawn base
@@ -13102,6 +13144,8 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 			P_SetScale(base, mobj->scale);
 			P_SetTarget(&base->target, mobj);
 			P_SetTarget(&mobj->tracer, base);
+			if (!(mthing->options & MTF_OBJECTSPECIAL))
+				base->flags |= MF_NOTHINK;
 		}
 		break;
 	case MT_RING_BOX:
