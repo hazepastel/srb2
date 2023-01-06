@@ -8466,10 +8466,6 @@ static void M_DrawLoadGameData(void)
 			{
 				if (savegameinfo[savetodraw].lives == -42)
 					col = 26;
-				else if (savegameinfo[savetodraw].botskin == 3) // & knuckles
-					col = 105;
-				else if (savegameinfo[savetodraw].botskin) // tailsbot or custom
-					col = 134;
 				else
 				{
 					if (charskin->prefoppositecolor)

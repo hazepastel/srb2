@@ -2328,7 +2328,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 				}
 			}
 			else if (player->charability2 == CA2_MELEE
-				&& ((player->panim == PA_ABILITY2) || (player->charability == CA_TWINSPIN && player->panim == PA_ABILITY && player->cmd.buttons & (BT_JUMP|BT_SPIN))))
+				&& ((player->panim == PA_ABILITY2) || (player->charability == CA_TWINSPIN && player->panim == PA_ABILITY)))
 			{
 				if (player->mo->state-states != S_PLAY_MELEE_LANDING)
 				{
@@ -4436,7 +4436,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			player->mo->momz = default<<1;
 		else if (player->powers[pw_super] && !(player->charflags & SF_NOSUPERJUMPBOOST))
 		{
-			player->mo->momz = default*5/3;
+			player->mo->momz = default*4/3;
 
 			// Add a boost for super characters with float/slowfall and multiability.
 			if (player->charability == CA_JUMPBOOST)

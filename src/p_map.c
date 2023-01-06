@@ -162,8 +162,7 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 	UINT8 strong = 0;
 
 	vertispeed = vertispeed*19/16; //gravity adjustment
-	if (vertispeed && horizspeed)
-		horizspeed = horizspeed*19/16; //also buff this, but only for diagonals
+	horizspeed = horizspeed*19/16;
 
 	// Object was already sprung this tic
 	if (object->eflags & MFE_SPRUNG)
