@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -22,9 +22,9 @@
 #include "v_video.h" // video flags (for lua)
 #include "i_sound.h" // musictype_t (for lua)
 #include "g_state.h" // gamestate_t (for lua)
-#include "g_game.h" // Gamepad axes (for lua)
+#include "g_game.h" // Joystick axes (for lua)
+#include "i_joy.h"
 #include "g_input.h" // Game controls (for lua)
-#include "i_gamepad.h"
 
 #include "deh_tables.h"
 
@@ -4841,7 +4841,7 @@ const char *const MENUTYPES_LIST[] = {
 	"OP_CHANGECONTROLS", // OP_ChangeControlsDef shared with P2
 	"OP_P1MOUSE",
 	"OP_P1JOYSTICK",
-	"OP_JOYSTICKSET", // OP_GamepadSetDef shared with P2
+	"OP_JOYSTICKSET", // OP_JoystickSetDef shared with P2
 	"OP_P1CAMERA",
 
 	"OP_P2CONTROLS",
@@ -5529,7 +5529,7 @@ struct int_const_s const INT_CONST[] = {
 	{"CV_HIDEN",CV_HIDEN},
 	{"CV_HIDDEN",CV_HIDEN},
 	{"CV_CHEAT",CV_CHEAT},
-	{"CV_NOLUA",CV_NOLUA},
+	{"CV_ALLOWLUA",CV_ALLOWLUA},
 
 	// v_video flags
 	{"V_NOSCALEPATCH",V_NOSCALEPATCH},
@@ -5646,7 +5646,7 @@ struct int_const_s const INT_CONST[] = {
 	{"GS_DEDICATEDSERVER",GS_DEDICATEDSERVER},
 	{"GS_WAITINGPLAYERS",GS_WAITINGPLAYERS},
 
-	// Gamepad axes
+	// Joystick axes
 	{"JA_NONE",JA_NONE},
 	{"JA_TURN",JA_TURN},
 	{"JA_MOVE",JA_MOVE},
@@ -5657,7 +5657,7 @@ struct int_const_s const INT_CONST[] = {
 	{"JA_SPIN",JA_SPIN},
 	{"JA_FIRE",JA_FIRE},
 	{"JA_FIRENORMAL",JA_FIRENORMAL},
-	{"JOYAXISRANGE",OLDJOYAXISRANGE},
+	{"JOYAXISRANGE",JOYAXISRANGE},
 
 	// Game controls
 	{"GC_NULL",GC_NULL},

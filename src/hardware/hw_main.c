@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -4102,7 +4102,7 @@ static void HWR_DrawSprite(gl_vissprite_t *spr)
 			scale *= spr->shadowscale;
 
 		if (spr->rotateflags & SRF_3D || renderflags & RF_NOSPLATBILLBOARD)
-			angle = spr->angle;
+			angle = spr->mobj->angle;
 		else
 			angle = viewangle;
 
@@ -4157,8 +4157,8 @@ static void HWR_DrawSprite(gl_vissprite_t *spr)
 		// Translate
 		for (i = 0; i < 4; i++)
 		{
-			wallVerts[i].x = rotated[i].x + spr->x1;
-			wallVerts[i].z = rotated[i].y + spr->z1;
+			wallVerts[i].x = rotated[i].x + FIXED_TO_FLOAT(spr->mobj->x);
+			wallVerts[i].z = rotated[i].y + FIXED_TO_FLOAT(spr->mobj->y);
 		}
 
 		if (renderflags & (RF_SLOPESPLAT | RF_OBJECTSLOPESPLAT))
@@ -5180,7 +5180,15 @@ static void HWR_ProjectSprite(mobj_t *thing)
 	if (thing->rollangle
 	&& !(splat && !(thing->renderflags & RF_NOSPLATROLLANGLE)))
 	{
-		rollangle = R_GetRollAngle(thing->rollangle);
+		if (papersprite)
+		{
+			// a positive rollangle should should pitch papersprites upwards relative to their facing angle
+			rollangle = R_GetRollAngle(InvAngle(thing->rollangle));
+		}
+		else
+		{
+			rollangle = R_GetRollAngle(thing->rollangle);
+		}
 		rotsprite = Patch_GetRotatedSprite(sprframe, (thing->frame & FF_FRAMEMASK), rot, flip, false, sprinfo, rollangle);
 
 		if (rotsprite != NULL)
@@ -5234,7 +5242,7 @@ static void HWR_ProjectSprite(mobj_t *thing)
 		{
 			interpmobjstate_t casterinterp = { 0 };
 			fixed_t groundz;
-			fixed_t floordiff; 
+			fixed_t floordiff;
 
 			if (R_UsingFrameInterpolation() && !paused)
 			{
@@ -5244,7 +5252,7 @@ static void HWR_ProjectSprite(mobj_t *thing)
 			{
 				R_InterpolateMobjState(caster, FRACUNIT, &casterinterp);
 			}
-			
+
 			groundz = R_GetShadowZ(thing, NULL);
 			floordiff = abs(((thing->eflags & MFE_VERTICALFLIP) ? caster->height : 0) + casterinterp.z - groundz);
 

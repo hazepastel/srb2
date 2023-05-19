@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -443,7 +443,7 @@ void CON_Init(void)
 
 	// register our commands
 	//
-	COM_AddCommand("cls", CONS_Clear_f);
+	COM_AddCommand("cls", CONS_Clear_f, 0);
 	//COM_AddCommand("english", CONS_English_f);
 	// set console full screen for game startup MAKE SURE VID_Init() done !!!
 	Lock_state();
@@ -470,7 +470,7 @@ void CON_Init(void)
 		CV_RegisterVar(&cons_height);
 		CV_RegisterVar(&cons_backpic);
 		CV_RegisterVar(&cons_backcolor);
-		COM_AddCommand("bind", CONS_Bind_f);
+		COM_AddCommand("bind", CONS_Bind_f, 0);
 	}
 	else
 	{
@@ -918,8 +918,7 @@ boolean CON_Responder(event_t *ev)
 	static INT32 alias_skips;
 
 	const char *cmd = NULL;
-	INT32 key = ev->key;
-	boolean key_is_console = (key == gamecontrol[GC_CONSOLE][0] || key == gamecontrol[GC_CONSOLE][1]);
+	INT32 key;
 
 	if (chat_on)
 		return false;
@@ -927,10 +926,12 @@ boolean CON_Responder(event_t *ev)
 	// let go keyup events, don't eat them
 	if (ev->type != ev_keydown && ev->type != ev_console)
 	{
-		if (key_is_console)
+		if (ev->key == gamecontrol[GC_CONSOLE][0] || ev->key == gamecontrol[GC_CONSOLE][1])
 			consdown = false;
 		return false;
 	}
+
+	key = ev->key;
 
 	// check for console toggle key
 	if (ev->type != ev_console)
@@ -938,7 +939,7 @@ boolean CON_Responder(event_t *ev)
 		if (modeattacking || metalrecording || marathonmode)
 			return false;
 
-		if (key_is_console)
+		if (key == gamecontrol[GC_CONSOLE][0] || key == gamecontrol[GC_CONSOLE][1])
 		{
 			if (consdown) // ignore repeat
 				return true;

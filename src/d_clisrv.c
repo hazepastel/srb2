@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -25,8 +25,7 @@
 #include "st_stuff.h"
 #include "hu_stuff.h"
 #include "keys.h"
-#include "g_input.h"
-#include "i_gamepad.h"
+#include "g_input.h" // JOY1
 #include "m_menu.h"
 #include "console.h"
 #include "d_netfil.h"
@@ -34,7 +33,6 @@
 #include "p_saveg.h"
 #include "z_zone.h"
 #include "p_local.h"
-#include "p_haptic.h"
 #include "m_misc.h"
 #include "am_map.h"
 #include "m_random.h"
@@ -51,7 +49,7 @@
 #include "m_perfstats.h"
 
 // aaaaaa
-#include "i_gamepad.h"
+#include "i_joy.h"
 
 #ifndef NONET
 // cl loading screen
@@ -655,6 +653,22 @@ static UINT8 Snake_GetOppositeDir(UINT8 dir)
 		return 12 + 5 - dir;
 }
 
+event_t *snakejoyevents[MAXEVENTS];
+UINT16 joyeventcount = 0;
+
+// I'm screaming the hack is clean - ashi
+static boolean Snake_Joy_Grabber(event_t *ev)
+{
+	if (ev->type == ev_joystick  && ev->key == 0)
+	{
+		snakejoyevents[joyeventcount] = ev;
+		joyeventcount++;
+		return true;
+	}
+	else
+		return false;
+}
+
 static void Snake_FindFreeSlot(UINT8 *freex, UINT8 *freey, UINT8 headx, UINT8 heady)
 {
 	UINT8 x, y;
@@ -681,17 +695,19 @@ static void Snake_Handle(void)
 	UINT8 x, y;
 	UINT8 oldx, oldy;
 	UINT16 i;
+	UINT16 j;
 	UINT16 joystate = 0;
+	static INT32 pjoyx = 0, pjoyy = 0;
 
 	// Handle retry
-	if (snake->gameover && (G_PlayerInputDown(0, GC_JUMP) || gamekeydown[KEY_ENTER]))
+	if (snake->gameover && (PLAYER1INPUTDOWN(GC_JUMP) || gamekeydown[KEY_ENTER]))
 	{
 		Snake_Initialise();
 		snake->pausepressed = true; // Avoid accidental pause on respawn
 	}
 
 	// Handle pause
-	if (G_PlayerInputDown(0, GC_PAUSE) || gamekeydown[KEY_ENTER])
+	if (PLAYER1INPUTDOWN(GC_PAUSE) || gamekeydown[KEY_ENTER])
 	{
 		if (!snake->pausepressed)
 			snake->paused = !snake->paused;
@@ -710,23 +726,58 @@ static void Snake_Handle(void)
 	oldx = snake->snakex[1];
 	oldy = snake->snakey[1];
 
+	// process the input events in here dear lord
+	for (j = 0; j < joyeventcount; j++)
+	{
+		event_t *ev = snakejoyevents[j];
+		const INT32 jdeadzone = (JOYAXISRANGE * cv_digitaldeadzone.value) / FRACUNIT;
+		if (ev->y != INT32_MAX)
+		{
+			if (Joystick.bGamepadStyle || abs(ev->y) > jdeadzone)
+			{
+				if (ev->y < 0 && pjoyy >= 0)
+					joystate = 1;
+				else if (ev->y > 0 && pjoyy <= 0)
+					joystate = 2;
+				pjoyy = ev->y;
+			}
+			else
+				pjoyy = 0;
+		}
+
+		if (ev->x != INT32_MAX)
+		{
+			if (Joystick.bGamepadStyle || abs(ev->x) > jdeadzone)
+			{
+				if (ev->x < 0 && pjoyx >= 0)
+					joystate = 3;
+				else if (ev->x > 0 && pjoyx <= 0)
+					joystate = 4;
+				pjoyx = ev->x;
+			}
+			else
+				pjoyx = 0;
+		}
+	}
+	joyeventcount = 0;
+
 	// Update direction
-	if (G_PlayerInputDown(0, GC_STRAFELEFT) || gamekeydown[KEY_LEFTARROW] || joystate == 3)
+	if (PLAYER1INPUTDOWN(GC_STRAFELEFT) || gamekeydown[KEY_LEFTARROW] || joystate == 3)
 	{
 		if (snake->snakelength < 2 || x <= oldx)
 			snake->snakedir[0] = 1;
 	}
-	else if (G_PlayerInputDown(0, GC_STRAFERIGHT) || gamekeydown[KEY_RIGHTARROW] || joystate == 4)
+	else if (PLAYER1INPUTDOWN(GC_STRAFERIGHT) || gamekeydown[KEY_RIGHTARROW] || joystate == 4)
 	{
 		if (snake->snakelength < 2 || x >= oldx)
 			snake->snakedir[0] = 2;
 	}
-	else if (G_PlayerInputDown(0, GC_FORWARD) || gamekeydown[KEY_UPARROW] || joystate == 1)
+	else if (PLAYER1INPUTDOWN(GC_FORWARD) || gamekeydown[KEY_UPARROW] || joystate == 1)
 	{
 		if (snake->snakelength < 2 || y <= oldy)
 			snake->snakedir[0] = 3;
 	}
-	else if (G_PlayerInputDown(0, GC_BACKWARD) || gamekeydown[KEY_DOWNARROW] || joystate == 2)
+	else if (PLAYER1INPUTDOWN(GC_BACKWARD) || gamekeydown[KEY_DOWNARROW] || joystate == 2)
 	{
 		if (snake->snakelength < 2 || y >= oldy)
 			snake->snakedir[0] = 4;
@@ -1324,8 +1375,9 @@ static void SV_SendServerInfo(INT32 node, tic_t servertime)
 	netbuffer->u.serverinfo.time = (tic_t)LONG(servertime);
 	netbuffer->u.serverinfo.leveltime = (tic_t)LONG(leveltime);
 
-	netbuffer->u.serverinfo.numberofplayer = (UINT8)D_NumPlayers();
-	netbuffer->u.serverinfo.maxplayer = (UINT8)cv_maxplayers.value;
+	// Exclude bots from both counts
+	netbuffer->u.serverinfo.numberofplayer = (UINT8)(D_NumPlayers() - D_NumBots());
+	netbuffer->u.serverinfo.maxplayer = (UINT8)(cv_maxplayers.value - D_NumBots());
 
 	netbuffer->u.serverinfo.refusereason = GetRefuseReason(node);
 
@@ -1650,8 +1702,6 @@ static void CL_LoadReceivedSavegame(boolean reloading)
 	titledemo = false;
 	automapactive = false;
 
-	P_StopRumble(NULL);
-
 	// load a base level
 	if (P_LoadNetGame(reloading))
 	{
@@ -1938,10 +1988,9 @@ void CL_UpdateServerList(boolean internetsearch, INT32 room)
 static void M_ConfirmConnect(event_t *ev)
 {
 #ifndef NONET
-
-	if (ev->type == ev_keydown || ev->type == ev_gamepad_down)
+	if (ev->type == ev_keydown)
 	{
-		if ((ev->type == ev_keydown && (ev->key == ' ' || ev->key == 'y' || ev->key == KEY_ENTER)) || (ev->type == ev_gamepad_down && ev->which == 0 && ev->key == GAMEPAD_BUTTON_A))
+		if (ev->key == ' ' || ev->key == 'y' || ev->key == KEY_ENTER || ev->key == KEY_JOY1)
 		{
 			if (totalfilesrequestednum > 0)
 			{
@@ -1956,7 +2005,7 @@ static void M_ConfirmConnect(event_t *ev)
 
 			M_ClearMenus(true);
 		}
-		else if ((ev->type == ev_keydown && (ev->key == 'n' || ev->key == KEY_ESCAPE)) || (ev->type == ev_gamepad_down && ev->which == 0 && ev->key == GAMEPAD_BUTTON_B))
+		else if (ev->key == 'n' || ev->key == KEY_ESCAPE || ev->key == KEY_JOY1 + 3)
 		{
 			cl_mode = CL_ABORTED;
 			M_ClearMenus(true);
@@ -2390,11 +2439,14 @@ static boolean CL_ServerConnectionTicker(const char *tmpsave, tic_t *oldtic, tic
 			// my hand has been forced and I am dearly sorry for this awful hack :vomit:
 			for (; eventtail != eventhead; eventtail = (eventtail+1) & (MAXEVENTS-1))
 			{
-				G_MapEventsToControls(&events[eventtail]);
+#ifndef NONET
+				if (!Snake_Joy_Grabber(&events[eventtail]))
+#endif
+					G_MapEventsToControls(&events[eventtail]);
 			}
 		}
 
-		if (gamekeydown[KEY_ESCAPE] || gamepads[0].buttons[GAMEPAD_BUTTON_B] || cl_mode == CL_ABORTED)
+		if (gamekeydown[KEY_ESCAPE] || gamekeydown[KEY_JOY1+1] || cl_mode == CL_ABORTED)
 		{
 			CONS_Printf(M_GetText("Network game synchronization aborted.\n"));
 			M_StartMessage(M_GetText("Network game synchronization aborted.\n\nPress ESC\n"), NULL, MM_NOTHING);
@@ -3453,10 +3505,10 @@ static void Got_KickCmd(UINT8 **p, INT32 playernum)
 static CV_PossibleValue_t netticbuffer_cons_t[] = {{0, "MIN"}, {3, "MAX"}, {0, NULL}};
 consvar_t cv_netticbuffer = CVAR_INIT ("netticbuffer", "1", CV_SAVE, netticbuffer_cons_t, NULL);
 
-consvar_t cv_allownewplayer = CVAR_INIT ("allowjoin", "On", CV_SAVE|CV_NETVAR, CV_OnOff, NULL);
+consvar_t cv_allownewplayer = CVAR_INIT ("allowjoin", "On", CV_SAVE|CV_NETVAR|CV_ALLOWLUA, CV_OnOff, NULL);
 consvar_t cv_joinnextround = CVAR_INIT ("joinnextround", "Off", CV_SAVE|CV_NETVAR, CV_OnOff, NULL); /// \todo not done
 static CV_PossibleValue_t maxplayers_cons_t[] = {{2, "MIN"}, {32, "MAX"}, {0, NULL}};
-consvar_t cv_maxplayers = CVAR_INIT ("maxplayers", "8", CV_SAVE|CV_NETVAR, maxplayers_cons_t, NULL);
+consvar_t cv_maxplayers = CVAR_INIT ("maxplayers", "8", CV_SAVE|CV_NETVAR|CV_ALLOWLUA, maxplayers_cons_t, NULL);
 static CV_PossibleValue_t joindelay_cons_t[] = {{1, "MIN"}, {3600, "MAX"}, {0, "Off"}, {0, NULL}};
 consvar_t cv_joindelay = CVAR_INIT ("joindelay", "10", CV_SAVE|CV_NETVAR, joindelay_cons_t, NULL);
 static CV_PossibleValue_t rejointimeout_cons_t[] = {{1, "MIN"}, {60 * FRACUNIT, "MAX"}, {0, "Off"}, {0, NULL}};
@@ -3484,22 +3536,22 @@ void D_ClientServerInit(void)
 		VERSION/100, VERSION%100, SUBVERSION));
 
 #ifndef NONET
-	COM_AddCommand("getplayernum", Command_GetPlayerNum);
-	COM_AddCommand("kick", Command_Kick);
-	COM_AddCommand("ban", Command_Ban);
-	COM_AddCommand("banip", Command_BanIP);
-	COM_AddCommand("clearbans", Command_ClearBans);
-	COM_AddCommand("showbanlist", Command_ShowBan);
-	COM_AddCommand("reloadbans", Command_ReloadBan);
-	COM_AddCommand("connect", Command_connect);
-	COM_AddCommand("nodes", Command_Nodes);
-	COM_AddCommand("resendgamestate", Command_ResendGamestate);
+	COM_AddCommand("getplayernum", Command_GetPlayerNum, COM_LUA);
+	COM_AddCommand("kick", Command_Kick, COM_LUA);
+	COM_AddCommand("ban", Command_Ban, COM_LUA);
+	COM_AddCommand("banip", Command_BanIP, COM_LUA);
+	COM_AddCommand("clearbans", Command_ClearBans, COM_LUA);
+	COM_AddCommand("showbanlist", Command_ShowBan, COM_LUA);
+	COM_AddCommand("reloadbans", Command_ReloadBan, COM_LUA);
+	COM_AddCommand("connect", Command_connect, COM_LUA);
+	COM_AddCommand("nodes", Command_Nodes, COM_LUA);
+	COM_AddCommand("resendgamestate", Command_ResendGamestate, COM_LUA);
 #ifdef PACKETDROP
-	COM_AddCommand("drop", Command_Drop);
-	COM_AddCommand("droprate", Command_Droprate);
+	COM_AddCommand("drop", Command_Drop, COM_LUA);
+	COM_AddCommand("droprate", Command_Droprate, COM_LUA);
 #endif
 #ifdef _DEBUG
-	COM_AddCommand("numnodes", Command_Numnodes);
+	COM_AddCommand("numnodes", Command_Numnodes, COM_LUA);
 #endif
 #endif
 
@@ -4023,7 +4075,7 @@ ConnectionRefused (SINT8 node, INT32 rejoinernum)
 		{
 			return va(
 					"Maximum players reached: %d",
-					cv_maxplayers.value);
+					cv_maxplayers.value - D_NumBots());
 		}
 	}
 
@@ -5176,7 +5228,7 @@ static void Local_Maketic(INT32 realtics)
 	                   // game responder calls HU_Responder, AM_Responder,
 	                   // and G_MapEventsToControls
 	if (!dedicated) rendergametic = gametic;
-	// translate inputs (keyboard/mouse/gamepad) into game controls
+	// translate inputs (keyboard/mouse/joystick) into game controls
 	G_BuildTiccmd(&localcmds, realtics, 1);
 	if (splitscreen || botingame)
 		G_BuildTiccmd(&localcmds2, realtics, 2);
@@ -5551,6 +5603,19 @@ INT32 D_NumPlayers(void)
 	INT32 num = 0, ix;
 	for (ix = 0; ix < MAXPLAYERS; ix++)
 		if (playeringame[ix])
+			num++;
+	return num;
+}
+
+/** Similar to the above, but counts only bots.
+  * Purpose is to remove bots from both the player count and the
+  * max player count on the server view
+*/
+INT32 D_NumBots(void)
+{
+	INT32 num = 0, ix;
+	for (ix = 0; ix < MAXPLAYERS; ix++)
+		if (playeringame[ix] && players[ix].bot)
 			num++;
 	return num;
 }

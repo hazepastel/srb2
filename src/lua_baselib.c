@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 2012-2016 by John "JTE" Muniz.
-// Copyright (C) 2012-2022 by Sonic Team Junior.
+// Copyright (C) 2012-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -15,7 +15,6 @@
 #include "p_local.h"
 #include "p_setup.h" // So we can have P_SetupLevelSky
 #include "p_slopes.h" // P_GetSlopeZAt
-#include "p_haptic.h"
 #include "z_zone.h"
 #include "r_main.h"
 #include "r_draw.h"
@@ -221,7 +220,6 @@ static const struct {
 	{META_LUABANKS,     "luabanks[]"},
 
 	{META_KEYEVENT,     "keyevent_t"},
-	{META_GAMEPAD,      "gamepad_t"},
 	{META_MOUSE,        "mouse_t"},
 	{NULL,              NULL}
 };
@@ -876,6 +874,7 @@ static int lib_pGetClosestAxis(lua_State *L)
 
 static int lib_pSpawnParaloop(lua_State *L)
 {
+	mobj_t *ptmthing = tmthing;
 	fixed_t x = luaL_checkfixed(L, 1);
 	fixed_t y = luaL_checkfixed(L, 2);
 	fixed_t z = luaL_checkfixed(L, 3);
@@ -892,6 +891,7 @@ static int lib_pSpawnParaloop(lua_State *L)
 	if (nstate >= NUMSTATES)
 		return luaL_error(L, "state %d out of range (0 - %d)", nstate, NUMSTATES-1);
 	P_SpawnParaloop(x, y, z, radius, number, type, nstate, rotangle, spawncenter);
+	P_SetTarget(&tmthing, ptmthing);
 	return 0;
 }
 
@@ -1734,78 +1734,6 @@ static int lib_pPlayerShouldUseSpinHeight(lua_State *L)
 	return 1;
 }
 
-// P_HAPTIC
-///////////
-#define GET_OPTIONAL_PLAYER(arg) \
-	player_t *player = NULL; \
-	if (!lua_isnoneornil(L, arg)) { \
-		player = *((player_t **)luaL_checkudata(L, arg, META_PLAYER)); \
-		if (!player) \
-			return LUA_ErrInvalid(L, "player_t"); \
-	}
-
-static int lib_pDoRumble(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	fixed_t large_magnitude = luaL_checkfixed(L, 2);
-	fixed_t small_magnitude = luaL_optfixed(L, 3, large_magnitude);
-	tic_t duration = luaL_optinteger(L, 4, 0);
-
-#define CHECK_MAGNITUDE(which) \
-	if (which##_magnitude < 0 || which##_magnitude > FRACUNIT) \
-		return luaL_error(L, va(#which " motor frequency %f out of range (minimum is 0.0, maximum is 1.0)", \
-			FixedToFloat(which##_magnitude)))
-
-	CHECK_MAGNITUDE(large);
-	CHECK_MAGNITUDE(small);
-
-#undef CHECK_MAGNITUDE
-
-	lua_pushboolean(L, P_DoRumble(player, large_magnitude, small_magnitude, duration));
-	return 1;
-}
-
-static int lib_pPauseRumble(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	P_PauseRumble(player);
-	return 0;
-}
-
-static int lib_pUnpauseRumble(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	P_UnpauseRumble(player);
-	return 0;
-}
-
-static int lib_pIsRumbleEnabled(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	if (player && P_IsLocalPlayer(player))
-		lua_pushboolean(L, P_IsRumbleEnabled(player));
-	else
-		lua_pushnil(L);
-	return 1;
-}
-
-static int lib_pIsRumblePaused(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	if (player && P_IsLocalPlayer(player))
-		lua_pushboolean(L, P_IsRumblePaused(player));
-	else
-		lua_pushnil(L);
-	return 1;
-}
-
-static int lib_pStopRumble(lua_State *L)
-{
-	GET_OPTIONAL_PLAYER(1);
-	P_StopRumble(player);
-	return 0;
-}
-
 // P_MAP
 ///////////
 
@@ -2332,6 +2260,18 @@ static int lib_pMobjTouchingSectorSpecial(lua_State *L)
 	if (!mo)
 		return LUA_ErrInvalid(L, "mobj_t");
 	LUA_PushUserdata(L, P_MobjTouchingSectorSpecial(mo, section, number), META_SECTOR);
+	return 1;
+}
+
+static int lib_pThingOnSpecial3DFloor(lua_State *L)
+{
+	mobj_t *mo = *((mobj_t **)luaL_checkudata(L, 1, META_MOBJ));
+	NOHUD
+	INLEVEL
+	if (!mo)
+		return LUA_ErrInvalid(L, "mobj_t");
+	LUA_Deprecated(L, "P_ThingOnSpecial3DFloor", "P_MobjTouchingSectorSpecial\" or \"P_MobjTouchingSectorSpecialFlag");
+	LUA_PushUserdata(L, P_ThingOnSpecial3DFloor(mo), META_SECTOR);
 	return 1;
 }
 
@@ -3442,6 +3382,7 @@ static int lib_sResumeMusic(lua_State *L)
 // G_GAME
 ////////////
 
+// Copypasted from lib_cvRegisterVar :]
 static int lib_gAddGametype(lua_State *L)
 {
 	const char *k;
@@ -3602,7 +3543,6 @@ static int lib_gAddPlayer(lua_State *L)
 		return 1;
 	}
 
-
 	newplayernum = i;
 
 	CL_ClearPlayer(newplayernum);
@@ -3613,9 +3553,6 @@ static int lib_gAddPlayer(lua_State *L)
 
 	newplayer->jointime = 0;
 	newplayer->quittime = 0;
-
-	// Set the bot name (defaults to Bot #)
-	strcpy(player_names[newplayernum], va("Bot %d", botcount));
 
 	// Read the skin argument (defaults to Sonic)
 	if (!lua_isnoneornil(L, 1))
@@ -3628,7 +3565,10 @@ static int lib_gAddPlayer(lua_State *L)
 	if (!lua_isnoneornil(L, 2))
 		newplayer->skincolor = R_GetColorByName(luaL_checkstring(L, 2));
 	else
-		newplayer->skincolor = skins[newplayer->skin].prefcolor;
+		newplayer->skincolor = skins[skinnum].prefcolor;
+
+	// Set the bot default name as the skin
+	strcpy(player_names[newplayernum], skins[skinnum].realname);
 
 	// Read the bot name, if given
 	if (!lua_isnoneornil(L, 3))
@@ -3644,14 +3584,19 @@ static int lib_gAddPlayer(lua_State *L)
 	// Set the skin (can't do this until AFTER bot type is set!)
 	SetPlayerSkinByNum(newplayernum, skinnum);
 
-
 	if (netgame)
 	{
 		char joinmsg[256];
 
+		// Truncate bot name
+		player_names[newplayernum][sizeof(*player_names) - 8] = '\0'; // The length of colored [BOT] + 1
+
 		strcpy(joinmsg, M_GetText("\x82*Bot %s has joined the game (player %d)"));
 		strcpy(joinmsg, va(joinmsg, player_names[newplayernum], newplayernum));
 		HU_AddChatText(joinmsg, false);
+
+		// Append blue [BOT] tag at the end
+		strlcat(player_names[newplayernum], "\x84[BOT]\x80", sizeof(*player_names));
 	}
 
 	LUA_PushUserdata(L, newplayer, META_PLAYER);
@@ -4163,14 +4108,6 @@ static luaL_Reg lib[] = {
 	{"P_PlayerCanEnterSpinGaps",lib_pPlayerCanEnterSpinGaps},
 	{"P_PlayerShouldUseSpinHeight",lib_pPlayerShouldUseSpinHeight},
 
-	// p_haptic
-	{"P_DoRumble",lib_pDoRumble},
-	{"P_PauseRumble",lib_pPauseRumble},
-	{"P_UnpauseRumble",lib_pUnpauseRumble},
-	{"P_IsRumbleEnabled",lib_pIsRumbleEnabled},
-	{"P_IsRumblePaused",lib_pIsRumblePaused},
-	{"P_StopRumble",lib_pStopRumble},
-
 	// p_map
 	{"P_CheckPosition",lib_pCheckPosition},
 	{"P_TryMove",lib_pTryMove},
@@ -4213,6 +4150,7 @@ static luaL_Reg lib[] = {
 	{"P_DoSuperTransformation",lib_pDoSuperTransformation},
 	{"P_ExplodeMissile",lib_pExplodeMissile},
 	{"P_MobjTouchingSectorSpecial",lib_pMobjTouchingSectorSpecial},
+	{"P_ThingOnSpecial3DFloor",lib_pThingOnSpecial3DFloor},
 	{"P_MobjTouchingSectorSpecialFlag",lib_pMobjTouchingSectorSpecialFlag},
 	{"P_PlayerTouchingSectorSpecial",lib_pPlayerTouchingSectorSpecial},
 	{"P_PlayerTouchingSectorSpecialFlag",lib_pPlayerTouchingSectorSpecialFlag},

@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -328,10 +328,10 @@ void HU_LoadGraphics(void)
 void HU_Init(void)
 {
 #ifndef NONET
-	COM_AddCommand("say", Command_Say_f);
-	COM_AddCommand("sayto", Command_Sayto_f);
-	COM_AddCommand("sayteam", Command_Sayteam_f);
-	COM_AddCommand("csay", Command_CSay_f);
+	COM_AddCommand("say", Command_Say_f, COM_LUA);
+	COM_AddCommand("sayto", Command_Sayto_f, COM_LUA);
+	COM_AddCommand("sayteam", Command_Sayteam_f, COM_LUA);
+	COM_AddCommand("csay", Command_CSay_f, COM_LUA);
 	RegisterNetXCmd(XD_SAY, Got_Saycmd);
 #endif
 
@@ -877,7 +877,7 @@ void HU_Ticker(void)
 	hu_tick++;
 	hu_tick &= 7; // currently only to blink chat input cursor
 
-	if (G_PlayerInputDown(0, GC_SCORES))
+	if (PLAYER1INPUTDOWN(GC_SCORES))
 		hu_showscores = !chat_on;
 	else
 		hu_showscores = false;
@@ -1051,6 +1051,26 @@ boolean HU_Responder(event_t *ev)
 		return false;
 
 	// only KeyDown events now...
+
+	/*// Shoot, to prevent P1 chatting from ruining the game for everyone else, it's either:
+	// A. completely disallow opening chat entirely in online splitscreen
+	// or B. iterate through all controls to make sure it's bound to player 1 before eating
+	// You can see which one I chose.
+	// (Unless if you're sharing a keyboard, since you probably establish when you start chatting that you have dibs on it...)
+	// (Ahhh, the good ol days when I was a kid who couldn't afford an extra USB controller...)
+
+	if (ev->key >= KEY_MOUSE1)
+	{
+		INT32 i;
+		for (i = 0; i < NUM_GAMECONTROLS; i++)
+		{
+			if (gamecontrol[i][0] == ev->key || gamecontrol[i][1] == ev->key)
+				break;
+		}
+
+		if (i == NUM_GAMECONTROLS)
+			return false;
+	}*/	//We don't actually care about that unless we get splitscreen netgames. :V
 
 #ifndef NONET
 	c = (INT32)ev->key;

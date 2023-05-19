@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -3066,6 +3066,18 @@ static thinker_t* LoadMobjThinker(actionf_p1 thinker)
 			mobj->player->viewz = mobj->player->mo->z + mobj->player->viewheight;
 	}
 
+	if (mobj->type == MT_SKYBOX && mobj->spawnpoint)
+	{
+		mtag_t tag = Tag_FGet(&mobj->spawnpoint->tags);
+		if (tag >= 0 && tag <= 15)
+		{
+			if (mobj->spawnpoint->args[0])
+				skyboxcenterpnts[tag] = mobj;
+			else
+				skyboxviewpnts[tag] = mobj;
+		}
+	}
+
 	mobj->info = (mobjinfo_t *)next; // temporarily, set when leave this function
 
 	R_AddMobjInterpolator(mobj);
@@ -3687,10 +3699,14 @@ static void P_NetUnArchiveThinkers(void)
 		{
 			next = currentthinker->next;
 
-			if (currentthinker->function.acp1 == (actionf_p1)P_MobjThinker)
+			if (currentthinker->function.acp1 == (actionf_p1)P_MobjThinker || currentthinker->function.acp1 == (actionf_p1)P_NullPrecipThinker)
 				P_RemoveSavegameMobj((mobj_t *)currentthinker); // item isn't saved, don't remove it
 			else
+			{
+				(next->prev = currentthinker->prev)->next = next;
+				R_DestroyLevelInterpolators(currentthinker);
 				Z_Free(currentthinker);
+			}
 		}
 	}
 
@@ -3891,6 +3907,10 @@ static void P_NetUnArchiveThinkers(void)
 
 		CONS_Debug(DBG_NETPLAY, "%u thinkers loaded in list %d\n", numloaded, i);
 	}
+
+	// Set each skyboxmo to the first skybox (or NULL)
+	skyboxmo[0] = skyboxviewpnts[0];
+	skyboxmo[1] = skyboxcenterpnts[0];
 
 	if (restoreNum)
 	{

@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -37,7 +37,6 @@
 #include "m_cond.h"
 #include "p_local.h"
 #include "p_setup.h"
-#include "p_haptic.h"
 #include "st_stuff.h" // hud hiding
 #include "fastcmp.h"
 #include "console.h"
@@ -338,7 +337,7 @@ static tic_t introscenetime[NUMINTROSCENES] =
 };
 
 // custom intros
-void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean resetplayer);
+void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean resetplayer, boolean FLS);
 
 void F_StartIntro(void)
 {
@@ -350,7 +349,7 @@ void F_StartIntro(void)
 		if (!cutscenes[introtoplay - 1])
 			D_StartTitle();
 		else
-			F_StartCustomCutscene(introtoplay - 1, false, false);
+			F_StartCustomCutscene(introtoplay - 1, false, false, false);
 		return;
 	}
 
@@ -511,7 +510,6 @@ void F_StartIntro(void)
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 	F_NewCutscene(introtext[0]);
 
 	intro_scenenum = 0;
@@ -993,10 +991,9 @@ void F_IntroTicker(void)
 //
 boolean F_IntroResponder(event_t *event)
 {
-	INT32 type = event->type;
-	INT32 key = G_RemapGamepadEvent(event, &type);
+	INT32 key = event->key;
 
-	// remap virtual keys (mouse & gamepad buttons)
+	// remap virtual keys (mouse & joystick buttons)
 	switch (key)
 	{
 		case KEY_MOUSE1:
@@ -1005,30 +1002,34 @@ boolean F_IntroResponder(event_t *event)
 		case KEY_MOUSE1 + 1:
 			key = KEY_BACKSPACE;
 			break;
-		case GAMEPAD_KEY(START):
-		case GAMEPAD_KEY(A):
-		case GAMEPAD_KEY(X):
-		case GAMEPAD_KEY(B):
+		case KEY_JOY1:
+		case KEY_JOY1 + 2:
 			key = KEY_ENTER;
 			break;
-		case GAMEPAD_KEY(DPAD_UP):
+		case KEY_JOY1 + 3:
+			key = 'n';
+			break;
+		case KEY_JOY1 + 1:
+			key = KEY_BACKSPACE;
+			break;
+		case KEY_HAT1:
 			key = KEY_UPARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_DOWN):
+		case KEY_HAT1 + 1:
 			key = KEY_DOWNARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_LEFT):
+		case KEY_HAT1 + 2:
 			key = KEY_LEFTARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_RIGHT):
+		case KEY_HAT1 + 3:
 			key = KEY_RIGHTARROW;
 			break;
 	}
 
-	if (type != ev_keydown)
+	if (event->type != ev_keydown && key != 301)
 		return false;
 
-	if (key != KEY_ESCAPE && key != KEY_ENTER && key != KEY_SPACE && key != KEY_BACKSPACE)
+	if (key != 27 && key != KEY_ENTER && key != KEY_SPACE && key != KEY_BACKSPACE)
 		return false;
 
 	if (keypressed)
@@ -1260,14 +1261,13 @@ void F_StartCredits(void)
 
 	if (creditscutscene)
 	{
-		F_StartCustomCutscene(creditscutscene - 1, false, false);
+		F_StartCustomCutscene(creditscutscene - 1, false, false, false);
 		return;
 	}
 
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 	S_StopMusic();
 	S_StopSounds();
 
@@ -1389,10 +1389,9 @@ void F_CreditTicker(void)
 
 boolean F_CreditResponder(event_t *event)
 {
-	INT32 type = event->type;
-	INT32 key = G_RemapGamepadEvent(event, &type);
+	INT32 key = event->key;
 
-	// remap virtual keys (mouse & gamepad buttons)
+	// remap virtual keys (mouse & joystick buttons)
 	switch (key)
 	{
 		case KEY_MOUSE1:
@@ -1401,27 +1400,31 @@ boolean F_CreditResponder(event_t *event)
 		case KEY_MOUSE1 + 1:
 			key = KEY_BACKSPACE;
 			break;
-		case GAMEPAD_KEY(START):
-		case GAMEPAD_KEY(A):
-		case GAMEPAD_KEY(X):
-		case GAMEPAD_KEY(B):
+		case KEY_JOY1:
+		case KEY_JOY1 + 2:
 			key = KEY_ENTER;
 			break;
-		case GAMEPAD_KEY(DPAD_UP):
+		case KEY_JOY1 + 3:
+			key = 'n';
+			break;
+		case KEY_JOY1 + 1:
+			key = KEY_BACKSPACE;
+			break;
+		case KEY_HAT1:
 			key = KEY_UPARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_DOWN):
+		case KEY_HAT1 + 1:
 			key = KEY_DOWNARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_LEFT):
+		case KEY_HAT1 + 2:
 			key = KEY_LEFTARROW;
 			break;
-		case GAMEPAD_KEY(DPAD_RIGHT):
+		case KEY_HAT1 + 3:
 			key = KEY_RIGHTARROW;
 			break;
 	}
 
-	if (type != ev_keydown)
+	if (event->type != ev_keydown)
 		return false;
 
 	if (key != KEY_ESCAPE && key != KEY_ENTER && key != KEY_SPACE && key != KEY_BACKSPACE)
@@ -1462,7 +1465,6 @@ void F_StartGameEvaluation(void)
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 
 	finalecount = -1;
 	sparklloop = 0;
@@ -1788,7 +1790,6 @@ void F_StartEnding(void)
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 	S_StopMusic(); // todo: placeholder
 	S_StopSounds();
 
@@ -2234,7 +2235,6 @@ void F_StartGameEnd(void)
 	paused = false;
 	CON_ToggleOff();
 	S_StopSounds();
-	P_StopRumble(NULL);
 
 	// In case menus are still up?!!
 	M_ClearMenus(true);
@@ -2513,6 +2513,8 @@ void F_StartTitleScreen(void)
 	{
 		titlemapinaction = TITLEMAP_OFF;
 		gamemap = 1; // g_game.c
+		if (!mapheaderinfo[gamemap-1])
+			P_AllocMapHeader(gamemap-1);
 		CON_ClearHUD();
 	}
 
@@ -3577,7 +3579,6 @@ void F_StartContinue(void)
 	keypressed = false;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 
 	// In case menus are still up?!!
 	M_ClearMenus(true);
@@ -3830,26 +3831,24 @@ void F_ContinueTicker(void)
 
 boolean F_ContinueResponder(event_t *event)
 {
+	INT32 key = event->key;
+
 	if (keypressed)
 		return true;
-
-	INT32 type = event->type;
-	INT32 key = G_RemapGamepadEvent(event, &type);
 
 	if (timetonext >= 21*TICRATE/2)
 		return false;
 	if (event->type != ev_keydown)
 		return false;
 
-	// remap virtual keys (mouse & gamepad buttons)
+	// remap virtual keys (mouse & joystick buttons)
 	switch (key)
 	{
 		case KEY_ENTER:
 		case KEY_SPACE:
 		case KEY_MOUSE1:
-		case GAMEPAD_KEY(START):
-		case GAMEPAD_KEY(A):
-		case GAMEPAD_KEY(X):
+		case KEY_JOY1:
+		case KEY_JOY1 + 2:
 			break;
 		default:
 			return false;
@@ -3870,7 +3869,7 @@ static INT32 scenenum, cutnum;
 static INT32 picxpos, picypos, picnum, pictime, picmode, numpics, pictoloop;
 static INT32 textxpos, textypos;
 static boolean cutsceneover = false;
-static boolean runningprecutscene = false, precutresetplayer = false;
+static boolean runningprecutscene = false, precutresetplayer = false, precutFLS = false;
 
 static void F_AdvanceToNextScene(void)
 {
@@ -3939,7 +3938,7 @@ void F_EndCutScene(void)
 	if (runningprecutscene)
 	{
 		if (server)
-			D_MapChange(gamemap, gametype, ultimatemode, precutresetplayer, 0, true, false);
+			D_MapChange(gamemap, gametype, ultimatemode, precutresetplayer, 0, true, precutFLS);
 	}
 	else
 	{
@@ -3954,7 +3953,7 @@ void F_EndCutScene(void)
 	}
 }
 
-void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean resetplayer)
+void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean resetplayer, boolean FLS)
 {
 	if (!cutscenes[cutscenenum])
 		return;
@@ -3967,13 +3966,13 @@ void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean reset
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	P_StopRumble(NULL);
 
 	F_NewCutscene(cutscenes[cutscenenum]->scene[0].text);
 
 	cutsceneover = false;
 	runningprecutscene = precutscene;
 	precutresetplayer = resetplayer;
+	precutFLS = FLS;
 
 	scenenum = picnum = 0;
 	cutnum = cutscenenum;

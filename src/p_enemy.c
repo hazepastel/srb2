@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -1589,6 +1589,10 @@ void A_PointyThink(mobj_t *actor)
 	if (!actor->tracer) // For some reason we do not have spike balls...
 		return;
 
+	// Catch case where actor lastlook is -1 (which segfaults the following blocks)
+	if (actor->lastlook < 0)
+		return;
+
 	// Position spike balls relative to the value of 'lastlook'.
 	ball = actor->tracer;
 
@@ -2671,7 +2675,7 @@ void A_LobShot(mobj_t *actor)
 	fixed_t z;
 	fixed_t dist;
 	fixed_t vertical, horizontal;
-	fixed_t airtime = var2 & 65535;
+	fixed_t airtime = max(1, var2 & 65535);
 
 	if (LUA_CallAction(A_LOBSHOT, actor))
 		return;
@@ -4859,12 +4863,12 @@ void A_FishJump(mobj_t *actor)
 		else
 		{
 			if (actor->spawnpoint && actor->spawnpoint->args[0])
-				jumpval = actor->spawnpoint->args[0];
+				jumpval = actor->spawnpoint->args[0] << (FRACBITS - 2);
 			else
-				jumpval = 44;
+				jumpval = 44 << (FRACBITS - 2);
 		}
 
-		actor->momz = FixedMul(jumpval << (FRACBITS - 2), actor->scale);
+		actor->momz = FixedMul(jumpval, actor->scale);
 		P_SetMobjStateNF(actor, actor->info->seestate);
 	}
 
@@ -13458,6 +13462,9 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 	player_t *player = thing->player;
 
 	if (!player)
+		return true;
+
+	if (player->spectator)
 		return true;
 
 	if (player->powers[pw_carry] != CR_DUSTDEVIL && (player->powers[pw_ignorelatch] & (1<<15)))

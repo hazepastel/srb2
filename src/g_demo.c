@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -32,7 +32,7 @@
 #include "z_zone.h"
 #include "i_video.h"
 #include "byteptr.h"
-#include "i_gamepad.h"
+#include "i_joy.h"
 #include "r_local.h"
 #include "r_skins.h"
 #include "y_inter.h"
@@ -1527,9 +1527,9 @@ void G_BeginRecording(void)
 			buf |= 0x08;
 			pflags |= PF_AUTOBRAKE;
 		}
-		if (cv_usegamepad[0].value)
+		if (cv_usejoystick.value)
 			buf |= 0x10;
-		CV_SetValue(&cv_showinputjoy, !!(cv_usegamepad[0].value));
+		CV_SetValue(&cv_showinputjoy, !!(cv_usejoystick.value));
 
 		WRITEUINT8(demo_p,buf);
 		player->pflags = pflags;

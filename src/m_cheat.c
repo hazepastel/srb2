@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -199,41 +199,39 @@ static UINT8 cht_CheckCheat(cheatseq_t *cht, char key)
 
 boolean cht_Responder(event_t *ev)
 {
-	UINT8 ch = 0;
+	UINT8 ret = 0, ch = 0;
+	if (ev->type != ev_keydown)
+		return false;
 
-	if (ev->type == ev_gamepad_down)
+	if (ev->key > 0xFF)
 	{
+		// map some fake (joy) inputs into keys
+		// map joy inputs into keys
 		switch (ev->key)
 		{
-			case GAMEPAD_BUTTON_DPAD_UP:
+			case KEY_JOY1:
+			case KEY_JOY1 + 2:
+				ch = KEY_ENTER;
+				break;
+			case KEY_HAT1:
 				ch = KEY_UPARROW;
 				break;
-			case GAMEPAD_BUTTON_DPAD_DOWN:
+			case KEY_HAT1 + 1:
 				ch = KEY_DOWNARROW;
 				break;
-			case GAMEPAD_BUTTON_DPAD_LEFT:
+			case KEY_HAT1 + 2:
 				ch = KEY_LEFTARROW;
 				break;
-			case GAMEPAD_BUTTON_DPAD_RIGHT:
+			case KEY_HAT1 + 3:
 				ch = KEY_RIGHTARROW;
-				break;
-			case GAMEPAD_BUTTON_START:
-				ch = KEY_ENTER;
 				break;
 			default:
 				// no mapping
 				return false;
 		}
 	}
-	else if (ev->type == ev_keydown)
-	{
-		if (ev->key > 0xFF)
-			return false;
-
+	else
 		ch = (UINT8)ev->key;
-	}
-
-	UINT8 ret = 0;
 
 	ret += cht_CheckCheat(&cheat_ultimate, (char)ch);
 	ret += cht_CheckCheat(&cheat_ultimate_joy, (char)ch);
@@ -1006,7 +1004,7 @@ static void OP_CycleThings(INT32 amt)
 		} while
 		(mobjinfo[op_currentthing].doomednum == -1
 			|| op_currentthing == MT_NIGHTSDRONE
-			|| mobjinfo[op_currentthing].flags & MF_NOSECTOR
+			|| mobjinfo[op_currentthing].flags & (MF_AMBIENT|MF_NOSECTOR)
 			|| (states[mobjinfo[op_currentthing].spawnstate].sprite == SPR_NULL
 			 && states[mobjinfo[op_currentthing].seestate].sprite == SPR_NULL)
 		);

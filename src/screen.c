@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -82,7 +82,7 @@ CV_PossibleValue_t cv_renderer_t[] = {
 	{0, NULL}
 };
 
-consvar_t cv_renderer = CVAR_INIT ("renderer", "Software", CV_SAVE|CV_NOLUA|CV_CALL, cv_renderer_t, SCR_ChangeRenderer);
+consvar_t cv_renderer = CVAR_INIT ("renderer", "Software", CV_SAVE|CV_CALL, cv_renderer_t, SCR_ChangeRenderer);
 
 static void SCR_ChangeFullscreen(void);
 
@@ -621,7 +621,13 @@ void SCR_ClosedCaptions(void)
 		y = basey-((i + 2)*10);
 
 		if (closedcaptions[i].b)
-			y -= (closedcaptions[i].b--)*vid.dupy;
+		{
+			y -= closedcaptions[i].b * vid.dupy;
+			if (renderisnewtic)
+			{
+				closedcaptions[i].b--;
+			}
+		}
 
 		if (closedcaptions[i].t < CAPTIONFADETICS)
 			flags |= (((CAPTIONFADETICS-closedcaptions[i].t)/2)*V_10TRANS);

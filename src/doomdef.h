@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2022 by Sonic Team Junior.
+// Copyright (C) 1999-2023 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -104,6 +104,8 @@
 #include <io.h>
 #endif
 
+FILE *fopenfile(const char*, const char*);
+
 //#define NOMD5
 
 // Uncheck this to compile debugging code
@@ -150,7 +152,7 @@ extern char logfilename[1024];
 
 // Does this version require an added patch file?
 // Comment or uncomment this as necessary.
-// #define USE_PATCH_DTA
+#define USE_PATCH_DTA
 
 // Enforce a limit of loaded WAD files.
 //#define ENFORCE_WAD_LIMIT
@@ -209,7 +211,7 @@ extern char logfilename[1024];
 // to an increment in MODVERSION. This might never happen in practice.
 // If MODVERSION increases, set MINOREXECVERSION to 0.
 #define MAJOREXECVERSION MODVERSION
-#define MINOREXECVERSION 1
+#define MINOREXECVERSION 0
 // (It would have been nice to use VERSION and SUBVERSION but those are zero'd out for DEVELOP builds)
 
 // Macros
@@ -555,6 +557,9 @@ UINT32 quickncasehash (const char *p, size_t n)
 #ifndef max // Double-Check with WATTCP-32's cdefs.h
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #endif
+
+// Max gamepad/joysticks that can be detected/used.
+#define MAX_JOYSTICKS 4
 
 #ifndef M_PIl
 #define M_PIl 3.1415926535897932384626433832795029L
