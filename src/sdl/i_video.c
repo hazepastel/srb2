@@ -5,7 +5,7 @@
 //
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Portions Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 2014-2022 by Sonic Team Junior.
+// Copyright (C) 2014-2023 by Sonic Team Junior.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -132,8 +132,10 @@ rendermode_t chosenrendermode = render_none; // set by command line arguments
 
 boolean highcolor = false;
 
+static void VidWaitChanged(void);
+
 // synchronize page flipping with screen refresh
-consvar_t cv_vidwait = CVAR_INIT ("vid_wait", "On", CV_SAVE, CV_OnOff, NULL);
+consvar_t cv_vidwait = CVAR_INIT ("vid_wait", "On", CV_SAVE | CV_CALL, CV_OnOff, VidWaitChanged);
 static consvar_t cv_stretch = CVAR_INIT ("stretch", "Off", CV_SAVE|CV_NOSHOWHELP, CV_OnOff, NULL);
 static consvar_t cv_alwaysgrabmouse = CVAR_INIT ("alwaysgrabmouse", "Off", CV_SAVE, CV_OnOff, NULL);
 
@@ -483,6 +485,22 @@ static void Impl_AppEnteredForeground(void)
 	}
 }
 #endif
+
+static void VidWaitChanged(void)
+{
+	if (renderer && rendermode == render_soft)
+	{
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+		SDL_RenderSetVSync(renderer, cv_vidwait.value ? 1 : 0);
+#endif
+	}
+#ifdef HWRENDER
+	else if (rendermode == render_opengl && sdlglcontext != NULL && SDL_GL_GetCurrentContext() == sdlglcontext)
+	{
+		SDL_GL_SetSwapInterval(cv_vidwait.value ? 1 : 0);
+	}
+#endif
+}
 
 static INT32 Impl_SDL_Scancode_To_Keycode(SDL_Scancode code)
 {
@@ -1834,6 +1852,35 @@ void VID_DisplayGLError(void)
 			M_ShowAnyKeyMessage("OpenGL failed to load.\nCheck the console\nor log file for details.\n\n");
 	}
 #endif
+	if (rendermode == render_soft)
+	{
+		int flags = 0; // Use this to set SDL_RENDERER_* flags now
+		if (usesdl2soft)
+			flags |= SDL_RENDERER_SOFTWARE;
+		else if (cv_vidwait.value)
+		{
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+			// If SDL is new enough, we can turn off vsync later.
+			flags |= SDL_RENDERER_PRESENTVSYNC;
+#else
+			// However, if it isn't, we should just silently turn vid_wait off
+			// This is because the renderer will be created before the config
+			// is read and vid_wait is set from the user's preferences, and thus
+			// vid_wait will have no effect.
+			CV_StealthSetValue(&cv_vidwait, 0);
+#endif
+		}
+
+		if (!renderer)
+			renderer = SDL_CreateRenderer(window, -1, flags);
+		if (renderer == NULL)
+		{
+			CONS_Printf(M_GetText("Couldn't create rendering context: %s\n"), SDL_GetError());
+			return SDL_FALSE;
+		}
+		SDL_RenderSetLogicalSize(renderer, BASEVIDWIDTH, BASEVIDHEIGHT);
+	}
+	return SDL_TRUE;
 }
 
 void VID_CheckGLLoaded(rendermode_t oldrender)
@@ -1913,6 +1960,7 @@ INT32 VID_CheckRenderer(void)
 				rendererchanged = 0;
 			}
 		}
+		else
 #endif
 
 #if !defined(__ANDROID__)
@@ -2314,10 +2362,10 @@ void I_StartupGraphics(void)
 	if (graphics_started)
 		return;
 
-	COM_AddCommand ("vid_nummodes", VID_Command_NumModes_f);
-	COM_AddCommand ("vid_info", VID_Command_Info_f);
-	COM_AddCommand ("vid_modelist", VID_Command_ModeList_f);
-	COM_AddCommand ("vid_mode", VID_Command_Mode_f);
+	COM_AddCommand ("vid_nummodes", VID_Command_NumModes_f, COM_LUA);
+	COM_AddCommand ("vid_info", VID_Command_Info_f, COM_LUA);
+	COM_AddCommand ("vid_modelist", VID_Command_ModeList_f, COM_LUA);
+	COM_AddCommand ("vid_mode", VID_Command_Mode_f, 0);
 	CV_RegisterVar (&cv_vidwait);
 	CV_RegisterVar (&cv_stretch);
 #ifdef DITHER
