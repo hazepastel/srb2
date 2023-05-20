@@ -365,7 +365,6 @@ CV_PossibleValue_t zerotoone_cons_t[] = {{0, "MIN"}, {FRACUNIT, "MAX"}, {0, NULL
 #define CAMCVARFLAGS (CV_FLOAT|CV_SAVE|CV_ALLOWLUA|CV_SLIDER_SAFE)
 
 consvar_t cv_cam_shiftfacing[2] = {
-<<<<<<< HEAD
 	CVAR_INIT ("cam_shiftfacingchar", "0.375", CAMCVARFLAGS, zerotoone_cons_t, NULL),
 	CVAR_INIT ("cam2_shiftfacingchar", "0.375", CAMCVARFLAGS, zerotoone_cons_t, NULL),
 };
@@ -384,6 +383,7 @@ consvar_t cv_cam_turnfacingspindash[2] = {
 consvar_t cv_cam_turnfacinginput[2] = {
 	CVAR_INIT ("cam_turnfacinginput", "0.375", CAMCVARFLAGS, zerotoone_cons_t, NULL),
 	CVAR_INIT ("cam2_turnfacinginput", "0.375", CAMCVARFLAGS, zerotoone_cons_t, NULL),
+};
 
 #undef CAMCVARFLAGS
 

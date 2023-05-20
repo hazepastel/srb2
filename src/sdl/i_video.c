@@ -1876,11 +1876,11 @@ void VID_DisplayGLError(void)
 		if (renderer == NULL)
 		{
 			CONS_Printf(M_GetText("Couldn't create rendering context: %s\n"), SDL_GetError());
-			return SDL_FALSE;
+			return;
 		}
 		SDL_RenderSetLogicalSize(renderer, BASEVIDWIDTH, BASEVIDHEIGHT);
 	}
-	return SDL_TRUE;
+	return;
 }
 
 void VID_CheckGLLoaded(rendermode_t oldrender)

@@ -8148,7 +8148,7 @@ static boolean P_LoadAddon(UINT16 numlumps)
 boolean P_AddWadFile(const char *wadfilename)
 {
 	return D_CheckPathAllowed(wadfilename, "tried to add file") &&
-		P_LoadAddon(W_InitFile(wadfilename, false, false));
+		P_LoadAddon(W_InitFile(wadfilename, FILEHANDLE_STANDARD, false, false));
 }
 
 boolean P_AddFolder(const char *folderpath)

@@ -17,7 +17,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 26
         versionCode 22100
-        versionName "2.2.10"
+        versionName "2.2.11"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-16"
@@ -43,7 +43,7 @@ android {
                             'srb2.pk3',
                             'zones.pk3',
                             'player.dta',
-                            'patch.pk3', 'patch_music.pk3',
+                            'patch.pk3',
                             'music.dta']
                     ))
                 }
