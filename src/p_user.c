@@ -4668,7 +4668,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if ((onground || (player->pflags & PF_JUMPED) || player->powers[pw_justsprung]) && !(player->pflags & PF_THOKKED) && !player->weapondelay && !player->powers[pw_carry])
+				if ((onground || (player->pflags & PF_JUMPED)) && !(player->pflags & PF_THOKKED) && !player->weapondelay && !player->powers[pw_carry])
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)
@@ -5135,7 +5135,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 	//& SUPER FLOAT!//
 	//////////////////
 
-	if (((player->pflags & PF_JUMPED) || player->powers[pw_justsprung]) && !player->exiting && !P_PlayerInPain(player))
+	if ((player->pflags & PF_JUMPED) && !player->exiting && !P_PlayerInPain(player))
 	{
 		if (onground || player->climbing || player->powers[pw_carry])
 			;
@@ -5153,7 +5153,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					case CA_TELEKINESIS:
 						if (!(player->pflags & (PF_THOKKED|PF_SPINDOWN)) || (player->charflags & SF_MULTIABILITY))
 						{
-							player->powers[pw_justsprung] = 0;
 							P_Telekinesis(player,
 								-FixedMul(player->actionspd, player->mo->scale), // -ve thrust (pulling towards player)
 								FixedMul(384*FRACUNIT, player->mo->scale));
@@ -5162,7 +5161,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 					case CA_TWINSPIN:
 						if ((player->charability2 == CA2_MELEE && !(player->pflags & (PF_THOKKED|PF_SPINDOWN))) || (player->charflags & SF_MULTIABILITY && !player->weapondelay))
 						{
-							player->powers[pw_justsprung] = 0;
 							P_DoTwinSpin(player);
 						}
 						break;
@@ -5231,21 +5229,14 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		}
 		else if (player->pflags & PF_SLIDING || ((gametyperules & GTR_TEAMFLAGS) && player->gotflag) || player->pflags & PF_SHIELDABILITY)
 			;
-		/*else if (P_SuperReady(player))
+		else if ((player->pflags & PF_JUMPED) || (player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND)
 		{
-			// If you can turn super and aren't already,
-			// and you don't have a shield, do it!
-			P_DoSuperTransformation(player, false);
-		}*/
-		else if ((player->pflags & PF_JUMPED) || player->powers[pw_justsprung])
-		{
-			if (!(player->pflags & PF_JUMPED) && (player->powers[pw_justsprung]) && !(player->pflags & PF_THOKKED))
+			if (!(player->pflags & PF_JUMPED) && !(player->pflags & PF_THOKKED))
 			{
-				player->powers[pw_justsprung] = 0;
 				player->pflags |= P_GetJumpFlags(player);
 				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP); //this intentionally also activates with no ability
 			}
-				
+		
 			if (!LUA_HookPlayer(player, HOOK(AbilitySpecial)))
 			switch (player->charability)
 			{
@@ -8062,7 +8053,7 @@ void P_MovePlayer(player_t *player)
 	}
 
 	// If Springing (or nojumpspinning), but travelling DOWNWARD, change back!
-	if (((player->panim == PA_SPRING || player->mo->state-states == S_PLAY_WALK) && P_MobjFlip(player->mo)*player->mo->momz < 0)
+	if (((player->panim == PA_SPRING || (player->mo->state-states == S_PLAY_WALK && !player->secondjump)) && P_MobjFlip(player->mo)*player->mo->momz < 0)
 		|| ((((player->charflags & SF_NOJUMPSPIN) && (player->pflags & PF_JUMPED) && player->panim == PA_JUMP))
 			&& (P_MobjFlip(player->mo)*player->mo->momz < 0)))
 		P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
@@ -12131,17 +12122,13 @@ void P_PlayerThink(player_t *player)
 		}
 		else if (notfloating) // Activate dash mode if we're on the ground.
 		{
-			if (player->normalspeed < FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale)) // If the player normalspeed is not currently at normalspeed*3/2 in dash mode, add speed each tic
-				player->normalspeed += FRACUNIT/9; // Enter Dash Mode smoothly.
+			if (player->normalspeed < FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale))
+			{
+				player->normalspeed = FixedMul(skins[player->skin].normalspeed*3/2, player->mo->scale); // enter dash mode INSTANTLY
+				player->jumpfactor = skins[player->skin].jumpfactor*1157/1000;
+			}
 		}
 
-		if (dashmode == DASHMODE_MAX && player->speed > FixedMul(52<<FRACBITS, player->mo->scale))
-		{
-			mobj_t *ghost = P_SpawnGhostMobj(player->mo); // Spawns afterimages
-			ghost->fuse = 2; // Makes the images fade quickly
-			if (ghost->tracer && !P_MobjWasRemoved(ghost->tracer))
-				ghost->tracer->fuse = ghost->fuse;
-		}
 	}
 	else if (dashmode)
 	{

@@ -378,7 +378,7 @@ boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 					}
 					else if ((player->panim == PA_RUN) || (player->panim == PA_DASH))
 					{
-						if (speed > 52<<FRACBITS)
+						if (speed > 54<<FRACBITS)
 							mobj->tics = 1;
 						else
 							mobj->tics = 2;
@@ -3181,7 +3181,7 @@ boolean P_CanRunOnWater(player_t *player, ffloor_t *rover)
 	boolean doifit = flip ? (surfaceheight - player->mo->floorz >= player->mo->height) : (player->mo->ceilingz - surfaceheight >= player->mo->height);
 
 	if (!player->powers[pw_carry] && !player->homing
-		&& ((player->powers[pw_super] || player->charflags & SF_RUNONWATER || player->speed > FixedMul(52<<FRACBITS, player->mo->scale)) && doifit)
+		&& ((player->powers[pw_super] || (player->charflags & SF_RUNONWATER) || player->dashmode == DASHMODE_MAX || player->speed > FixedMul(54<<FRACBITS, player->mo->scale)) && doifit)
 		&& (rover->fofflags & FOF_SWIMMABLE) && !(player->pflags & PF_SPINNING) && player->speed > FixedMul(player->runspeed, player->mo->scale)
 		&& !(player->pflags & PF_SLIDING)
 		&& abs(playerbottom - surfaceheight) < FixedMul(30*FRACUNIT, player->mo->scale))
