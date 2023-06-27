@@ -4463,7 +4463,7 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			player->mo->momz = default<<1;
 		else if (player->powers[pw_super] && !(player->charflags & SF_NOSUPERJUMPBOOST))
 		{
-			player->mo->momz = default*4/3;
+			player->mo->momz = default*6/5;
 
 			// Add a boost for super characters with float/slowfall and multiability.
 			if (player->charability == CA_JUMPBOOST)
@@ -12086,7 +12086,7 @@ void P_PlayerThink(player_t *player)
 	if ((player->charflags & SF_DASHMODE) && !player->gotflag && (player->powers[pw_carry] != CR_ROLLOUT) && !player->exiting && !(maptol & TOL_NIGHTS) && !P_PlayerInPain(player) && (player->playerstate == PST_LIVE))
 	{
 		tic_t prevdashmode = dashmode;
-		boolean above = (player->speed >= FixedMul(player->runspeed, player->mo->scale)) || (player->pflags & PF_STARTDASH);
+		boolean above = (player->speed >= FixedMul(skins[player->skin].normalspeed>>1, player->mo->scale)) || (player->pflags & PF_STARTDASH);
 		boolean notfloating = (P_IsObjectOnGround(player->mo) || (player->mo->eflags & MFE_JUSTHITFLOOR));
 
 		if (above && notfloating)

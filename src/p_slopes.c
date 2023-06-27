@@ -955,9 +955,6 @@ void P_ButteredSlope(mobj_t *mo)
 			spinadd = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 3/2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);
 			thrust += spinadd;
 		}
-
-		if (mo->player->speed < FixedMul(20<<FRACBITS, mo->scale))
-			thrust >>= 1;
 	}
 
 	// get the gravity strength for the object
