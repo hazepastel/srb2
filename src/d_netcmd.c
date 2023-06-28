@@ -1882,7 +1882,7 @@ static void Command_Map_f(void)
 	const char *gametypename;
 	boolean newresetplayers;
 
-	boolean mustmodifygame;
+	boolean wouldSetCheats;
 
 	INT32 newmapnum;
 
@@ -1903,11 +1903,11 @@ static void Command_Map_f(void)
 	option_gametype =   COM_CheckPartialParm("-g");
 	newresetplayers = ! COM_CheckParm("-noresetplayers");
 
-	mustmodifygame =
-		!( netgame     || multiplayer ) &&
-		(!modifiedgame || savemoddata );
+	wouldSetCheats =
+		!( netgame || multiplayer ) &&
+		!( usedCheats );
 
-	if (mustmodifygame && !option_force)
+	if (wouldSetCheats && !option_force)
 	{
 		/* May want to be more descriptive? */
 		CONS_Printf(M_GetText("Sorry, level change disabled in single player.\n"));
@@ -1961,9 +1961,9 @@ static void Command_Map_f(void)
 		return;
 	}
 
-	if (mustmodifygame && option_force)
+	if (wouldSetCheats && option_force)
 	{
-		G_SetGameModified(false);
+		G_SetUsedCheats(false);
 	}
 
 	// new gametype value
@@ -2036,7 +2036,7 @@ static void Command_Map_f(void)
 	// ... unless you're in a dedicated server.  Yes, technically this means you can view any level by
 	// running a dedicated server and joining it yourself, but that's better than making dedicated server's
 	// lives hell.
-	if (!dedicated && M_MapLocked(newmapnum))
+	if (!dedicated && M_MapLocked(newmapnum, serverGamedata))
 	{
 		CONS_Alert(CONS_NOTICE, M_GetText("You need to unlock this level before you can warp to it!\n"));
 		Z_Free(realmapname);
@@ -3945,15 +3945,9 @@ void ItemFinder_OnChange(void)
 	if (!cv_itemfinder.value)
 		return; // it's fine.
 
-	if (!M_SecretUnlocked(SECRET_ITEMFINDER))
+	if (!M_SecretUnlocked(SECRET_ITEMFINDER, clientGamedata))
 	{
 		CONS_Printf(M_GetText("You haven't earned this yet.\n"));
-		CV_StealthSetValue(&cv_itemfinder, 0);
-		return;
-	}
-	else if (netgame || multiplayer)
-	{
-		CONS_Printf(M_GetText("This only works in single player.\n"));
 		CV_StealthSetValue(&cv_itemfinder, 0);
 		return;
 	}
@@ -4305,7 +4299,7 @@ void D_GameTypeChanged(INT32 lastgametype)
 
 static void Ringslinger_OnChange(void)
 {
-	if (!M_SecretUnlocked(SECRET_PANDORA) && !netgame && cv_ringslinger.value && !cv_debug)
+	if (!M_SecretUnlocked(SECRET_PANDORA, serverGamedata) && !netgame && cv_ringslinger.value && !cv_debug)
 	{
 		CONS_Printf(M_GetText("You haven't earned this yet.\n"));
 		CV_StealthSetValue(&cv_ringslinger, 0);
@@ -4313,12 +4307,12 @@ static void Ringslinger_OnChange(void)
 	}
 
 	if (cv_ringslinger.value) // Only if it's been turned on
-		G_SetGameModified(multiplayer);
+		G_SetUsedCheats(false);
 }
 
 static void Gravity_OnChange(void)
 {
-	if (!M_SecretUnlocked(SECRET_PANDORA) && !netgame && !cv_debug
+	if (!M_SecretUnlocked(SECRET_PANDORA, serverGamedata) && !netgame && !cv_debug
 		&& strcmp(cv_gravity.string, cv_gravity.defaultvalue))
 	{
 		CONS_Printf(M_GetText("You haven't earned this yet.\n"));
@@ -4334,7 +4328,7 @@ static void Gravity_OnChange(void)
 #endif
 
 	if (!CV_IsSetToDefault(&cv_gravity))
-		G_SetGameModified(multiplayer);
+		G_SetUsedCheats(false);
 	gravity = cv_gravity.value;
 }
 
@@ -4650,7 +4644,7 @@ static void Fishcake_OnChange(void)
 	// so don't make modifiedgame always on!
 	if (cv_debug)
 	{
-		G_SetGameModified(multiplayer);
+		G_SetUsedCheats(false);
 	}
 
 	else if (cv_debug != cv_fishcake.value)
@@ -4667,11 +4661,11 @@ static void Fishcake_OnChange(void)
 static void Command_Isgamemodified_f(void)
 {
 	if (savemoddata)
-		CONS_Printf(M_GetText("modifiedgame is true, but you can save emblem and time data in this mod.\n"));
+		CONS_Printf(M_GetText("modifiedgame is true, but you can save time data in this mod.\n"));
 	else if (modifiedgame)
-		CONS_Printf(M_GetText("modifiedgame is true, extras will not be unlocked\n"));
+		CONS_Printf(M_GetText("modifiedgame is true, time data can't be saved\n"));
 	else
-		CONS_Printf(M_GetText("modifiedgame is false, you can unlock extras\n"));
+		CONS_Printf(M_GetText("modifiedgame is false, you can save time data\n"));
 }
 
 static void Command_Cheats_f(void)
