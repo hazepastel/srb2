@@ -65,7 +65,7 @@ JoyType_t Joystick2;
 // 1024 bytes is plenty for a savegame
 #define SAVEGAMESIZE (1024)
 
-char gamedatafilename[64] = "gamedata.dat";
+char gamedatafilename[69] = "gamedata.dat";
 char timeattackfolder[64] = "main";
 char customversionstring[32] = "\0";
 
@@ -4339,6 +4339,23 @@ void G_LoadGameData(gamedata_t *data)
 		return;
 	}
 
+	// rphys exclusive data
+	char currentfilename[64];
+	char rfilename[69];
+	char bak[5];
+
+	strcpy(bak, ".rev");
+	STRBUFCPY(currentfilename, gamedatafilename);
+	STRBUFCPY(rfilename, strcat(currentfilename, bak));
+
+	length = FIL_ReadFile(va(pandf, srb2home, rfilename), &savebuffer);
+	if (!length)
+	{
+		FIL_WriteFile(va(pandf, srb2home, rfilename), savebuffer, length);
+	}
+
+	STRBUFCPY(gamedatafilename, rfilename);
+
 	save_p = savebuffer;
 
 	// Version check
@@ -4376,16 +4393,6 @@ void G_LoadGameData(gamedata_t *data)
 			goto datacorrupt;
 		}
 
-		// make a backup of the old data
-		char currentfilename[64];
-		char backupfilename[69];
-		char bak[5];
-
-		strcpy(bak, ".bak");
-		strcpy(currentfilename, gamedatafilename);
-		STRBUFCPY(backupfilename, strcat(currentfilename, bak));
-
-		FIL_WriteFile(va(pandf, srb2home, backupfilename), savebuffer, length);
 	}
 	else
 #endif
