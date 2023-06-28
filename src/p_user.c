@@ -11213,6 +11213,7 @@ static void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 	{
 		if (stat != fume->info->spawnstate)
 			P_SetMobjState(fume, fume->info->spawnstate);
+		fume->color = FUME_SKINCOLORS[(dashmode * sizeof(FUME_SKINCOLORS)) / (DASHMODE_MAX + 1)];
 		return;
 	}
 
