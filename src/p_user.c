@@ -4481,6 +4481,10 @@ void P_DoJump(player_t *player, boolean soundandstate)
 		if (player->mo->eflags & MFE_UNDERWATER)
 			player->mo->momz = FixedMul(player->mo->momz, FixedDiv(117*FRACUNIT, 200*FRACUNIT));
 
+		// prevent holding spin to build infinite score chains (this isn't needed in vanilla because the spin control is so bad)
+		if (player->powers[pw_invulnerability] <= 1)
+			P_ResetScore(player);
+
 		player->pflags |= PF_STARTJUMP;
 	}
 
@@ -4616,7 +4620,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 					{
 #define chargecalculation (6*(player->dashspeed - player->mindash))/(player->maxdash - player->mindash)
 						fixed_t soundcalculation = chargecalculation;
-						player->dashspeed += 3*FRACUNIT/2;
+						player->dashspeed += FRACUNIT;
 						if (!player->spectator && soundcalculation != chargecalculation)
 							S_StartSound(player->mo, sfx_spndsh); // Make the rev sound!
 #undef chargecalculation
@@ -6007,8 +6011,6 @@ static void P_3dMovement(player_t *player)
 				turnspd -= FRACUNIT>>1;
 			else if (!onground)
 				turnspd -= FRACUNIT>>2;
-			if (player->charability2 == CA2_MELEE && player->panim == PA_ABILITY2)
-				turnspd >>= 1;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
 			else
@@ -11855,21 +11857,24 @@ void P_PlayerThink(player_t *player)
 			}
 		}
 
-		// Autobrake! check ST_drawInput if you modify this
+		// air drag! also autobrake i guess
 		{
 			boolean currentlyonground = P_IsObjectOnGround(player->mo);
 
 			if (currentlyonground || player->powers[pw_noautobrake])
 				;
 			else if (!player->powers[pw_carry] && !player->powers[pw_nocontrol]
-			&& ((player->pflags & (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE|PF_STASIS)) == (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE))
-			&& !(cmd->forwardmove || cmd->sidemove)
 			&& (player->rmomx || player->rmomy)
 			&& (!player->capsule || (player->capsule->reactiontime != (player-players)+1)))
 			{
-				fixed_t acceleration = FRACUNIT>>1;
+				fixed_t acceleration = -(FRACUNIT>>2);
 				angle_t moveAngle = R_PointToAngle2(0, 0, player->rmomx, player->rmomy);
-				P_Thrust(player->mo, moveAngle, FixedMul(-acceleration, player->mo->scale));
+				if (((player->pflags & (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE|PF_STASIS)) == (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE))
+				&& !(cmd->forwardmove || cmd->sidemove))
+					P_Thrust(player->mo, moveAngle, FixedMul(acceleration<<1, player->mo->scale));
+				else if (player->speed > FixedMul(player->normalspeed, player->mo->scale)
+				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1))
+					P_Thrust(player->mo, moveAngle, FixedMul(acceleration, player->mo->scale));
 			}
 
 			if (!(player->pflags & PF_AUTOBRAKE)
