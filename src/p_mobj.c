@@ -7054,9 +7054,16 @@ static void P_MobjScaleThink(mobj_t *mobj)
 		P_SetScale(mobj, mobj->scale - mobj->scalespeed);
 
 	if (correctionType == 1)
+	{
 		mobj->z -= (mobj->height - oldheight)/2;
+		if (mobj->eflags & MFE_VERTICALFLIP)
+			mobj->old_z -= mobj->height - oldheight; // Don't divide by 2 here
+	}
 	else if (correctionType == 2)
-		mobj->z -= mobj->height - oldheight;
+	{
+		mobj->z     -= mobj->height - oldheight;
+		mobj->old_z -= mobj->height - oldheight;
+	}
 
 	if (mobj->scale == mobj->destscale)
 		/// \todo Lua hook for "reached destscale"?
@@ -12597,7 +12604,7 @@ static boolean P_SetupNiGHTSDrone(mapthing_t *mthing, mobj_t *mobj)
 	dronemangoaldiff = max(mobjinfo[MT_NIGHTSDRONE_MAN].height - mobjinfo[MT_NIGHTSDRONE_GOAL].height, 0);
 
 	if (flip && mobj->height != oldheight)
-		P_MoveOrigin(mobj, mobj->x, mobj->y, mobj->z - (mobj->height - oldheight));
+		P_SetOrigin(mobj, mobj->x, mobj->y, mobj->z - (mobj->height - oldheight));
 
 	if (!flip)
 	{
