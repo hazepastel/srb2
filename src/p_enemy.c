@@ -13555,6 +13555,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 			}
 			player->powers[pw_carry] = CR_DUSTDEVIL;
 			player->powers[pw_nocontrol] = 2;
+			player->powers[pw_noautobrake] = TICRATE;
 			P_SetTarget(&thing->tracer, dustdevil);
 			P_SetPlayerMobjState(thing, S_PLAY_PAIN);
 
@@ -13577,6 +13578,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 			thrust = 23*FRACUNIT;
 			player->powers[pw_carry] = CR_NONE;
 			player->powers[pw_nocontrol] = 0;
+			player->powers[pw_noautobrake] = TICRATE;
 			P_SetTarget(&thing->tracer, NULL);
 			S_StartSound(thing, sfx_wdjump);
 			P_SetPlayerMobjState(thing, S_PLAY_FALL);

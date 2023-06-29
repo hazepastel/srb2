@@ -11877,7 +11877,8 @@ void P_PlayerThink(player_t *player)
 				&& !(cmd->forwardmove || cmd->sidemove))
 					P_Thrust(player->mo, moveAngle, FixedMul(acceleration<<1, player->mo->scale));
 				else if (player->speed > FixedMul(player->normalspeed, player->mo->scale)
-				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1))
+				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1)
+				&& !(player->panim == PA_WALK) && !(player->panim == PA_RUN) && !(player->panim == PA_DASH))
 					P_Thrust(player->mo, moveAngle, FixedMul(acceleration, player->mo->scale));
 			}
 

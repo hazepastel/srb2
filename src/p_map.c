@@ -317,13 +317,13 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-			if (spring->info->painchance != 3)
-				object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
-			if (horizspeed)
-				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
-			else
+			object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
+			object->player->powers[pw_noautobrake] = object->player->powers[pw_justsprung];
+			if (!horizspeed)
+			{
 				if (abs(object->player->rmomx) > object->scale || abs(object->player->rmomy) > object->scale)
 					object->player->drawangle = R_PointToAngle2(0, 0, object->player->rmomx, object->player->rmomy);
+			}
 		}
 
 		if ((horizspeed && vertispeed) || (object->player && object->player->homing)) // Mimic SA
@@ -562,6 +562,7 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 				if (p->panim != PA_FALL)
 					P_SetPlayerMobjState(object, S_PLAY_FALL);
 				p->powers[pw_justsprung] = abs(speed)/FRACUNIT;
+				p->powers[pw_noautobrake] = p->powers[pw_justsprung];
 			}
 			break;
 		default:
