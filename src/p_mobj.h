@@ -361,7 +361,7 @@ typedef struct mobj_s
 
 	INT32 threshold; // If >0, the target will be chased no matter what.
 
-	INT8 hybridtics; // Tics spent in hyrbid thinker state
+	SINT8 hybridtics; // Tics spent in hyrbid thinker state
 
 	// Additional info record for player avatars only.
 	// Only valid if type == MT_PLAYER
