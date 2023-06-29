@@ -566,59 +566,27 @@ static luaL_Reg lib[] = {
 	{NULL, NULL}
 };
 
-enum cvar_e
-{
-	cvar_name,
-	cvar_defaultvalue,
-	cvar_flags,
-	cvar_value,
-	cvar_string,
-	cvar_changed,
-};
-
-static const char *const cvar_opt[] = {
-	"name",
-	"defaultvalue",
-	"flags",
-	"value",
-	"string",
-	"changed",
-	NULL,
-};
-
-static int cvar_fields_ref = LUA_NOREF;
-
 static int cvar_get(lua_State *L)
 {
 	consvar_t *cvar = *(consvar_t **)luaL_checkudata(L, 1, META_CVAR);
-	enum cvar_e field = Lua_optoption(L, 2, -1, cvar_fields_ref);
+	const char *field = luaL_checkstring(L, 2);
 
-	switch (field)
-	{
-	case cvar_name:
+	if(fastcmp(field,"name"))
 		lua_pushstring(L, cvar->name);
-		break;
-	case cvar_defaultvalue:
+	else if(fastcmp(field,"defaultvalue"))
 		lua_pushstring(L, cvar->defaultvalue);
-		break;
-	case cvar_flags:
+	else if(fastcmp(field,"flags"))
 		lua_pushinteger(L, cvar->flags);
-		break;
-	case cvar_value:
+	else if(fastcmp(field,"value"))
 		lua_pushinteger(L, cvar->value);
-		break;
-	case cvar_string:
+	else if(fastcmp(field,"string"))
 		lua_pushstring(L, cvar->string);
-		break;
-	case cvar_changed:
+	else if(fastcmp(field,"changed"))
 		lua_pushboolean(L, cvar->changed);
-		break;
-	default:
-		if (devparm)
-			return luaL_error(L, LUA_QL("consvar_t") " has no field named " LUA_QS, field);
-		else
-			return 0;
-	}
+	else if (devparm)
+		return luaL_error(L, LUA_QL("consvar_t") " has no field named " LUA_QS, field);
+	else
+		return 0;
 	return 1;
 }
 
@@ -629,8 +597,6 @@ int LUA_ConsoleLib(lua_State *L)
 		lua_pushcfunction(L, cvar_get);
 		lua_setfield(L, -2, "__index");
 	lua_pop(L,1);
-
-	cvar_fields_ref = Lua_CreateFieldTable(L, cvar_opt);
 
 	// Set empty registry tables
 	lua_newtable(L);

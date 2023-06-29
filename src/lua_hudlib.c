@@ -95,8 +95,6 @@ static const char *const patch_opt[] = {
 	"topoffset",
 	NULL};
 
-static int patch_fields_ref = LUA_NOREF;
-
 // alignment types for v.drawString
 enum align {
 	align_left = 0,
@@ -198,8 +196,6 @@ static const char *const camera_opt[] = {
 	"momz",
 	NULL};
 
-static int camera_fields_ref = LUA_NOREF;
-
 static int lib_getHudInfo(lua_State *L)
 {
 	UINT32 i;
@@ -280,7 +276,7 @@ static int colormap_get(lua_State *L)
 static int patch_get(lua_State *L)
 {
 	patch_t *patch = *((patch_t **)luaL_checkudata(L, 1, META_PATCH));
-	enum patch field = Lua_optoption(L, 2, -1, patch_fields_ref);
+	enum patch field = luaL_checkoption(L, 2, NULL, patch_opt);
 
 	// patches are invalidated when switching renderers
 	if (!patch) {
@@ -320,7 +316,7 @@ static int patch_set(lua_State *L)
 static int camera_get(lua_State *L)
 {
 	camera_t *cam = *((camera_t **)luaL_checkudata(L, 1, META_CAMERA));
-	enum cameraf field = Lua_optoption(L, 2, -1, camera_fields_ref);
+	enum cameraf field = luaL_checkoption(L, 2, NULL, camera_opt);
 
 	// cameras should always be valid unless I'm a nutter
 	I_Assert(cam != NULL);
@@ -376,7 +372,7 @@ static int camera_get(lua_State *L)
 static int camera_set(lua_State *L)
 {
 	camera_t *cam = *((camera_t **)luaL_checkudata(L, 1, META_CAMERA));
-	enum cameraf field = Lua_optoption(L, 2, -1, camera_fields_ref);
+	enum cameraf field = luaL_checkoption(L, 2, NULL, camera_opt);
 
 	I_Assert(cam != NULL);
 
@@ -1448,8 +1444,6 @@ int LUA_HudLib(lua_State *L)
 		lua_setfield(L, -2, "__newindex");
 	lua_pop(L,1);
 
-	patch_fields_ref = Lua_CreateFieldTable(L, patch_opt);
-
 	luaL_newmetatable(L, META_CAMERA);
 		lua_pushcfunction(L, camera_get);
 		lua_setfield(L, -2, "__index");
@@ -1457,8 +1451,6 @@ int LUA_HudLib(lua_State *L)
 		lua_pushcfunction(L, camera_set);
 		lua_setfield(L, -2, "__newindex");
 	lua_pop(L,1);
-
-	camera_fields_ref = Lua_CreateFieldTable(L, camera_opt);
 
 	luaL_register(L, "hud", lib_hud);
 	return 0;

@@ -88,8 +88,6 @@ static const char *const sector_opt[] = {
 	"gravity",
 	NULL};
 
-static int sector_fields_ref = LUA_NOREF;
-
 enum subsector_e {
 	subsector_valid = 0,
 	subsector_sector,
@@ -105,8 +103,6 @@ static const char *const subsector_opt[] = {
 	"firstline",
 	"polyList",
 	NULL};
-
-static int subsector_fields_ref = LUA_NOREF;
 
 enum line_e {
 	line_valid = 0,
@@ -160,8 +156,6 @@ static const char *const line_opt[] = {
 	"callcount",
 	NULL};
 
-static int line_fields_ref = LUA_NOREF;
-
 enum side_e {
 	side_valid = 0,
 	side_textureoffset,
@@ -202,8 +196,6 @@ static const char *const side_opt[] = {
 	"text",
 	NULL};
 
-static int side_fields_ref = LUA_NOREF;
-
 enum vertex_e {
 	vertex_valid = 0,
 	vertex_x,
@@ -223,8 +215,6 @@ static const char *const vertex_opt[] = {
 	"ceilingz",
 	"ceilingzset",
 	NULL};
-
-static int vertex_fields_ref = LUA_NOREF;
 
 enum ffloor_e {
 	ffloor_valid = 0,
@@ -278,8 +268,6 @@ static const char *const ffloor_opt[] = {
 	"bouncestrength",
 	NULL};
 
-static int ffloor_fields_ref = LUA_NOREF;
-
 #ifdef HAVE_LUA_SEGS
 enum seg_e {
 	seg_valid = 0,
@@ -309,8 +297,6 @@ static const char *const seg_opt[] = {
 	"polyseg",
 	NULL};
 
-static int seg_fields_ref = LUA_NOREF;
-
 enum node_e {
 	node_valid = 0,
 	node_x,
@@ -330,8 +316,6 @@ static const char *const node_opt[] = {
 	"bbox",
 	"children",
 	NULL};
-
-static int node_fields_ref = LUA_NOREF;
 
 enum nodechild_e {
 	nodechild_valid = 0,
@@ -383,8 +367,6 @@ static const char *const slope_opt[] = {
 	"xydirection",
 	"flags",
 	NULL};
-
-static int slope_fields_ref = LUA_NOREF;
 
 // shared by both vector2_t and vector3_t
 enum vector_e {
@@ -605,7 +587,7 @@ static int sectorlines_num(lua_State *L)
 static int sector_get(lua_State *L)
 {
 	sector_t *sector = *((sector_t **)luaL_checkudata(L, 1, META_SECTOR));
-	enum sector_e field = Lua_optoption(L, 2, sector_valid, sector_fields_ref);
+	enum sector_e field = luaL_checkoption(L, 2, sector_opt[0], sector_opt);
 	INT16 i;
 
 	if (!sector)
@@ -727,7 +709,7 @@ static int sector_get(lua_State *L)
 static int sector_set(lua_State *L)
 {
 	sector_t *sector = *((sector_t **)luaL_checkudata(L, 1, META_SECTOR));
-	enum sector_e field = Lua_optoption(L, 2, sector_valid, sector_fields_ref);
+	enum sector_e field = luaL_checkoption(L, 2, sector_opt[0], sector_opt);
 
 	if (!sector)
 		return luaL_error(L, "accessed sector_t doesn't exist anymore.");
@@ -844,7 +826,7 @@ static int sector_num(lua_State *L)
 static int subsector_get(lua_State *L)
 {
 	subsector_t *subsector = *((subsector_t **)luaL_checkudata(L, 1, META_SUBSECTOR));
-	enum subsector_e field = Lua_optoption(L, 2, subsector_valid, subsector_fields_ref);
+	enum subsector_e field = luaL_checkoption(L, 2, subsector_opt[0], subsector_opt);
 
 	if (!subsector)
 	{
@@ -928,7 +910,7 @@ static int linestringargs_len(lua_State *L)
 static int line_get(lua_State *L)
 {
 	line_t *line = *((line_t **)luaL_checkudata(L, 1, META_LINE));
-	enum line_e field = Lua_optoption(L, 2, line_valid, line_fields_ref);
+	enum line_e field = luaL_checkoption(L, 2, line_opt[0], line_opt);
 
 	if (!line)
 	{
@@ -1087,7 +1069,7 @@ static int sidenum_get(lua_State *L)
 static int side_get(lua_State *L)
 {
 	side_t *side = *((side_t **)luaL_checkudata(L, 1, META_SIDE));
-	enum side_e field = Lua_optoption(L, 2, side_valid, side_fields_ref);
+	enum side_e field = luaL_checkoption(L, 2, side_opt[0], side_opt);
 
 	if (!side)
 	{
@@ -1158,7 +1140,7 @@ static int side_get(lua_State *L)
 static int side_set(lua_State *L)
 {
 	side_t *side = *((side_t **)luaL_checkudata(L, 1, META_SIDE));
-	enum side_e field = Lua_optoption(L, 2, side_valid, side_fields_ref);
+	enum side_e field = luaL_checkoption(L, 2, side_opt[0], side_opt);
 
 	if (!side)
 	{
@@ -1232,7 +1214,7 @@ static int side_num(lua_State *L)
 static int vertex_get(lua_State *L)
 {
 	vertex_t *vertex = *((vertex_t **)luaL_checkudata(L, 1, META_VERTEX));
-	enum vertex_e field = Lua_optoption(L, 2, vertex_valid, vertex_fields_ref);
+	enum vertex_e field = luaL_checkoption(L, 2, vertex_opt[0], vertex_opt);
 
 	if (!vertex)
 	{
@@ -1286,7 +1268,7 @@ static int vertex_num(lua_State *L)
 static int seg_get(lua_State *L)
 {
 	seg_t *seg = *((seg_t **)luaL_checkudata(L, 1, META_SEG));
-	enum seg_e field = Lua_optoption(L, 2, seg_valid, seg_fields_ref);
+	enum seg_e field = luaL_checkoption(L, 2, seg_opt[0], seg_opt);
 
 	if (!seg)
 	{
@@ -1350,7 +1332,7 @@ static int seg_num(lua_State *L)
 static int node_get(lua_State *L)
 {
 	node_t *node = *((node_t **)luaL_checkudata(L, 1, META_NODE));
-	enum node_e field = Lua_optoption(L, 2, node_valid, node_fields_ref);
+	enum node_e field = luaL_checkoption(L, 2, node_opt[0], node_opt);
 
 	if (!node)
 	{
@@ -1986,7 +1968,7 @@ static INT32 P_GetOldFOFFlags(ffloor_t *fflr)
 static int ffloor_get(lua_State *L)
 {
 	ffloor_t *ffloor = *((ffloor_t **)luaL_checkudata(L, 1, META_FFLOOR));
-	enum ffloor_e field = Lua_optoption(L, 2, ffloor_valid, ffloor_fields_ref);
+	enum ffloor_e field = luaL_checkoption(L, 2, ffloor_opt[0], ffloor_opt);
 	INT16 i;
 
 	if (!ffloor)
@@ -2168,7 +2150,7 @@ static void P_SetOldFOFFlags(ffloor_t *fflr, oldffloortype_e oldflags)
 static int ffloor_set(lua_State *L)
 {
 	ffloor_t *ffloor = *((ffloor_t **)luaL_checkudata(L, 1, META_FFLOOR));
-	enum ffloor_e field = Lua_optoption(L, 2, ffloor_valid, ffloor_fields_ref);
+	enum ffloor_e field = luaL_checkoption(L, 2, ffloor_opt[0], ffloor_opt);
 
 	if (!ffloor)
 		return luaL_error(L, "accessed ffloor_t doesn't exist anymore.");
@@ -2263,7 +2245,7 @@ static int ffloor_set(lua_State *L)
 static int slope_get(lua_State *L)
 {
 	pslope_t *slope = *((pslope_t **)luaL_checkudata(L, 1, META_SLOPE));
-	enum slope_e field = Lua_optoption(L, 2, slope_valid, slope_fields_ref);
+	enum slope_e field = luaL_checkoption(L, 2, slope_opt[0], slope_opt);
 
 	if (!slope)
 	{
@@ -2307,7 +2289,7 @@ static int slope_get(lua_State *L)
 static int slope_set(lua_State *L)
 {
 	pslope_t *slope = *((pslope_t **)luaL_checkudata(L, 1, META_SLOPE));
-	enum slope_e field = Lua_optoption(L, 2, slope_valid, slope_fields_ref);
+	enum slope_e field = luaL_checkoption(L, 2, slope_opt[0], slope_opt);
 
 	if (!slope)
 		return luaL_error(L, "accessed pslope_t doesn't exist anymore.");
@@ -2471,258 +2453,110 @@ static int lib_nummapheaders(lua_State *L)
 // mapheader_t //
 /////////////////
 
-enum mapheaderinfo_e
-{
-	mapheaderinfo_lvlttl,
-	mapheaderinfo_subttl,
-	mapheaderinfo_actnum,
-	mapheaderinfo_typeoflevel,
-	mapheaderinfo_nextlevel,
-	mapheaderinfo_marathonnext,
-	mapheaderinfo_keywords,
-	mapheaderinfo_musname,
-	mapheaderinfo_mustrack,
-	mapheaderinfo_muspos,
-	mapheaderinfo_musinterfadeout,
-	mapheaderinfo_musintername,
-	mapheaderinfo_muspostbossname,
-	mapheaderinfo_muspostbosstrack,
-	mapheaderinfo_muspostbosspos,
-	mapheaderinfo_muspostbossfadein,
-	mapheaderinfo_musforcereset,
-	mapheaderinfo_forcecharacter,
-	mapheaderinfo_weather,
-	mapheaderinfo_skynum,
-	mapheaderinfo_skybox_scalex,
-	mapheaderinfo_skybox_scaley,
-	mapheaderinfo_skybox_scalez,
-	mapheaderinfo_interscreen,
-	mapheaderinfo_runsoc,
-	mapheaderinfo_scriptname,
-	mapheaderinfo_precutscenenum,
-	mapheaderinfo_cutscenenum,
-	mapheaderinfo_countdown,
-	mapheaderinfo_palette,
-	mapheaderinfo_numlaps,
-	mapheaderinfo_unlockrequired,
-	mapheaderinfo_levelselect,
-	mapheaderinfo_bonustype,
-	mapheaderinfo_ltzzpatch,
-	mapheaderinfo_ltzztext,
-	mapheaderinfo_ltactdiamond,
-	mapheaderinfo_maxbonuslives,
-	mapheaderinfo_levelflags,
-	mapheaderinfo_menuflags,
-	mapheaderinfo_selectheading,
-	mapheaderinfo_startrings,
-	mapheaderinfo_sstimer,
-	mapheaderinfo_ssspheres,
-	mapheaderinfo_gravity,
-};
-
-static const char *const mapheaderinfo_opt[] = {
-	"lvlttl",
-	"subttl",
-	"actnum",
-	"typeoflevel",
-	"nextlevel",
-	"marathonnext",
-	"keywords",
-	"musname",
-	"mustrack",
-	"muspos",
-	"musinterfadeout",
-	"musintername",
-	"muspostbossname",
-	"muspostbosstrack",
-	"muspostbosspos",
-	"muspostbossfadein",
-	"musforcereset",
-	"forcecharacter",
-	"weather",
-	"skynum",
-	"skybox_scalex",
-	"skybox_scaley",
-	"skybox_scalez",
-	"interscreen",
-	"runsoc",
-	"scriptname",
-	"precutscenenum",
-	"cutscenenum",
-	"countdown",
-	"palette",
-	"numlaps",
-	"unlockrequired",
-	"levelselect",
-	"bonustype",
-	"ltzzpatch",
-	"ltzztext",
-	"ltactdiamond",
-	"maxbonuslives",
-	"levelflags",
-	"menuflags",
-	"selectheading",
-	"startrings",
-	"sstimer",
-	"ssspheres",
-	"gravity",
-	NULL,
-};
-
-static int mapheaderinfo_fields_ref = LUA_NOREF;
-
 static int mapheaderinfo_get(lua_State *L)
 {
 	mapheader_t *header = *((mapheader_t **)luaL_checkudata(L, 1, META_MAPHEADER));
-	enum mapheaderinfo_e field = Lua_optoption(L, 2, -1, mapheaderinfo_fields_ref);
+	const char *field = luaL_checkstring(L, 2);
 	INT16 i;
-
-	switch (field)
-	{
-	case mapheaderinfo_lvlttl:
+	if (fastcmp(field,"lvlttl"))
 		lua_pushstring(L, header->lvlttl);
-		break;
-	case mapheaderinfo_subttl:
+	else if (fastcmp(field,"subttl"))
 		lua_pushstring(L, header->subttl);
-		break;
-	case mapheaderinfo_actnum:
+	else if (fastcmp(field,"actnum"))
 		lua_pushinteger(L, header->actnum);
-		break;
-	case mapheaderinfo_typeoflevel:
+	else if (fastcmp(field,"typeoflevel"))
 		lua_pushinteger(L, header->typeoflevel);
-		break;
-	case mapheaderinfo_nextlevel:
+	else if (fastcmp(field,"nextlevel"))
 		lua_pushinteger(L, header->nextlevel);
-		break;
-	case mapheaderinfo_marathonnext:
+	else if (fastcmp(field,"marathonnext"))
 		lua_pushinteger(L, header->marathonnext);
-		break;
-	case mapheaderinfo_keywords:
+	else if (fastcmp(field,"keywords"))
 		lua_pushstring(L, header->keywords);
-		break;
-	case mapheaderinfo_musname:
+	else if (fastcmp(field,"musname"))
 		lua_pushstring(L, header->musname);
-		break;
-	case mapheaderinfo_mustrack:
+	else if (fastcmp(field,"mustrack"))
 		lua_pushinteger(L, header->mustrack);
-		break;
-	case mapheaderinfo_muspos:
+	else if (fastcmp(field,"muspos"))
 		lua_pushinteger(L, header->muspos);
-		break;
-	case mapheaderinfo_musinterfadeout:
+	else if (fastcmp(field,"musinterfadeout"))
 		lua_pushinteger(L, header->musinterfadeout);
-		break;
-	case mapheaderinfo_musintername:
+	else if (fastcmp(field,"musintername"))
 		lua_pushstring(L, header->musintername);
-		break;
-	case mapheaderinfo_muspostbossname:
+	else if (fastcmp(field,"muspostbossname"))
 		lua_pushstring(L, header->muspostbossname);
-		break;
-	case mapheaderinfo_muspostbosstrack:
+	else if (fastcmp(field,"muspostbosstrack"))
 		lua_pushinteger(L, header->muspostbosstrack);
-		break;
-	case mapheaderinfo_muspostbosspos:
+	else if (fastcmp(field,"muspostbosspos"))
 		lua_pushinteger(L, header->muspostbosspos);
-		break;
-	case mapheaderinfo_muspostbossfadein:
+	else if (fastcmp(field,"muspostbossfadein"))
 		lua_pushinteger(L, header->muspostbossfadein);
-		break;
-	case mapheaderinfo_musforcereset:
+	else if (fastcmp(field,"musforcereset"))
 		lua_pushinteger(L, header->musforcereset);
-		break;
-	case mapheaderinfo_forcecharacter:
+	else if (fastcmp(field,"forcecharacter"))
 		lua_pushstring(L, header->forcecharacter);
-		break;
-	case mapheaderinfo_weather:
+	else if (fastcmp(field,"weather"))
 		lua_pushinteger(L, header->weather);
-		break;
-	case mapheaderinfo_skynum:
+	else if (fastcmp(field,"skynum"))
 		lua_pushinteger(L, header->skynum);
-		break;
-	case mapheaderinfo_skybox_scalex:
+	else if (fastcmp(field,"skybox_scalex"))
 		lua_pushinteger(L, header->skybox_scalex);
-		break;
-	case mapheaderinfo_skybox_scaley:
+	else if (fastcmp(field,"skybox_scaley"))
 		lua_pushinteger(L, header->skybox_scaley);
-		break;
-	case mapheaderinfo_skybox_scalez:
+	else if (fastcmp(field,"skybox_scalez"))
 		lua_pushinteger(L, header->skybox_scalez);
-		break;
-	case mapheaderinfo_interscreen:
+	else if (fastcmp(field,"interscreen")) {
 		for (i = 0; i < 8; i++)
 			if (!header->interscreen[i])
 				break;
 		lua_pushlstring(L, header->interscreen, i);
-		break;
-	case mapheaderinfo_runsoc:
+	} else if (fastcmp(field,"runsoc"))
 		lua_pushstring(L, header->runsoc);
-		break;
-	case mapheaderinfo_scriptname:
+	else if (fastcmp(field,"scriptname"))
 		lua_pushstring(L, header->scriptname);
-		break;
-	case mapheaderinfo_precutscenenum:
+	else if (fastcmp(field,"precutscenenum"))
 		lua_pushinteger(L, header->precutscenenum);
-		break;
-	case mapheaderinfo_cutscenenum:
+	else if (fastcmp(field,"cutscenenum"))
 		lua_pushinteger(L, header->cutscenenum);
-		break;
-	case mapheaderinfo_countdown:
+	else if (fastcmp(field,"countdown"))
 		lua_pushinteger(L, header->countdown);
-		break;
-	case mapheaderinfo_palette:
+	else if (fastcmp(field,"palette"))
 		lua_pushinteger(L, header->palette);
-		break;
-	case mapheaderinfo_numlaps:
+	else if (fastcmp(field,"numlaps"))
 		lua_pushinteger(L, header->numlaps);
-		break;
-	case mapheaderinfo_unlockrequired:
+	else if (fastcmp(field,"unlockrequired"))
 		lua_pushinteger(L, header->unlockrequired);
-		break;
-	case mapheaderinfo_levelselect:
+	else if (fastcmp(field,"levelselect"))
 		lua_pushinteger(L, header->levelselect);
-		break;
-	case mapheaderinfo_bonustype:
+	else if (fastcmp(field,"bonustype"))
 		lua_pushinteger(L, header->bonustype);
-		break;
-	case mapheaderinfo_ltzzpatch:
+	else if (fastcmp(field,"ltzzpatch"))
 		lua_pushstring(L, header->ltzzpatch);
-		break;
-	case mapheaderinfo_ltzztext:
+	else if (fastcmp(field,"ltzztext"))
 		lua_pushstring(L, header->ltzztext);
-		break;
-	case mapheaderinfo_ltactdiamond:
+	else if (fastcmp(field,"ltactdiamond"))
 		lua_pushstring(L, header->ltactdiamond);
-		break;
-	case mapheaderinfo_maxbonuslives:
+	else if (fastcmp(field,"maxbonuslives"))
 		lua_pushinteger(L, header->maxbonuslives);
-		break;
-	case mapheaderinfo_levelflags:
+	else if (fastcmp(field,"levelflags"))
 		lua_pushinteger(L, header->levelflags);
-		break;
-	case mapheaderinfo_menuflags:
+	else if (fastcmp(field,"menuflags"))
 		lua_pushinteger(L, header->menuflags);
-		break;
-	case mapheaderinfo_selectheading:
+	else if (fastcmp(field,"selectheading"))
 		lua_pushstring(L, header->selectheading);
-		break;
-	case mapheaderinfo_startrings:
+	else if (fastcmp(field,"startrings"))
 		lua_pushinteger(L, header->startrings);
-		break;
-	case mapheaderinfo_sstimer:
+	else if (fastcmp(field, "sstimer"))
 		lua_pushinteger(L, header->sstimer);
-		break;
-	case mapheaderinfo_ssspheres:
+	else if (fastcmp(field, "ssspheres"))
 		lua_pushinteger(L, header->ssspheres);
-		break;
-	case mapheaderinfo_gravity:
+	else if (fastcmp(field, "gravity"))
 		lua_pushfixed(L, header->gravity);
-		break;
 	// TODO add support for reading numGradedMares and grades
-	default:
+	else {
 		// Read custom vars now
 		// (note: don't include the "LUA." in your lua scripts!)
 		UINT8 j = 0;
-		for (;j < header->numCustomOptions && !fastcmp(lua_tostring(L, 2), header->customopts[j].option); ++j);
+		for (;j < header->numCustomOptions && !fastcmp(field, header->customopts[j].option); ++j);
 
 		if(j < header->numCustomOptions)
 			lua_pushstring(L, header->customopts[j].value);
@@ -2753,8 +2587,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
 
-	sector_fields_ref = Lua_CreateFieldTable(L, sector_opt);
-
 	luaL_newmetatable(L, META_SUBSECTOR);
 		lua_pushcfunction(L, subsector_get);
 		lua_setfield(L, -2, "__index");
@@ -2763,8 +2595,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
 
-	subsector_fields_ref = Lua_CreateFieldTable(L, subsector_opt);
-
 	luaL_newmetatable(L, META_LINE);
 		lua_pushcfunction(L, line_get);
 		lua_setfield(L, -2, "__index");
@@ -2772,8 +2602,6 @@ int LUA_MapLib(lua_State *L)
 		lua_pushcfunction(L, line_num);
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
-
-	line_fields_ref = Lua_CreateFieldTable(L, line_opt);
 
 	luaL_newmetatable(L, META_LINEARGS);
 		lua_pushcfunction(L, lineargs_get);
@@ -2807,8 +2635,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
 
-	side_fields_ref = Lua_CreateFieldTable(L, side_opt);
-
 	luaL_newmetatable(L, META_VERTEX);
 		lua_pushcfunction(L, vertex_get);
 		lua_setfield(L, -2, "__index");
@@ -2817,8 +2643,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
 
-	vertex_fields_ref = Lua_CreateFieldTable(L, vertex_opt);
-
 	luaL_newmetatable(L, META_FFLOOR);
 		lua_pushcfunction(L, ffloor_get);
 		lua_setfield(L, -2, "__index");
@@ -2826,8 +2650,6 @@ int LUA_MapLib(lua_State *L)
 		lua_pushcfunction(L, ffloor_set);
 		lua_setfield(L, -2, "__newindex");
 	lua_pop(L, 1);
-
-	ffloor_fields_ref = Lua_CreateFieldTable(L, ffloor_opt);
 
 #ifdef HAVE_LUA_SEGS
 	luaL_newmetatable(L, META_SEG);
@@ -2838,8 +2660,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
 
-	seg_fields_ref = Lua_CreateFieldTable(L, seg_opt);
-
 	luaL_newmetatable(L, META_NODE);
 		lua_pushcfunction(L, node_get);
 		lua_setfield(L, -2, "__index");
@@ -2847,8 +2667,6 @@ int LUA_MapLib(lua_State *L)
 		lua_pushcfunction(L, node_num);
 		lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
-
-	node_fields_ref = Lua_CreateFieldTable(L, node_opt);
 
 	luaL_newmetatable(L, META_NODEBBOX);
 		//lua_pushcfunction(L, nodebbox_get);
@@ -2876,8 +2694,6 @@ int LUA_MapLib(lua_State *L)
 		lua_setfield(L, -2, "__newindex");
 	lua_pop(L, 1);
 
-	slope_fields_ref = Lua_CreateFieldTable(L, slope_opt);
-
 	luaL_newmetatable(L, META_VECTOR2);
 		lua_pushcfunction(L, vector2_get);
 		lua_setfield(L, -2, "__index");
@@ -2895,8 +2711,6 @@ int LUA_MapLib(lua_State *L)
 		//lua_pushcfunction(L, mapheaderinfo_num);
 		//lua_setfield(L, -2, "__len");
 	lua_pop(L, 1);
-
-	mapheaderinfo_fields_ref = Lua_CreateFieldTable(L, mapheaderinfo_opt);
 
 	LUA_PushTaggableObjectArray(L, "sectors",
 			lib_iterateSectors,
