@@ -5223,6 +5223,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 			player->powers[pw_carry] = CR_NONE;
 			P_SetTarget(&player->mo->tracer, NULL);
 			player->powers[pw_flashing] = TICRATE/4;
+			player->powers[pw_noautobrake] = TICRATE;
 		}
 		// can't jump while in air, can't jump while jumping
 		else if (onground || player->climbing || player->powers[pw_carry])
@@ -11872,13 +11873,15 @@ void P_PlayerThink(player_t *player)
 			&& (!player->capsule || (player->capsule->reactiontime != (player-players)+1)))
 			{
 				fixed_t acceleration = -(FRACUNIT>>2);
+				fixed_t normalspd = FixedMul(player->normalspeed, player->mo->scale);
 				angle_t moveAngle = R_PointToAngle2(0, 0, player->rmomx, player->rmomy);
+				if (player->powers[pw_super] || player->powers[pw_sneakers])
+					normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
 				if (((player->pflags & (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE|PF_STASIS)) == (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE))
 				&& !(cmd->forwardmove || cmd->sidemove))
 					P_Thrust(player->mo, moveAngle, FixedMul(acceleration<<1, player->mo->scale));
-				else if (player->speed > FixedMul(player->normalspeed, player->mo->scale)
-				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1)
-				&& !(player->panim == PA_WALK) && !(player->panim == PA_RUN) && !(player->panim == PA_DASH))
+				else if ((player->speed > normalspd)
+				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1))
 					P_Thrust(player->mo, moveAngle, FixedMul(acceleration, player->mo->scale));
 			}
 
