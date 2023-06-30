@@ -317,8 +317,8 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-			object->player->powers[pw_justsprung] = vertispeed ? (TICRATE)+(abs(vertispeed)/FRACUNIT) : (TICRATE)+((abs(horizspeed)/3)/FRACUNIT);
-			object->player->powers[pw_noautobrake] = object->player->powers[pw_justsprung];
+			object->player->powers[pw_justsprung] = vertispeed ? (abs(vertispeed)/FRACUNIT) : ((abs(horizspeed)/3)/FRACUNIT);
+			object->player->powers[pw_noautobrake] = TICRATE;
 			if (!horizspeed)
 			{
 				if (abs(object->player->rmomx) > object->scale || abs(object->player->rmomy) > object->scale)
@@ -562,7 +562,7 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 				if (p->panim != PA_FALL)
 					P_SetPlayerMobjState(object, S_PLAY_FALL);
 				p->powers[pw_justsprung] = abs(speed)/FRACUNIT;
-				p->powers[pw_noautobrake] = p->powers[pw_justsprung];
+				p->powers[pw_noautobrake] = TICRATE;
 			}
 			break;
 		default:

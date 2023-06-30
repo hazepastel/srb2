@@ -5139,9 +5139,9 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 	//& SUPER FLOAT!//
 	//////////////////
 
-	if ((player->pflags & PF_JUMPED) && !player->exiting && !P_PlayerInPain(player))
+	if ((player->pflags & PF_JUMPED) || (player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND)
 	{
-		if (onground || player->climbing || player->powers[pw_carry])
+		if (onground || player->exiting || player->climbing || player->powers[pw_carry] || P_PlayerInPain(player))
 			;
 		else if ((gametyperules & GTR_TEAMFLAGS) && player->gotflag)
 			;

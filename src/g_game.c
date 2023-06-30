@@ -4348,10 +4348,27 @@ void G_LoadGameData(gamedata_t *data)
 	STRBUFCPY(currentfilename, gamedatafilename);
 	STRBUFCPY(rfilename, strcat(currentfilename, bak));
 
-	length = FIL_ReadFile(va(pandf, srb2home, rfilename), &savebuffer);
-	if (!length)
+	if (FIL_FileExists(rfilename))
 	{
-		FIL_WriteFile(va(pandf, srb2home, rfilename), savebuffer, length);
+		length = FIL_ReadFile(va(pandf, srb2home, rfilename), &savebuffer);
+		if (!length)
+		{
+			// No gamedata. We can save a new one.
+			data->loaded = true;
+			return;
+		
+		}
+	}
+	else
+	{
+		length = FIL_ReadFile(va(pandf, srb2home, gamedatafilename), &savebuffer);
+		if (!length)
+		{
+			// No gamedata. We can save a new one.
+			data->loaded = true;
+			return;
+		
+		}
 	}
 
 	STRBUFCPY(gamedatafilename, rfilename);
