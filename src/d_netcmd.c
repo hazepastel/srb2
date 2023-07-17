@@ -873,6 +873,9 @@ void D_RegisterClientCommands(void)
 	// screen.c
 	CV_RegisterVar(&cv_fullscreen);
 	CV_RegisterVar(&cv_renderview);
+	CV_RegisterVar(&cv_renderhitboxinterpolation);
+	CV_RegisterVar(&cv_renderhitboxgldepth);
+	CV_RegisterVar(&cv_renderhitbox);
 	CV_RegisterVar(&cv_renderer);
 	CV_RegisterVar(&cv_scr_depth);
 	CV_RegisterVar(&cv_scr_width);
@@ -4609,6 +4612,7 @@ void Command_ExitGame_f(void)
 	botskin = 0;
 	cv_debug = 0;
 	emeralds = 0;
+	automapactive = false;
 	memset(&luabanks, 0, sizeof(luabanks));
 
 	if (dirmenu)
