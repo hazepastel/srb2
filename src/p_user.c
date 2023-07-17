@@ -5236,7 +5236,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 			player->powers[pw_carry] = CR_NONE;
 			P_SetTarget(&player->mo->tracer, NULL);
 			player->powers[pw_flashing] = TICRATE/4;
-			player->powers[pw_noautobrake] = TICRATE;
+			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
 		}
 		// can't jump while in air, can't jump while jumping
 		else if (onground || player->climbing || player->powers[pw_carry])
@@ -6003,7 +6003,7 @@ static void P_3dMovement(player_t *player)
 		}
 	}
 
-	if (totalthrust.x || totalthrust.y) //turning (modified from cobaltbw code)
+	if (totalthrust.x || totalthrust.y) //turning (modified from clairebun code)
 	{
 		fixed_t ang1 = AngleFixed(R_PointToAngle2(0, 0, player->rmomx,  player->rmomy));
 		fixed_t ang2 = AngleFixed(R_PointToAngle2(0, 0, totalthrust.x, totalthrust.y));
@@ -6017,7 +6017,7 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
-			if (!onground)
+			if (!onground && !spin)
 				turnspd -= FRACUNIT>>2;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
