@@ -5841,14 +5841,7 @@ static void P_3dMovement(player_t *player)
 		}
 	}
 
-	if (controlstyle & CS_LMAOGALOG)
-	{
-		movepushangle = (cmd->angleturn<<16 /* not FRACBITS */);
-	}
-	else
-	{
-		movepushangle = player->mo->angle;
-	}
+	movepushangle = (cmd->angleturn<<16);
 	movepushsideangle = movepushangle-ANGLE_90;
 
 	if (P_ShouldResetConveyorMomentum(player))
@@ -6023,10 +6016,8 @@ static void P_3dMovement(player_t *player)
 		if (abs(angdiff) > FRACUNIT && abs(angdiff) < FRACUNIT * 135)
 		{
 			fixed_t newang = ang1;
-			fixed_t turnspd = FixedMul(3<<FRACBITS, player->mo->movefactor);
-			if (spin)
-				turnspd -= FRACUNIT>>1;
-			else if (!onground)
+			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
+			if (!onground)
 				turnspd -= FRACUNIT>>2;
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
@@ -6079,7 +6070,6 @@ static void P_3dMovement(player_t *player)
 				player->mo->momx = tempmomx + player->cmomx;
 				player->mo->momy = tempmomy + player->cmomy;
 			}
-			// else do nothing
 		}
 		else
 		{
