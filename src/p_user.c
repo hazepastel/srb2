@@ -8349,16 +8349,6 @@ void P_MovePlayer(player_t *player)
 				&& leveltime % 10 == 0
 				&& !player->spectator)
 				S_StartSound(player->mo, sfx_putput);
-
-			// Flight cancel
-			if (cmd->buttons & BT_SPIN && !(player->fly1) && !(player->pflags & PF_SPINDOWN) && !(player->pflags & PF_STASIS) && !player->exiting)
-			{
-				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP);
-				player->powers[pw_tailsfly] = 0;
-				player->pflags |= PF_JUMPED;
-				if (P_MobjFlip(player->mo)*player->mo->momz > 0)
-					player->mo->momz = 0;
-			}
 		}
 		else
 		{
