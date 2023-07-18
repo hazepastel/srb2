@@ -4351,7 +4351,7 @@ void G_LoadGameData(gamedata_t *data)
 	char rfilename[69];
 	char bak[5];
 
-	strcpy(bak, ".rev");
+	strcpy(bak, ".rvr");
 	STRBUFCPY(currentfilename, gamedatafilename);
 	STRBUFCPY(rfilename, strcat(currentfilename, bak));
 
