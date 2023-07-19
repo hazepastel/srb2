@@ -269,7 +269,6 @@ static SDL_bool Impl_RenderContextCreate(void)
 
 		if (renderer == NULL)
 		{
-			VIDEO_INIT_ERROR("Couldn't create rendering context: %s");
 			return SDL_FALSE;
 		}
 	}
@@ -1720,7 +1719,7 @@ void I_FinishUpdate(void)
 		if (!bufSurface) // Double-check
 			Impl_VideoSetupSDLBuffer();
 
-		Impl_BlitSurfaceRegion();
+		Impl_BlitSurfaceRegion(0, 0, 0, 0);
 
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, &src_rect, NULL);
