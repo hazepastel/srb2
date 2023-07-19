@@ -140,6 +140,7 @@ boolean GLBackend_Init(void)
 
 	\param	w	width
 	\param	h	height
+	\param	isFullscreen	if true, go fullscreen
 
 	\return	if true, changed video mode
 */
@@ -153,8 +154,13 @@ boolean OglSdlSurface(INT32 w, INT32 h)
 	if (!GLBackend_LoadExtraFunctions())
 		return false;
 
-	GLBackend_SetSurface(w, h);
+	SetSurface(w, h);
 
+	glanisotropicmode_cons_t[1].value = maximumAnisotropy;
+
+	SDL_GL_SetSwapInterval(cv_vidwait.value ? 1 : 0);
+
+	HWR_Startup();
 	textureformatGL = cbpp > 16 ? GL_RGBA : GL_RGB5_A1;
 
 	return true;
@@ -177,26 +183,33 @@ void OglSdlFinishUpdate(boolean waitvbl)
 	oldwaitvbl = waitvbl;
 
 	SDL_GetWindowSize(window, &sdlw, &sdlh);
-	GPU->MakeFinalScreenTexture();
+	MakeFinalScreenTexture();
 
-#ifdef HAVE_GL_FRAMEBUFFER
 	GLFramebuffer_Disable();
 	RenderToFramebuffer = FramebufferEnabled;
-#endif
 
-	GPU->DrawFinalScreenTexture(sdlw, sdlh);
+	DrawFinalScreenTexture(sdlw, sdlh);
 
-#ifdef HAVE_GL_FRAMEBUFFER
 	if (RenderToFramebuffer)
 		GLFramebuffer_Enable();
-#endif
 
 	SDL_GL_SwapWindow(window);
-	GPU->GClipRect(0, 0, realwidth, realheight, NZCLIP_PLANE);
+	GClipRect(0, 0, realwidth, realheight, NZCLIP_PLANE);
 
 	// Sryder:	We need to draw the final screen texture again into the other buffer in the original position so that
 	//			effects that want to take the old screen can do so after this
-	GPU->DrawFinalScreenTexture(realwidth, realheight);
+	DrawFinalScreenTexture(realwidth, realheight);
+}
+
+EXPORT void HWRAPI(OglSdlSetPalette) (RGBA_t *palette)
+{
+	size_t palsize = (sizeof(RGBA_t) * 256);
+	// on a palette change, you have to reload all of the textures
+	if (memcmp(&myPaletteData, palette, palsize))
+	{
+		memcpy(&myPaletteData, palette, palsize);
+		GLTexture_Flush();
+	}
 }
 
 #endif //HWRENDER

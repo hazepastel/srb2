@@ -63,6 +63,8 @@ void I_UpdateNoBlit(void){}
 
 void I_FinishUpdate(void){}
 
+void I_OnLoopFinishUpdate(void){}
+
 void I_UpdateNoVsync(void) {}
 
 INT32 I_AppOnBackground(void)

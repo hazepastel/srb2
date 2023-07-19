@@ -626,7 +626,7 @@ void HWR_FreeTextureData(patch_t *patch)
 	grPatch = patch->hardware;
 
 	if (vid.glstate == VID_GL_LIBRARY_LOADED)
-		GPU->DeleteTexture(grPatch->mipmap);
+		HWD.pfnDeleteTexture(grPatch->mipmap);
 	if (grPatch->mipmap->data)
 		Z_Free(grPatch->mipmap->data);
 }
@@ -694,7 +694,7 @@ void HWR_FreeTextureColormaps(patch_t *patch)
 			Z_Free(next->colormap);
 		next->data = NULL;
 		next->colormap = NULL;
-		GPU->DeleteTexture(next);
+		HWD.pfnDeleteTexture(next);
 
 		// Free the old colormap mipmap from memory.
 		free(next);
@@ -729,7 +729,7 @@ static void FreeTextureCache(boolean freeall)
 // free all textures after each level
 void HWR_ClearAllTextures(void)
 {
-	GPU->ClearMipMapCache(); // free references to the textures
+	HWD.pfnClearMipMapCache(); // free references to the textures
 	//FreeTextureCache(true);
 }
 
@@ -748,7 +748,7 @@ void HWR_InitMapTextures(void)
 
 static void FreeMapTexture(GLMapTexture_t *tex)
 {
-	GPU->DeleteTexture(&tex->mipmap);
+	HWD.pfnDeleteTexture(&tex->mipmap);
 	if (tex->mipmap.data)
 		Z_Free(tex->mipmap.data);
 	tex->mipmap.data = NULL;
@@ -793,7 +793,7 @@ void HWR_LoadMapTextures(size_t pnumtextures)
 
 void HWR_SetPalette(RGBA_t *palette)
 {
-	GPU->SetPalette(palette);
+	HWD.pfnSetPalette(palette);
 
 	// hardware driver will flush there own cache if cache is non paletized
 	// now flush data texture cache so 32 bit texture are recomputed
@@ -825,7 +825,7 @@ GLMapTexture_t *HWR_GetTexture(INT32 tex)
 
 	// If hardware does not have the texture, then call pfnSetTexture to upload it
 	if (!grtex->mipmap.downloaded)
-		GPU->SetTexture(&grtex->mipmap);
+		HWD.pfnSetTexture(&grtex->mipmap);
 	HWR_SetCurrentTexture(&grtex->mipmap);
 
 	// The system-memory data can be purged now.
@@ -886,7 +886,7 @@ void HWR_GetRawFlat(lumpnum_t flatlumpnum)
 
 	// If hardware does not have the texture, then call pfnSetTexture to upload it
 	if (!grmip->downloaded)
-		GPU->SetTexture(grmip);
+		HWD.pfnSetTexture(grmip);
 	HWR_SetCurrentTexture(grmip);
 
 	// The system-memory data can be purged now.
@@ -923,7 +923,7 @@ void HWR_GetLevelFlat(levelflat_t *levelflat)
 
 		// If hardware does not have the texture, then call pfnSetTexture to upload it
 		if (!grtex->mipmap.downloaded)
-			GPU->SetTexture(&grtex->mipmap);
+			HWD.pfnSetTexture(&grtex->mipmap);
 		HWR_SetCurrentTexture(&grtex->mipmap);
 
 		// The system-memory data can be purged now.
@@ -998,7 +998,7 @@ static void HWR_LoadPatchMipmap(patch_t *patch, GLMipmap_t *grMipmap)
 
 	// If hardware does not have the texture, then call pfnSetTexture to upload it
 	if (!grMipmap->downloaded)
-		GPU->SetTexture(grMipmap);
+		HWD.pfnSetTexture(grMipmap);
 	HWR_SetCurrentTexture(grMipmap);
 
 	// The system-memory data can be purged now.
@@ -1016,9 +1016,9 @@ static void HWR_UpdatePatchMipmap(patch_t *patch, GLMipmap_t *grMipmap)
 	// If hardware does not have the texture, then call pfnSetTexture to upload it
 	// If it does have the texture, then call pfnUpdateTexture to update it
 	if (!grMipmap->downloaded)
-		GPU->SetTexture(grMipmap);
+		HWD.pfnSetTexture(grMipmap);
 	else
-		GPU->UpdateTexture(grMipmap);
+		HWD.pfnUpdateTexture(grMipmap);
 	HWR_SetCurrentTexture(grMipmap);
 
 	// The system-memory data can be purged now.
@@ -1228,7 +1228,7 @@ patch_t *HWR_GetPic(lumpnum_t lumpnum)
 		grPatch->mipmap->flags = 0;
 		grPatch->max_s = grPatch->max_t = 1.0f;
 	}
-	GPU->SetTexture(grPatch->mipmap);
+	HWD.pfnSetTexture(grPatch->mipmap);
 	//CONS_Debug(DBG_RENDER, "picloaded at %x as texture %d\n",grPatch->mipmap->data, grPatch->mipmap->downloaded);
 
 	return patch;
@@ -1345,7 +1345,7 @@ void HWR_GetFadeMask(lumpnum_t fademasklumpnum)
 	if (!grmip->downloaded && !grmip->data)
 		HWR_CacheFadeMask(grmip, fademasklumpnum);
 
-	GPU->SetTexture(grmip);
+	HWD.pfnSetTexture(grmip);
 
 	// The system-memory data can be purged now.
 	Z_ChangeTag(grmip->data, PU_HWRCACHE_UNLOCKED);

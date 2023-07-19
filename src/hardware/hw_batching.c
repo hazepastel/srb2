@@ -69,7 +69,7 @@ void HWR_SetCurrentTexture(GLMipmap_t *texture)
     }
     else
     {
-        GPU->SetTexture(texture);
+        HWD.pfnSetTexture(texture);
     }
 }
 
@@ -122,7 +122,7 @@ void HWR_ProcessPolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPt
 		unsortedVertexArraySize += iNumPts;
 	}
 	else
-        GPU->DrawPolygonShader(pSurf, pOutVerts, iNumPts, PolyFlags, shader);
+        HWD.pfnDrawPolygonShader(pSurf, pOutVerts, iNumPts, PolyFlags, shader);
 }
 
 static int comparePolygons(const void *p1, const void *p2)
@@ -283,14 +283,14 @@ void HWR_RenderBatches(void)
 	// set state for first batch
 	if (cv_glshaders.value && gl_shadersavailable)
 	{
-		GPU->SetBlend(currentPolyFlags);
-		GPU->SetShader(currentShader);
+		HWD.pfnSetBlend(currentPolyFlags);
+		HWD.pfnSetShader(currentShader);
 	}
 
 	if (currentPolyFlags & PF_NoTexture)
 		currentTexture = NULL;
     else
-	    GPU->SetTexture(currentTexture);
+	    HWD.pfnSetTexture(currentTexture);
 
 	while (1)// note: remember handling notexture polyflag as having texture number 0 (also in comparePolygons)
 	{
@@ -405,7 +405,7 @@ void HWR_RenderBatches(void)
 		if (changeState || stopFlag)
 		{
 			// execute draw call
-			GPU->DrawIndexedTriangles(&currentSurfaceInfo, finalVertexArray, finalIndexWritePos, currentPolyFlags, finalVertexIndexArray);
+            HWD.pfnDrawIndexedTriangles(&currentSurfaceInfo, finalVertexArray, finalIndexWritePos, currentPolyFlags, finalVertexIndexArray);
 			// update stats
 			ps_hw_numcalls.value.i++;
 			ps_hw_numverts.value.i += finalIndexWritePos;
@@ -421,7 +421,7 @@ void HWR_RenderBatches(void)
 		// change state according to change bools and next vars, update current vars and reset bools
 		if (changeShader)
 		{
-			GPU->SetShader(nextShader);
+			HWD.pfnSetShader(nextShader);
 			currentShader = nextShader;
 			changeShader = false;
 
@@ -430,7 +430,7 @@ void HWR_RenderBatches(void)
 		if (changeTexture)
 		{
 			// texture should be already ready for use from calls to SetTexture during batch collection
-			GPU->SetTexture(nextTexture);
+		    HWD.pfnSetTexture(nextTexture);
 			currentTexture = nextTexture;
 			changeTexture = false;
 

@@ -120,7 +120,7 @@ void HWR_DrawPatch(patch_t *gpatch, INT32 x, INT32 y, INT32 option)
 	flags = PF_Translucent|PF_NoDepthTest;
 
 	// clip it since it is used for bunny scroll in doom I
-	GPU->DrawPolygon(NULL, v, 4, flags);
+	HWD.pfnDrawPolygon(NULL, v, 4, flags);
 }
 
 void HWR_DrawStretchyFixedPatch(patch_t *gpatch, fixed_t x, fixed_t y, fixed_t pscale, fixed_t vscale, INT32 option, const UINT8 *colormap)
@@ -359,10 +359,10 @@ void HWR_DrawStretchyFixedPatch(patch_t *gpatch, fixed_t x, fixed_t y, fixed_t p
 		else if (alphalevel == 12) Surf.PolyColor.s.alpha = softwaretranstogl_hi[st_translucency]; // V_HUDTRANSDOUBLE
 		else Surf.PolyColor.s.alpha = softwaretranstogl[10-alphalevel];
 		flags |= PF_Modulated;
-		GPU->DrawPolygon(&Surf, v, 4, flags);
+		HWD.pfnDrawPolygon(&Surf, v, 4, flags);
 	}
 	else
-		GPU->DrawPolygon(NULL, v, 4, flags);
+		HWD.pfnDrawPolygon(NULL, v, 4, flags);
 }
 
 void HWR_DrawCroppedPatch(patch_t *gpatch, fixed_t x, fixed_t y, fixed_t pscale, fixed_t vscale, INT32 option, const UINT8 *colormap, fixed_t sx, fixed_t sy, fixed_t w, fixed_t h)
@@ -654,10 +654,10 @@ void HWR_DrawCroppedPatch(patch_t *gpatch, fixed_t x, fixed_t y, fixed_t pscale,
 		else Surf.PolyColor.s.alpha = softwaretranstogl[10-alphalevel];
 
 		flags |= PF_Modulated;
-		GPU->DrawPolygon(&Surf, v, 4, flags);
+		HWD.pfnDrawPolygon(&Surf, v, 4, flags);
 	}
 	else
-		GPU->DrawPolygon(NULL, v, 4, flags);
+		HWD.pfnDrawPolygon(NULL, v, 4, flags);
 }
 
 void HWR_DrawPic(INT32 x, INT32 y, lumpnum_t lumpnum)
@@ -692,7 +692,7 @@ void HWR_DrawPic(INT32 x, INT32 y, lumpnum_t lumpnum)
 	// But then, the question is: why not 0 instead of PF_Masked ?
 	// or maybe PF_Environment ??? (like what I said above)
 	// BP: PF_Environment don't change anything ! and 0 is undifined
-	GPU->DrawPolygon(NULL, v, 4, PF_Translucent | PF_NoDepthTest);
+	HWD.pfnDrawPolygon(NULL, v, 4, PF_Translucent | PF_NoDepthTest);
 }
 
 // ==========================================================================
@@ -735,7 +735,7 @@ void HWR_DrawFlatFill (INT32 x, INT32 y, INT32 w, INT32 h, lumpnum_t flatlumpnum
 	// BTW, I see we put 0 for PFs, and If I'm right, that
 	// means we take the previous PFs as default
 	// how can we be sure they are ok?
-	GPU->DrawPolygon(NULL, v, 4, PF_NoDepthTest); //PF_Translucent);
+	HWD.pfnDrawPolygon(NULL, v, 4, PF_NoDepthTest); //PF_Translucent);
 }
 
 
@@ -772,7 +772,7 @@ void HWR_FadeScreenMenuBack(UINT16 color, UINT8 strength)
 		Surf.PolyColor.rgba = V_GetColor(color).rgba;
 		Surf.PolyColor.s.alpha = softwaretranstogl[strength];
 	}
-	GPU->DrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnDrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
 }
 
 // -----------------+
@@ -945,7 +945,7 @@ void HWR_DrawFadeFill(INT32 x, INT32 y, INT32 w, INT32 h, INT32 color, UINT16 ac
 		Surf.PolyColor.rgba = V_GetColor(actualcolor).rgba;
 		Surf.PolyColor.s.alpha = softwaretranstogl[strength];
 	}
-	GPU->DrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnDrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
 }
 
 // Draw the console background with translucency support
@@ -972,7 +972,7 @@ void HWR_DrawConsoleBack(UINT32 color, INT32 height)
 	Surf.PolyColor.rgba = UINT2RGBA(color);
 	Surf.PolyColor.s.alpha = 0x80;
 
-	GPU->DrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnDrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
 }
 
 // Very similar to HWR_DrawConsoleBack, except we draw from the middle(-ish) of the screen to the bottom.
@@ -1002,7 +1002,7 @@ void HWR_DrawTutorialBack(UINT32 color, INT32 boxheight)
 	Surf.PolyColor.rgba = UINT2RGBA(color);
 	Surf.PolyColor.s.alpha = (color == 0 ? 0xC0 : 0x80); // make black darker, like software
 
-	GPU->DrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnDrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
 }
 
 
@@ -1156,7 +1156,7 @@ void HWR_drawAMline(const fline_t *fl, INT32 color)
 	v2.x = ((float)fl->b.x-(vid.width/2.0f))*(2.0f/vid.width);
 	v2.y = ((float)fl->b.y-(vid.height/2.0f))*(2.0f/vid.height);
 
-	GPU->Draw2DLine(&v1, &v2, color_rgba);
+	HWD.pfnDraw2DLine(&v1, &v2, color_rgba);
 }
 
 // -------------------+
@@ -1322,7 +1322,7 @@ void HWR_DrawConsoleFill(INT32 x, INT32 y, INT32 w, INT32 h, INT32 color, UINT32
 	Surf.PolyColor.rgba = UINT2RGBA(actualcolor);
 	Surf.PolyColor.s.alpha = 0x80;
 
-	GPU->DrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnDrawPolygon(&Surf, v, 4, PF_NoTexture|PF_Modulated|PF_Translucent|PF_NoDepthTest);
 }
 
 // -----------------+
@@ -1426,7 +1426,7 @@ void HWR_DrawFill(INT32 x, INT32 y, INT32 w, INT32 h, INT32 color)
 			clearColour.green = (float)rgbaColour.s.green / 255;
 			clearColour.blue = (float)rgbaColour.s.blue / 255;
 			clearColour.alpha = 1;
-			GPU->ClearBuffer(true, false, &clearColour);
+			HWD.pfnClearBuffer(true, false, &clearColour);
 			return;
 		}
 
@@ -1499,7 +1499,7 @@ void HWR_DrawFill(INT32 x, INT32 y, INT32 w, INT32 h, INT32 color)
 
 	Surf.PolyColor = V_GetColor(color);
 
-	GPU->DrawPolygon(&Surf, v, 4,
+	HWD.pfnDrawPolygon(&Surf, v, 4,
 		PF_Modulated|PF_NoTexture|PF_NoDepthTest);
 }
 
@@ -1581,7 +1581,7 @@ UINT8 *HWR_GetScreenshot(void)
 		return NULL;
 
 	// returns either 24bit 888 RGB or 32bit 8888 RGBA
-	GPU->ReadRect(0, 0, vid.width, vid.height, vid.width * SCREENSHOT_BITS, (void *)buf);
+	HWD.pfnReadRect(0, 0, vid.width, vid.height, vid.width * SCREENSHOT_BITS, (void *)buf);
 	return buf;
 }
 

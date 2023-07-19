@@ -350,7 +350,7 @@ void W_UnpackMultipleFiles(addfilelist_t *list, boolean checkhash)
 	{
 		UnpackFile_ProgressClear();
 		UnpackFile_ProgressSetTotalFiles(numstartupunpack);
-		UnpackFile_ProgressSetReportFlag(false);
+		UnpackFile_ProgressSetReportFlag(true);
 		W_UnpackBaseFiles();
 	}
 

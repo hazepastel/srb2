@@ -419,7 +419,7 @@ static void md2_loadTexture(md2_t *model)
 			image++;
 		}
 	}
-	GPU->SetTexture(grPatch->mipmap);
+	HWD.pfnSetTexture(grPatch->mipmap);
 }
 
 // -----------------+
@@ -473,7 +473,7 @@ static void md2_loadBlendTexture(md2_t *model)
 		grPatch->mipmap->width = (UINT16)w;
 		grPatch->mipmap->height = (UINT16)h;
 	}
-	GPU->SetTexture(grPatch->mipmap); // We do need to do this so that it can be cleared and knows to recreate it when necessary
+	HWD.pfnSetTexture(grPatch->mipmap); // We do need to do this so that it can be cleared and knows to recreate it when necessary
 
 	Z_Free(filename);
 }
@@ -490,6 +490,7 @@ void HWR_InitModels(void)
 	float scale, offset;
 	size_t prefixlen;
 
+	CONS_Printf("HWR_InitModels()...\n");
 	for (s = 0; s < MAXSKINS; s++)
 	{
 		md2_playermodels[s].scale = -1.0f;
@@ -1081,7 +1082,7 @@ static void HWR_GetBlendedTexture(patch_t *patch, patch_t *blendpatch, INT32 ski
 	if (blendpatch == NULL || colormap == colormaps || colormap == NULL)
 	{
 		// Don't do any blending
-		GPU->SetTexture(grPatch->mipmap);
+		HWD.pfnSetTexture(grPatch->mipmap);
 		return;
 	}
 
@@ -1089,7 +1090,7 @@ static void HWR_GetBlendedTexture(patch_t *patch, patch_t *blendpatch, INT32 ski
 		&& (patch->width != blendpatch->width || patch->height != blendpatch->height))
 	{
 		// Blend image exists, but it's bad.
-		GPU->SetTexture(grPatch->mipmap);
+		HWD.pfnSetTexture(grPatch->mipmap);
 		return;
 	}
 
@@ -1106,10 +1107,10 @@ static void HWR_GetBlendedTexture(patch_t *patch, patch_t *blendpatch, INT32 ski
 				{
 					M_Memcpy(grMipmap->colormap->data, colormap, 256 * sizeof(UINT8));
 					HWR_CreateBlendedTexture(patch, blendpatch, grMipmap, skinnum, color);
-					GPU->UpdateTexture(grMipmap);
+					HWD.pfnUpdateTexture(grMipmap);
 				}
 				else
-					GPU->SetTexture(grMipmap); // found the colormap, set it to the correct texture
+					HWD.pfnSetTexture(grMipmap); // found the colormap, set it to the correct texture
 
 				Z_ChangeTag(grMipmap->data, PU_HWRMODELTEXTURE_UNLOCKED);
 				return;
@@ -1135,7 +1136,7 @@ static void HWR_GetBlendedTexture(patch_t *patch, patch_t *blendpatch, INT32 ski
 
 	HWR_CreateBlendedTexture(patch, blendpatch, newMipmap, skinnum, color);
 
-	GPU->SetTexture(newMipmap);
+	HWD.pfnSetTexture(newMipmap);
 	Z_ChangeTag(newMipmap->data, PU_HWRMODELTEXTURE_UNLOCKED);
 }
 
@@ -1455,7 +1456,7 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 
 		if (!md2->model->hasVBOs)
 		{
-			GPU->CreateModelVBOs(md2->model);
+			HWD.pfnCreateModelVBOs(md2->model);
 			md2->model->hasVBOs = true;
 		}
 
@@ -1676,12 +1677,12 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 		else if (Surf.PolyColor.s.alpha == 0xFF)
 			flags |= (PF_Occlude | PF_Masked);
 
-		GPU->SetBlend(flags);
-		GPU->SetShader(SHADER_MODEL);
-		GPU->DrawModel(md2->model, frame, durs, tics, nextFrame, &p, finalscale, flip, hflip, &Surf);
+		HWD.pfnSetBlend(flags);
+		HWD.pfnSetShader(SHADER_MODEL);
+		HWD.pfnDrawModel(md2->model, frame, durs, tics, nextFrame, &p, finalscale, flip, hflip, &Surf);
 	}
 
-	GPU->SetShader(SHADER_DEFAULT);
+	HWD.pfnSetShader(SHADER_DEFAULT);
 
 	return true;
 }

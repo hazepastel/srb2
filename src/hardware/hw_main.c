@@ -54,7 +54,7 @@
 // ==========================================================================
 // the hardware driver object
 // ==========================================================================
-struct hwdriver_s *hwdriver;
+struct hwdriver_s hwdriver;
 
 // ==========================================================================
 //                                                                     PROTOS
@@ -685,7 +685,7 @@ static void HWR_RenderSkyPlane(extrasubsector_t *xsub, fixed_t fixedheight)
 		v3d->z = pv->y;
 	}
 
-	GPU->DrawPolygon(NULL, planeVerts, nrPlaneVerts, PF_Invisible|PF_NoTexture|PF_Occlude);
+	HWD.pfnDrawPolygon(NULL, planeVerts, nrPlaneVerts, PF_Invisible|PF_NoTexture|PF_Occlude);
 }
 #endif //polysky
 
@@ -3193,10 +3193,10 @@ static void HWR_Subsector(size_t num)
 		}
 	}
 
-// Hurder ici se passe les choses INT32�essantes!
+// Hurder ici se passe les choses INT32 essantes!
 // on vient de tracer le sol et le plafond
-// on trace �pr�ent d'abord les sprites et ensuite les murs
-// hurdler: faux: on ajoute seulement les sprites, le murs sont trac� d'abord
+// on trace  pr ent d'abord les sprites et ensuite les murs
+// hurdler: faux: on ajoute seulement les sprites, le murs sont trac  d'abord
 	if (line)
 	{
 		// draw sprites first, coz they are clipped to the solidsegs of
@@ -4807,8 +4807,8 @@ static void HWR_CreateDrawNodes(void)
 	PS_START_TIMING(ps_hw_nodedrawtime);
 
 	// Okay! Let's draw it all! Woo!
-	GPU->SetTransform(&atransform);
-	GPU->SetShader(SHADER_DEFAULT);
+	HWD.pfnSetTransform(&atransform);
+	HWD.pfnSetShader(SHADER_DEFAULT);
 
 	for (i = 0; i < p; i++)
 	{
@@ -4859,7 +4859,7 @@ static void HWR_DrawSprites(void)
 {
 	UINT32 i;
 	boolean skipshadow = false; // skip shadow if it was drawn already for a linkdraw sprite encountered earlier in the list
-	GPU->SetSpecialState(HWD_SET_MODEL_LIGHTING, cv_glmodellighting.value);
+	HWD.pfnSetSpecialState(HWD_SET_MODEL_LIGHTING, cv_glmodellighting.value);
 	for (i = 0; i < gl_visspritecount; i++)
 	{
 		gl_vissprite_t *spr = gl_vsprorder[i];
@@ -4917,7 +4917,7 @@ static void HWR_DrawSprites(void)
 			}
 		}
 	}
-	GPU->SetSpecialState(HWD_SET_MODEL_LIGHTING, 0);
+	HWD.pfnSetSpecialState(HWD_SET_MODEL_LIGHTING, 0);
 
 	// At the end of sprite drawing, draw shapes of linkdraw sprites to z-buffer, so they
 	// don't get drawn over by transparent surfaces.
@@ -4927,7 +4927,7 @@ static void HWR_DrawSprites(void)
 	// (Other states probably don't matter. Here I left them same as in LinkDrawHackFinish)
 	// Without this workaround the rest of the draw calls in this frame (including UI, screen texture)
 	// can get drawn using an incorrect glBlendFunc, resulting in a occasional black screen.
-	GPU->SetBlend(PF_Translucent|PF_Occlude|PF_Masked);
+	HWD.pfnSetBlend(PF_Translucent|PF_Occlude|PF_Masked);
 }
 
 // --------------------------------------------------------------------------
@@ -5764,7 +5764,7 @@ void HWR_BuildSkyDome(void)
 
 static void HWR_DrawSkyBackground(player_t *player)
 {
-	GPU->SetBlend(PF_Translucent|PF_NoDepthTest|PF_Modulated);
+	HWD.pfnSetBlend(PF_Translucent|PF_NoDepthTest|PF_Modulated);
 
 	if (cv_glskydome.value)
 	{
@@ -5811,9 +5811,9 @@ static void HWR_DrawSkyBackground(player_t *player)
 			HWR_BuildSkyDome();
 		}
 
-		GPU->SetShader(SHADER_SKY); // sky shader
-		GPU->SetTransform(&dometransform);
-		GPU->RenderSkyDome(&gl_sky);
+		HWD.pfnSetShader(SHADER_SKY); // sky shader
+		HWD.pfnSetTransform(&dometransform);
+		HWD.pfnRenderSkyDome(&gl_sky);
 	}
 	else
 	{
@@ -5904,13 +5904,13 @@ static void HWR_DrawSkyBackground(player_t *player)
 		}
 
 #ifdef HAVE_GLES2
-		GPU->SetTransform(NULL);
+		HWD.pfnSetTransform(NULL);
 #endif
-		GPU->UnSetShader();
-		GPU->DrawPolygon(NULL, v, 4, 0);
+		HWD.pfnUnSetShader();
+		HWD.pfnDrawPolygon(NULL, v, 4, 0);
 	}
 
-	GPU->SetShader(SHADER_DEFAULT);
+	HWD.pfnSetShader(SHADER_DEFAULT);
 }
 
 
@@ -5926,16 +5926,16 @@ static inline void HWR_ClearView(void)
 
 	/// \bug faB - enable depth mask, disable color mask
 
-	GPU->GClipRect((INT32)gl_viewwindowx,
+	HWD.pfnGClipRect((INT32)gl_viewwindowx,
 	                 (INT32)gl_viewwindowy,
 	                 (INT32)(gl_viewwindowx + gl_viewwidth),
 	                 (INT32)(gl_viewwindowy + gl_viewheight),
 	                 ZCLIP_PLANE);
-	GPU->ClearBuffer(false, true, 0);
+	HWD.pfnClearBuffer(false, true, 0);
 
 	//disable clip window - set to full size
 	// rem by Hurdler
-	// GPU->GClipRect(0, 0, vid.width, vid.height);
+	// HWD.pfnGClipRect(0, 0, vid.width, vid.height);
 }
 
 
@@ -5970,7 +5970,7 @@ void HWR_SetViewSize(void)
 	gl_pspritexscale = gl_viewwidth / BASEVIDWIDTH;
 	gl_pspriteyscale = ((vid.height*gl_pspritexscale*BASEVIDWIDTH)/BASEVIDHEIGHT)/vid.width;
 
-	GPU->FlushScreenTextures();
+	HWD.pfnFlushScreenTextures();
 }
 
 float HWR_GetFOV(player_t *player)
@@ -6026,8 +6026,8 @@ static void HWR_SetShaderState(void)
 	if (!cv_glallowshaders.value)
 		state = (cv_glshaders.value == HWD_SHADEROPTION_ON ? HWD_SHADEROPTION_NOCUSTOM : cv_glshaders.value);
 
-	GPU->SetSpecialState(HWD_SET_SHADERS, (INT32)state);
-	GPU->SetShader(SHADER_DEFAULT);
+	HWD.pfnSetSpecialState(HWD_SET_SHADERS, (INT32)state);
+	HWD.pfnSetShader(SHADER_DEFAULT);
 }
 
 // ==========================================================================
@@ -6149,7 +6149,7 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 
 	//04/01/2000: Hurdler: added for T&L
 	//                     Actually it only works on Walls and Planes
-	GPU->SetTransform(&atransform);
+	HWD.pfnSetTransform(&atransform);
 
 	// Reset the shader state.
 	HWR_SetShaderState();
@@ -6222,8 +6222,8 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 		HWR_CreateDrawNodes();
 	}
 
-	GPU->SetTransform(NULL);
-	GPU->UnSetShader();
+	HWD.pfnSetTransform(NULL);
+	HWD.pfnUnSetShader();
 
 	// Check for new console commands.
 	NetUpdate();
@@ -6233,7 +6233,7 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 
 	// added by Hurdler for correct splitscreen
 	// moved here by hurdler so it works with the new near clipping plane
-	GPU->GClipRect(0, 0, vid.width, vid.height, NZCLIP_PLANE);
+	HWD.pfnGClipRect(0, 0, vid.width, vid.height, NZCLIP_PLANE);
 }
 
 // ==========================================================================
@@ -6260,10 +6260,10 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 	ClearColor.alpha = 1.0f;
 
 	if (cv_glshaders.value)
-		GPU->SetShaderInfo(HWD_SHADERINFO_LEVELTIME, (INT32)leveltime); // The water surface shader needs the leveltime.
+		HWD.pfnSetShaderInfo(HWD_SHADERINFO_LEVELTIME, (INT32)leveltime); // The water surface shader needs the leveltime.
 
 	if (viewnumber == 0) // Only do it if it's the first screen being rendered
-		GPU->ClearBuffer(true, false, &ClearColor); // Clear the Color Buffer, stops HOMs. Also seems to fix the skybox issue on Intel GPUs.
+		HWD.pfnClearBuffer(true, false, &ClearColor); // Clear the Color Buffer, stops HOMs. Also seems to fix the skybox issue on Intel GPUs.
 
 	PS_START_TIMING(ps_hw_skyboxtime);
 	if (skybox && drawsky) // If there's a skybox and we should be drawing the sky, draw the skybox
@@ -6379,7 +6379,7 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 
 	//04/01/2000: Hurdler: added for T&L
 	//                     Actually it only works on Walls and Planes
-	GPU->SetTransform(&atransform);
+	HWD.pfnSetTransform(&atransform);
 
 	// Reset the shader state.
 	HWR_SetShaderState();
@@ -6466,8 +6466,8 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 		HWR_CreateDrawNodes();
 	}
 
-	GPU->SetTransform(NULL);
-	GPU->UnSetShader();
+	HWD.pfnSetTransform(NULL);
+	HWD.pfnUnSetShader();
 
 	HWR_DoPostProcessor(player);
 
@@ -6479,9 +6479,9 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 
 	// added by Hurdler for correct splitscreen
 	// moved here by hurdler so it works with the new near clipping plane
-	GPU->GClipRect(0, 0, vid.width, vid.height, NZCLIP_PLANE);
+	HWD.pfnGClipRect(0, 0, vid.width, vid.height, NZCLIP_PLANE);
 #ifdef HAVE_GLES2
-	GPU->SetBlend(PF_Modulated|PF_Translucent|PF_NoDepthTest);
+	HWD.pfnSetBlend(PF_Modulated|PF_Translucent|PF_NoDepthTest);
 #endif
 }
 
@@ -6509,12 +6509,10 @@ static CV_PossibleValue_t glshaders_cons_t[] = {{HWD_SHADEROPTION_OFF, "Off"}, {
 static CV_PossibleValue_t glmodelinterpolation_cons_t[] = {{0, "Off"}, {1, "Sometimes"}, {2, "Always"}, {0, NULL}};
 static CV_PossibleValue_t glfakecontrast_cons_t[] = {{0, "Off"}, {1, "On"}, {2, "Smooth"}, {0, NULL}};
 static CV_PossibleValue_t glshearing_cons_t[] = {{0, "Off"}, {1, "On"}, {2, "Third-person"}, {0, NULL}};
-#ifdef HAVE_GL_FRAMEBUFFER
-static CV_PossibleValue_t glrenderbufferdepth_cons_t[] = {{0, "Default"}, {1, "16 bits"}, {2, "24 bits"}, {3, "32 bits"}, {4, "Float"}, {0, NULL}};
+CV_PossibleValue_t glrenderbufferdepth_cons_t[] = {{0, "Default"}, {1, "16 bits"}, {2, "24 bits"}, {3, "32 bits"}, {4, "Float"}, {0, NULL}};
 
 static void CV_glframebuffer_OnChange(void);
 static void CV_glrenderbufferdepth_OnChange(void);
-#endif
 static void CV_glfiltermode_OnChange(void);
 static void CV_glanisotropic_OnChange(void);
 
@@ -6554,33 +6552,31 @@ consvar_t cv_glsolvetjoin = CVAR_INIT ("gr_solvetjoin", "On", 0, CV_OnOff, NULL)
 
 consvar_t cv_glbatching = CVAR_INIT ("gr_batching", "On", 0, CV_OnOff, NULL);
 
-#ifdef HAVE_GL_FRAMEBUFFER
 consvar_t cv_glframebuffer = CVAR_INIT ("gr_framebuffer", "Off", CV_SAVE|CV_CALL, CV_OnOff, CV_glframebuffer_OnChange);
 consvar_t cv_glrenderbufferdepth = CVAR_INIT ("gr_renderbufferdepth", "Float", CV_SAVE|CV_CALL, glrenderbufferdepth_cons_t, CV_glrenderbufferdepth_OnChange);
 
 static void CV_glframebuffer_OnChange(void)
 {
 	if (rendermode == render_opengl)
-		GPU->SetSpecialState(HWD_SET_FRAMEBUFFER, cv_glframebuffer.value);
+		HWD.pfnSetSpecialState(HWD_SET_FRAMEBUFFER, cv_glframebuffer.value);
 }
 
 static void CV_glrenderbufferdepth_OnChange(void)
 {
 	if (rendermode == render_opengl)
-		GPU->SetSpecialState(HWD_SET_RENDERBUFFER_DEPTH, cv_glrenderbufferdepth.value);
+		HWD.pfnSetSpecialState(HWD_SET_RENDERBUFFER_DEPTH, cv_glrenderbufferdepth.value);
 }
-#endif
 
 static void CV_glfiltermode_OnChange(void)
 {
 	if (rendermode == render_opengl)
-		GPU->SetSpecialState(HWD_SET_TEXTUREFILTERMODE, cv_glfiltermode.value);
+		HWD.pfnSetSpecialState(HWD_SET_TEXTUREFILTERMODE, cv_glfiltermode.value);
 }
 
 static void CV_glanisotropic_OnChange(void)
 {
 	if (rendermode == render_opengl)
-		GPU->SetSpecialState(HWD_SET_TEXTUREANISOTROPICMODE, cv_glanisotropicmode.value);
+		HWD.pfnSetSpecialState(HWD_SET_TEXTUREANISOTROPICMODE, cv_glanisotropicmode.value);
 }
 
 //added by Hurdler: console varibale that are saved
@@ -6610,10 +6606,8 @@ void HWR_AddCommands(void)
 	CV_RegisterVar(&cv_glsolvetjoin);
 
 	CV_RegisterVar(&cv_glbatching);
-#ifdef HAVE_GL_FRAMEBUFFER
 	CV_RegisterVar(&cv_glframebuffer);
 	CV_RegisterVar(&cv_glrenderbufferdepth);
-#endif
 
 #ifndef NEWCLIP
 	CV_RegisterVar(&cv_glclipwalls);
@@ -6633,23 +6627,31 @@ void HWR_AddSessionCommands(void)
 // --------------------------------------------------------------------------
 void HWR_Startup(void)
 {
-	if (gl_init)
-		return;
+	if (!gl_init)
+	{
+		CONS_Printf("HWR_Startup()...\n");
 
-	HWR_InitPolyPool();
-	HWR_AddSessionCommands();
-	HWR_InitMapTextures();
-	HWR_InitModels();
-
-#ifdef ALAM_LIGHTING
-	HWR_InitLight();
+#if defined(__ANDROID__)
+		gl_powersoftwo = true;
 #endif
 
-	HWR_LoadAllCustomShaders();
-	if (!HWR_CompileShaders())
-		gl_shadersavailable = false;
+		HWR_InitPolyPool();
+		HWR_AddSessionCommands();
+		HWR_InitMapTextures();
+		HWR_InitModels();
 
-	textureformat = patchformat = GL_TEXFMT_RGBA;
+#ifdef ALAM_LIGHTING
+		HWR_InitLight();
+#endif
+
+		HWR_LoadAllCustomShaders();
+		if (!HWR_CompileShaders())
+			gl_shadersavailable = false;
+	}
+
+	if (rendermode == render_opengl)
+		textureformat = patchformat = GL_TEXFMT_RGBA;
+
 	gl_init = true;
 }
 
@@ -6663,10 +6665,8 @@ void HWR_Switch(void)
 		HWR_AddSessionCommands();
 
 	// Set special states from CVARs
-#ifdef HAVE_GL_FRAMEBUFFER
 	CV_glframebuffer_OnChange();
 	CV_glrenderbufferdepth_OnChange();
-#endif
 	CV_glfiltermode_OnChange();
 	CV_glanisotropic_OnChange();
 
@@ -6691,7 +6691,7 @@ void HWR_Shutdown(void)
 	HWR_FreeExtraSubsectors();
 	HWR_FreePolyPool();
 	HWR_FreeMapTextures();
-	GPU->FlushScreenTextures();
+	HWD.pfnFlushScreenTextures();
 }
 
 void transform(float *cx, float *cy, float *cz)
@@ -6776,14 +6776,14 @@ void HWR_RenderWall(FOutVector *wallVerts, FSurfaceInfo *pSurf, FBITFIELD blend,
 
 INT32 HWR_GetTextureUsed(void)
 {
-	return GPU->GetTextureUsed();
+	return HWD.pfnGetTextureUsed();
 }
 
 void HWR_DoPostProcessor(player_t *player)
 {
 	postimg_t *type;
 
-	GPU->UnSetShader();
+	HWD.pfnUnSetShader();
 
 	if (splitscreen && player == &players[secondarydisplayplayer])
 		type = &postimgtype2;
@@ -6818,12 +6818,12 @@ void HWR_DoPostProcessor(player_t *player)
 
 		Surf.PolyColor.s.alpha = 0xc0; // match software mode
 
-		GPU->DrawPolygon(&Surf, v, 4, PF_Modulated|PF_Additive|PF_NoTexture|PF_NoDepthTest);
+		HWD.pfnDrawPolygon(&Surf, v, 4, PF_Modulated|PF_Additive|PF_NoTexture|PF_NoDepthTest);
 	}
 
 	// Capture the screen for intermission and screen waving
 	if(gamestate != GS_INTERMISSION)
-		GPU->MakeScreenTexture();
+		HWD.pfnMakeScreenTexture();
 
 	if (splitscreen) // Not supported in splitscreen - someone want to add support?
 		return;
@@ -6863,11 +6863,13 @@ void HWR_DoPostProcessor(player_t *player)
 				v[x][y][1] = (y/((float)(SCREENVERTS-1.0f)/9.0f))-4.5f;
 			}
 		}
-		GPU->PostImgRedraw(v);
+		HWD.pfnPostImgRedraw(v);
+		if (!(paused || P_AutoPause()))
+			disStart += 1;
 
 		// Capture the screen again for screen waving on the intermission
 		if(gamestate != GS_INTERMISSION)
-			GPU->MakeScreenTexture();
+			HWD.pfnMakeScreenTexture();
 	}
 	// Flipping of the screen isn't done here anymore
 }
@@ -6875,18 +6877,18 @@ void HWR_DoPostProcessor(player_t *player)
 void HWR_StartScreenWipe(void)
 {
 	//CONS_Debug(DBG_RENDER, "In HWR_StartScreenWipe()\n");
-	GPU->StartScreenWipe();
+	HWD.pfnStartScreenWipe();
 }
 
 void HWR_EndScreenWipe(void)
 {
 	//CONS_Debug(DBG_RENDER, "In HWR_EndScreenWipe()\n");
-	GPU->EndScreenWipe();
+	HWD.pfnEndScreenWipe();
 }
 
 void HWR_DrawIntermissionBG(void)
 {
-	GPU->DrawIntermissionBG();
+	HWD.pfnDrawIntermissionBG();
 }
 
 //
@@ -6931,7 +6933,7 @@ void HWR_DoWipe(UINT8 wipenum, UINT8 scrnnum)
 		return;
 
 	HWR_GetFadeMask(wipelumpnum);
-	GPU->DoScreenWipe();
+	HWD.pfnDoScreenWipe();
 }
 
 void HWR_DoTintedWipe(UINT8 wipenum, UINT8 scrnnum)
@@ -6941,7 +6943,7 @@ void HWR_DoTintedWipe(UINT8 wipenum, UINT8 scrnnum)
 		return;
 
 	HWR_GetFadeMask(wipelumpnum);
-	GPU->DoTintedWipe((wipestyleflags & WSF_FADEIN), (wipestyleflags & WSF_TOWHITE));
+	HWD.pfnDoTintedWipe((wipestyleflags & WSF_FADEIN), (wipestyleflags & WSF_TOWHITE));
 #else
 	// It does the same thing
 	HWR_DoWipe(wipenum, scrnnum);
@@ -6953,7 +6955,7 @@ void HWR_RecreateContext(void)
 	HWR_ClearSkyDome();
 
 	if (vid.glstate == VID_GL_LIBRARY_LOADED)
-		GPU->RecreateContext();
+		HWD.pfnRecreateContext();
 }
 
 static inline UINT16 HWR_FindShaderDefs(UINT16 wadnum)
@@ -6971,7 +6973,7 @@ static inline UINT16 HWR_FindShaderDefs(UINT16 wadnum)
 
 boolean HWR_CompileShaders(void)
 {
-	return GPU->CompileShaders();
+	return HWD.pfnCompileShaders();
 }
 
 customshaderxlat_t shaderxlat[] =
@@ -7110,7 +7112,7 @@ skip_lump:
 					shader_source = Z_Malloc(shader_size, PU_STATIC, NULL);
 					W_ReadLumpPwad(wadnum, shader_lumpnum, shader_source);
 
-					GPU->LoadCustomShader(shaderxlat[i].id, shader_source, shader_size, (shadertype == 2));
+					HWD.pfnLoadCustomShader(shaderxlat[i].id, shader_source, shader_size, (shadertype == 2));
 
 					Z_Free(shader_source);
 					Z_Free(shader_lumpname);

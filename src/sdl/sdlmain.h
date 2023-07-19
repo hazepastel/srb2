@@ -26,18 +26,12 @@ extern SDL_Window *window;
 extern SDL_bool consolevent;
 extern SDL_bool framebuffer;
 
-#if defined(__ANDROID__)
-int Android_EventFilter(void *userdata, SDL_Event *event);
-#endif
+void Impl_BlitSurfaceRegion(INT32 x, INT32 y, INT32 w, INT32 h);
+void Impl_RenderContextReset(void);
+void Impl_PumpEvents(void);
 
-void Impl_InitVideoSubSystem(void);
-void Impl_HandleVideoEvent(SDL_Event *evt);
-
-struct SDLSplashScreen
-{
-	SDL_bool displaying;
-	UINT32 *image;
-};
+SDL_bool Impl_LoadSplashScreen(void);
+void Impl_PresentSplashScreen(void);
 
 // So m_menu knows whether to store cv_usejoystick value or string
 #define JOYSTICK_HOTPLUG
