@@ -3147,7 +3147,8 @@ boolean P_SceneryZMovement(mobj_t *mo)
 
 	if (P_CheckDeathPitCollide(mo))
 	{
-		P_RemoveMobj(mo);
+		if (mo->type != MT_GHOST)  // ghosts play death animations instead, so don't remove them
+			P_RemoveMobj(mo);
 		return false;
 	}
 
@@ -6773,7 +6774,8 @@ void P_RunShields(void)
 	// run shields
 	for (i = 0; i < numshields; i++)
 	{
-		P_ShieldLook(shields[i], shields[i]->threshold);
+		if (!P_MobjWasRemoved(shields[i]))
+			P_ShieldLook(shields[i], shields[i]->threshold);
 		P_SetTarget(&shields[i], NULL);
 	}
 	numshields = 0;
@@ -9609,7 +9611,7 @@ static boolean P_MobjRegularThink(mobj_t *mobj)
 	case MT_BOSSFLYPOINT:
 		return false;
 	case MT_NIGHTSCORE:
-		mobj->color = (UINT16)(leveltime % SKINCOLOR_WHITE);
+		mobj->color = linkColor[mobj->extravalue2][(leveltime + mobj->extravalue1) % NUMLINKCOLORS];
 		break;
 	case MT_JETFUME1:
 		if (!P_JetFume1Think(mobj))
@@ -9705,7 +9707,7 @@ static boolean P_MobjRegularThink(mobj_t *mobj)
 		P_RingThinker(mobj);
 		if (mobj->flags2 & MF2_NIGHTSPULL)
 			P_NightsItemChase(mobj);
-		else
+		else if (mobj->type != MT_BOMBSPHERE) // prevent shields from attracting bomb spheres
 			A_AttractChase(mobj);
 		return false;
 		// Flung items
@@ -9723,6 +9725,11 @@ static boolean P_MobjRegularThink(mobj_t *mobj)
 			A_AttractChase(mobj);
 		break;
 	case MT_EMBLEM:
+		if (P_EmblemWasCollected(mobj->health - 1) || !P_CanPickupEmblem(&players[consoleplayer], mobj->health - 1))
+			mobj->frame |= (tr_trans50 << FF_TRANSSHIFT);
+		else
+			mobj->frame &= ~FF_TRANSMASK;
+
 		if (mobj->flags2 & MF2_NIGHTSPULL)
 			P_NightsItemChase(mobj);
 		break;
@@ -10674,6 +10681,8 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->health = (info->spawnhealth ? info->spawnhealth : 1);
 
 	mobj->reactiontime = info->reactiontime;
+
+	mobj->dispoffset = info->dispoffset;
 
 	mobj->lastlook = -1; // stuff moved in P_enemy.P_LookForPlayer
 
@@ -12055,12 +12064,8 @@ static boolean P_AllowMobjSpawn(mapthing_t* mthing, mobjtype_t i)
 
 		break;
 	case MT_EMBLEM:
-		if (netgame || multiplayer)
-			return false; // Single player
-
-		if (modifiedgame && !savemoddata)
-			return false; // No cheating!!
-
+		if (!G_CoopGametype())
+			return false; // Gametype's not right
 		break;
 	default:
 		break;
@@ -12204,7 +12209,6 @@ static boolean P_SetupEmblem(mapthing_t *mthing, mobj_t *mobj)
 	INT32 j;
 	emblem_t* emblem = M_GetLevelEmblems(gamemap);
 	skincolornum_t emcolor;
-	boolean validEmblem = true;
 
 	while (emblem)
 	{
@@ -12229,42 +12233,19 @@ static boolean P_SetupEmblem(mapthing_t *mthing, mobj_t *mobj)
 	emcolor = M_GetEmblemColor(&emblemlocations[j]); // workaround for compiler complaint about bad function casting
 	mobj->color = (UINT16)emcolor;
 
-	validEmblem = !emblemlocations[j].collected;
+	mobj->frame &= ~FF_TRANSMASK;
 
-	if (emblemlocations[j].type == ET_SKIN)
+	if (emblemlocations[j].type == ET_GLOBAL)
 	{
-		INT32 skinnum = M_EmblemSkinNum(&emblemlocations[j]);
-
-		if (players[0].skin != skinnum)
+		mobj->reactiontime = emblemlocations[j].var;
+		if (emblemlocations[j].var & GE_NIGHTSITEM)
 		{
-			validEmblem = false;
+			mobj->flags |= MF_NIGHTSITEM;
+			mobj->flags &= ~MF_SPECIAL;
+			mobj->flags2 |= MF2_DONTDRAW;
 		}
 	}
 
-	if (validEmblem == false)
-	{
-		P_UnsetThingPosition(mobj);
-		mobj->flags |= MF_NOCLIP;
-		mobj->flags &= ~MF_SPECIAL;
-		mobj->flags |= MF_NOBLOCKMAP;
-		mobj->frame |= (tr_trans50 << FF_TRANSSHIFT);
-		P_SetThingPosition(mobj);
-	}
-	else
-	{
-		mobj->frame &= ~FF_TRANSMASK;
-
-		if (emblemlocations[j].type == ET_GLOBAL)
-		{
-			mobj->reactiontime = emblemlocations[j].var;
-			if (emblemlocations[j].var & GE_NIGHTSITEM)
-			{
-				mobj->flags |= MF_NIGHTSITEM;
-				mobj->flags &= ~MF_SPECIAL;
-				mobj->flags2 |= MF2_DONTDRAW;
-			}
-		}
-	}
 	return true;
 }
 
@@ -13760,7 +13741,6 @@ void P_SpawnItemPattern(mapthing_t *mthing, boolean bonustime)
 		UINT8 numitemtypes;
 		if (!udmf)
 			return;
-		CONS_Printf("Itemstring: %s\n", mthing->stringargs[0]);
 		P_ParseItemTypes(mthing->stringargs[0], itemtypes, &numitemtypes);
 		P_SpawnItemCircle(mthing, itemtypes, numitemtypes, mthing->args[0], mthing->args[1] << FRACBITS, bonustime);
 		return;

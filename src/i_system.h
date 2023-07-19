@@ -60,7 +60,7 @@ INT32 I_OnAppleTV(void);
 
 	\return	free memory in the system
 */
-UINT32 I_GetFreeMem(UINT32 *total);
+size_t I_GetFreeMem(size_t *total);
 
 /**	\brief	Returns precise time value for performance measurement. The precise
             time should be a monotonically increasing counter, and will wrap.

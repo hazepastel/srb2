@@ -122,7 +122,7 @@ typedef enum
 	MF_AMBIENT          = 1<<10,
 	// Slide this object when it hits a wall.
 	MF_SLIDEME          = 1<<11,
-	// Player cheat.
+	// Don't collide with walls or solid objects. Two MF_NOCLIP objects can't touch each other at all!
 	MF_NOCLIP           = 1<<12,
 	// Allow moves to any height, no gravity. For active floaters.
 	MF_FLOAT            = 1<<13,
@@ -399,6 +399,7 @@ typedef struct mobj_s
 	boolean colorized; // Whether the mobj uses the rainbow colormap
 	boolean mirrored; // The object's rotations will be mirrored left to right, e.g., see frame AL from the right and AR from the left
 	fixed_t shadowscale; // If this object casts a shadow, and the size relative to radius
+	INT32 dispoffset; // copy of info->dispoffset, so mobjs can be sorted independently of their type
 
 	// WARNING: New fields must be added separately to savegame and Lua.
 } mobj_t;

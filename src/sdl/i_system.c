@@ -323,52 +323,62 @@ static void write_backtrace(INT32 signal)
 static void I_ReportSignal(int num, int coredumped)
 {
 	//static char msg[] = "oh no! back to reality!\r\n";
-	const char *      sigmsg;
-	char msg[128];
+	const char *sigmsg, *sigttl;
+	char ttl[128];
 
 	switch (num)
 	{
 //	case SIGINT:
-//		sigmsg = "SIGINT - interrupted";
+//		sigttl = "SIGINT"
+//		sigmsg = "SRB2 was interrupted prematurely by the user.";
 //		break;
 	case SIGILL:
-		sigmsg = "SIGILL - illegal instruction - invalid function image";
+		sigmsg = "SRB2 has attempted to execute an illegal instruction and needs to close. %s";
+		sigttl = "SIGILL"; // illegal instruction - invalid function image
 		break;
 	case SIGFPE:
-		sigmsg = "SIGFPE - mathematical exception";
+		sigmsg = "SRB2 has encountered a mathematical exception and needs to close. %s";
+		sigttl = "SIGFPE"; // mathematical exception
 		break;
 	case SIGSEGV:
-		sigmsg = "SIGSEGV - segment violation";
+		sigmsg = "SRB2 has attempted to access a memory location that it shouldn't and needs to close. %s";
+		sigttl = "SIGSEGV"; // segment violation
 		break;
 //	case SIGTERM:
-//		sigmsg = "SIGTERM - Software termination signal from kill";
+//		sigmsg = "SRB2 was terminated by a kill signal.";
+//		sigttl = "SIGTERM"; // Software termination signal from kill
 //		break;
 //	case SIGBREAK:
-//		sigmsg = "SIGBREAK - Ctrl-Break sequence";
+//		sigmsg = "SRB2 was terminated by a Ctrl-Break sequence.";
+//		sigttl = "SIGBREAK" // Ctrl-Break sequence
 //		break;
 	case SIGABRT:
-		sigmsg = "SIGABRT - abnormal termination triggered by abort call";
+		sigmsg = "SRB2 was terminated by an abort signal. %s";
+		sigttl = "SIGABRT"; // abnormal termination triggered by abort call
 		break;
 	default:
-		sprintf(msg,"signal number %d", num);
+		sigmsg = "SRB2 was terminated by an unknown signal. %s";
+
+		sprintf(ttl, "number %d", num);
 		if (coredumped)
-			sigmsg = 0;
+			sigttl = 0;
 		else
-			sigmsg = msg;
+			sigttl = ttl;
 	}
 
 	if (coredumped)
 	{
-		if (sigmsg)
-			sprintf(msg, "%s (core dumped)", sigmsg);
+		if (sigttl)
+			sprintf(ttl, "%s (core dumped)", sigttl);
 		else
-			strcat(msg, " (core dumped)");
+			strcat(ttl, " (core dumped)");
 
-		sigmsg = msg;
+		sigttl = ttl;
 	}
 
-	I_OutputMsg("\nProcess killed by signal: %s\n\n", sigmsg);
+	sprintf(ttl, "Process killed by signal: %s", sigttl);
 
+<<<<<<< HEAD
 #if defined(__ANDROID__)
 	NDKCrashHandler_ReportSignal(sigmsg);
 #endif
@@ -2216,7 +2226,7 @@ void I_Quit(void)
 #ifndef NONET
 	D_SaveBan(); // save the ban list
 #endif
-	G_SaveGameData(); // Tails 12-08-2002
+	G_SaveGameData(clientGamedata); // Tails 12-08-2002
 	//added:16-02-98: when recording a demo, should exit using 'q' key,
 	//        but sometimes we forget and use 'F10'.. so save here too.
 
@@ -2300,7 +2310,7 @@ void I_Error(const char *error, ...)
 		if (errorcount == 8 && I_StoragePermission())
 		{
 			M_SaveConfig(NULL);
-			G_SaveGameData();
+			G_SaveGameData(clientGamedata);
 		}
 		if (errorcount > 20)
 		{
@@ -2335,7 +2345,7 @@ void I_Error(const char *error, ...)
 #ifndef NONET
 	D_SaveBan(); // save the ban list
 #endif
-	G_SaveGameData(); // Tails 12-08-2002
+	G_SaveGameData(clientGamedata); // Tails 12-08-2002
 
 	// Shutdown. Here might be other errors.
 	if (demorecording)
@@ -3017,8 +3027,7 @@ static long get_entry(const char* name, const char* buf)
 }
 #endif
 
-// quick fix for compil
-UINT32 I_GetFreeMem(UINT32 *total)
+size_t I_GetFreeMem(size_t *total)
 {
 #ifdef FREEBSD
 	struct vmmeter sum;
@@ -3066,14 +3075,14 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	info.dwLength = sizeof (MEMORYSTATUS);
 	GlobalMemoryStatus( &info );
 	if (total)
-		*total = (UINT32)info.dwTotalPhys;
-	return (UINT32)info.dwAvailPhys;
+		*total = (size_t)info.dwTotalPhys;
+	return (size_t)info.dwAvailPhys;
 #elif defined (__linux__)
 	/* Linux */
 	char buf[1024];
 	char *memTag;
-	UINT32 freeKBytes;
-	UINT32 totalKBytes;
+	size_t freeKBytes;
+	size_t totalKBytes;
 	INT32 n;
 	INT32 meminfo_fd = -1;
 	long Cached;
@@ -3104,7 +3113,7 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	}
 
 	memTag += sizeof (MEMTOTAL);
-	totalKBytes = atoi(memTag);
+	totalKBytes = (size_t)atoi(memTag);
 
 	if ((memTag = strstr(buf, MEMAVAILABLE)) == NULL)
 	{

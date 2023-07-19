@@ -126,6 +126,55 @@ EXPORT void HWRAPI(LoadCustomShader) (int number, char *shader, size_t size, boo
 #endif
 }
 
+EXPORT void HWRAPI(SetShader) (int type)
+{
+#ifdef GL_SHADERS
+	if (type == SHADER_NONE)
+	{
+		UnSetShader();
+		return;
+	}
+
+	if (gl_allowshaders != HWD_SHADEROPTION_OFF)
+	{
+		gl_shader_t *shader = gl_shaderstate.current;
+
+		// If using model lighting, set the appropriate shader.
+		// However don't override a custom shader.
+		if (type == SHADER_MODEL && model_lighting
+		&& !(gl_shaders[SHADER_MODEL].custom && !gl_shaders[SHADER_MODEL_LIGHTING].custom))
+			type = SHADER_MODEL_LIGHTING;
+
+		if ((shader == NULL) || (GLuint)type != gl_shaderstate.type)
+		{
+			gl_shader_t *baseshader = &gl_shaders[type];
+			gl_shader_t *usershader = &gl_usershaders[type];
+
+			if (usershader->program)
+				shader = (gl_allowshaders == HWD_SHADEROPTION_NOCUSTOM) ? baseshader : usershader;
+			else
+				shader = baseshader;
+
+			gl_shaderstate.current = shader;
+			gl_shaderstate.type = type;
+			gl_shaderstate.changed = true;
+		}
+
+		if (gl_shaderstate.program != shader->program)
+		{
+			gl_shaderstate.program = shader->program;
+			gl_shaderstate.changed = true;
+		}
+
+		gl_shadersenabled = (shader->program != 0);
+		return;
+	}
+#else
+	(void)type;
+#endif
+	gl_shadersenabled = false;
+}
+
 EXPORT void HWRAPI(UnSetShader) (void)
 {
 #ifdef GL_SHADERS
@@ -862,7 +911,7 @@ static void DrawPolygon_GL2(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iN
 
 	pglVertexPointer(3, GL_FLOAT, sizeof(FOutVector), &pOutVerts[0].x);
 	pglTexCoordPointer(2, GL_FLOAT, sizeof(FOutVector), &pOutVerts[0].s);
-	pglDrawArrays(GL_TRIANGLE_FAN, 0, iNumPts);
+	pglDrawArrays(PolyFlags & PF_WireFrame ? GL_LINES : GL_TRIANGLE_FAN, 0, iNumPts);
 
 	if (PolyFlags & PF_RemoveYWrap)
 		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

@@ -1422,6 +1422,9 @@ void D_SRB2Main(void)
 	CONS_Printf("Z_Init(): Init zone memory allocation daemon. \n");
 	Z_Init();
 
+	clientGamedata = M_NewGameDataStruct();
+	serverGamedata = M_NewGameDataStruct();
+
 	// Do this up here so that WADs loaded through the command line can use ExecCfg
 	COM_Init();
 
@@ -1558,7 +1561,15 @@ void D_SRB2Main(void)
 	//--------------------------------------------------------- CONFIG.CFG
 	M_FirstLoadConfig(); // WARNING : this do a "COM_BufExecute()"
 
-	G_LoadGameData();
+	if (M_CheckParm("-gamedata") && M_IsNextParm())
+	{
+		// Moved from G_LoadGameData itself, as it would cause some crazy
+		// confusion issues when loading mods.
+		strlcpy(gamedatafilename, M_GetNextParm(), sizeof gamedatafilename);
+	}
+
+	G_LoadGameData(clientGamedata);
+	M_CopyGameData(serverGamedata, clientGamedata);
 
 #ifdef TOUCHINPUTS
 	TS_InitLayouts();
@@ -1590,7 +1601,7 @@ void D_SRB2Main(void)
 		else
 		{
 			if (!M_CheckParm("-server"))
-				G_SetGameModified(true);
+				G_SetUsedCheats(true);
 			autostart = true;
 		}
 	}
@@ -1794,7 +1805,7 @@ void D_SRB2Main(void)
 			// ... unless you're in a dedicated server.  Yes, technically this means you can view any level by
 			// running a dedicated server and joining it yourself, but that's better than making dedicated server's
 			// lives hell.
-			else if (!dedicated && M_MapLocked(pstartmap))
+			else if (!dedicated && M_MapLocked(pstartmap, serverGamedata))
 				I_Error("You need to unlock this level before you can warp to it!\n");
 			else
 			{
