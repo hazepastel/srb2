@@ -245,12 +245,6 @@ INT32 cheats; //for multiplayer cheat commands
 
 tic_t hidetime;
 
-typedef struct joystickvector2_s
-{
-	INT32 xaxis;
-	INT32 yaxis;
-} joystickvector2_t;
-
 boolean precache = true; // if true, load all graphics at start
 
 INT16 prevmap, nextmap;
@@ -4446,6 +4440,7 @@ static boolean gamedatainpath = false;
 // Loads the main data file, which stores information such as emblems found, etc.
 void G_LoadGameData(gamedata_t *data)
 {
+	size_t length;
 	INT32 i, j;
 
 	UINT32 versionID;

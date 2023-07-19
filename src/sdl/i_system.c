@@ -378,7 +378,6 @@ static void I_ReportSignal(int num, int coredumped)
 
 	sprintf(ttl, "Process killed by signal: %s", sigttl);
 
-<<<<<<< HEAD
 #if defined(__ANDROID__)
 	NDKCrashHandler_ReportSignal(sigmsg);
 #endif

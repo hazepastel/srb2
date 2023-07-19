@@ -2182,7 +2182,7 @@ menu_t SP_PauseLevelSelectDef = MAPPLATTERMENUSTYLE(
 	MTREE4(MN_SP_MAIN, MN_SP_LOAD, MN_SP_PLAYER, MN_SP_LEVELSELECT),
 	NULL, SP_LevelSelectMenu);
 
-menu_t SP_LevelStatsDef =
+static menu_t SP_LevelStatsDef =
 {
 	MTREE2(MN_SP_MAIN, MN_SP_LEVELSTATS), 0,
 	"M_STATS",
@@ -9790,43 +9790,7 @@ UINT8 skyRoomMenuTranslations[MAXUNLOCKABLES];
 
 static boolean checklist_cangodown; // uuuueeerggghhhh HACK
 
-static void M_UnlockChecklist(INT32 choice)
-{
-	(void)choice;
-	M_SetupNextMenu(&SR_UnlockChecklistDef);
-#ifdef TOUCHINPUTS
-	M_SetHeldKeyHandler(M_HandleChecklist);
-#endif
-}
-
-static void M_ChecklistDown(void)
-{
-	if ((check_on != MAXUNLOCKABLES) && checklist_cangodown)
-	{
-		INT32 j;
-
-		for (j = check_on+1; j < MAXUNLOCKABLES; j++)
-		{
-			if (!unlockables[j].name[0])
-				continue;
-			// if (unlockables[j].nochecklist)
-			//	continue;
-			if (!unlockables[j].conditionset)
-				continue;
-			if (unlockables[j].conditionset > MAXCONDITIONSETS)
-				continue;
-			if (!unlockables[j].unlocked && unlockables[j].showconditionset && !M_Achieved(unlockables[j].showconditionset))
-				continue;
-			if (unlockables[j].conditionset == unlockables[check_on].conditionset)
-				continue;
-			break;
-		}
-		if (j != MAXUNLOCKABLES)
-			check_on = j;
-	}
-}
-
-static void M_ChecklistUp(void)
+static void M_HandleChecklist(INT32 choice)
 {
 	gamedata_t *data = clientGamedata;
 	INT32 j;
@@ -9885,7 +9849,7 @@ static void M_ChecklistUp(void)
 
 		case KEY_ESCAPE:
 			if (currentMenu->prevMenu)
-				M_SetupPrevMenu(currentMenu->prevMenu);
+				M_SetupNextMenu(currentMenu->prevMenu);
 			else
 				M_ClearMenus(true);
 			return;
@@ -9893,6 +9857,8 @@ static void M_ChecklistUp(void)
 			break;
 	}
 }
+
+#define addy(add) { y += add; if ((y - currentMenu->y) > (scrollareaheight*2)) goto finishchecklist; }
 
 #ifdef TOUCHINPUTS
 TSNAVHANDLER(UnlockChecklist)
@@ -11271,9 +11237,6 @@ static inline void M_SPShiftSelections(INT32 start)
 
 static void M_SinglePlayerMenu(INT32 choice)
 {
-	boolean raUnlocked = M_SecretUnlocked(SECRET_RECORDATTACK);
-	boolean naUnlocked = M_SecretUnlocked(SECRET_NIGHTSMODE);
-
 	// Reset the item positions, to avoid them sinking farther down every time the menu is opened if one is unavailable
 	// Note that they're reset, not simply "not moved again", in case mid-game add-ons re-enable an option
 	SP_MainMenu[spstartgame]   .alphaKey = 76;
@@ -13256,13 +13219,6 @@ static void M_DrawLevelStats(void)
 	boolean bestunfinished[3] = {false, false, false};
 
 	M_DrawMenuTitle();
-
-#ifdef TOUCHINPUTS
-	if (inputmethod == INPUTMETHOD_TOUCH)
-		V_DrawCenteredString(BASEVIDWIDTH/2, 24, V_YELLOWMAP, playtimestr);
-	else
-#endif
-		V_DrawString(20, 24, V_YELLOWMAP, playtimestr);
 
 	V_DrawCenteredString(BASEVIDWIDTH/2, 32, 0, va("%i hours, %i minutes, %i seconds",
 	                         G_TicsToHours(data->totalplaytime),
