@@ -11873,6 +11873,8 @@ void P_PlayerThink(player_t *player)
 				angle_t moveAngle = R_PointToAngle2(0, 0, player->rmomx, player->rmomy);
 				if (player->powers[pw_super] || player->powers[pw_sneakers])
 					normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
+				if (player->mo->eflags & MFE_UNDERWATER)
+					normalspd >>= 1;
 				if (((player->pflags & (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE|PF_STASIS)) == (PF_AUTOBRAKE|PF_APPLYAUTOBRAKE))
 				&& !(cmd->forwardmove || cmd->sidemove))
 					P_Thrust(player->mo, moveAngle, FixedMul(acceleration<<1, player->mo->scale));
