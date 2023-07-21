@@ -5629,7 +5629,7 @@ static void P_2dMovement(player_t *player)
 	INT32 topspeed, acceleration;
 	fixed_t movepushforward = 0;
 	angle_t movepushangle = 0;
-	fixed_t normalspd = FixedMul(player->normalspeed*8/9, player->mo->scale);
+	fixed_t normalspd = FixedMul(player->normalspeed, player->mo->scale);
 
 	static fixed_t oldz = 0;
 
