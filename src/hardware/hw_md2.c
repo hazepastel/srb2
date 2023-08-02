@@ -1448,8 +1448,7 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 				return false;
 			}
 		}
-
-<<<<<<< HEAD
+/*
 		if (!md2->model->hasVBOs)
 		{
 			HWD.pfnCreateModelVBOs(md2->model);
@@ -1457,10 +1456,9 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 		}
 
 		finalscale = md2->scale;
-=======
+*/
 		//HWD.pfnSetBlend(blend); // This seems to actually break translucency?
 		//Hurdler: arf, I don't like that implementation at all... too much crappy
->>>>>>> 4176b4d74c85d6316a8d08d96bbe4f9c90c854a8
 
 		if (gpatch && hwrPatch && hwrPatch->mipmap->format) // else if meant that if a texture couldn't be loaded, it would just end up using something else's texture
 		{
@@ -1666,7 +1664,7 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 			p.y += ox * gl_viewcos;
 			p.z += oy;
 
-			HWD.pfnDrawModel(md2->model, frame, durs, tics, nextFrame, &p, md2->scale * xs, md2->scale * ys, flip, hflip, &Surf);
+			HWD.pfnDrawModel(md2->model, frame, durs, tics, nextFrame, &p, md2->scale * xs, md2->scale * ys, flip, &Surf);
 		}
 	}
 

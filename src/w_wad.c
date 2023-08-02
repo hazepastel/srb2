@@ -802,7 +802,7 @@ static void W_LoadDehackedLumps(UINT16 wadnum, boolean mainfile)
   * \param resblock resulting MD5 checksum
   * \return 0 if MD5 checksum was made, and is at resblock, 1 if error was found
   */
-static INT32 W_MakeFileMD5(const char *filename, void *resblock)
+static INT32 W_MakeFileMD5(const char *filename, fhandletype_t handletype, void *resblock)
 {
 #ifdef NOMD5
 	(void)filename;

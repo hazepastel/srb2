@@ -6360,7 +6360,6 @@ static void M_DrawSaveLoadBorder(INT32 x,INT32 y)
 	V_DrawScaledPatch (x,y+7,0,W_CachePatchName("M_LSRGHT",PU_PATCH));
 }
 #endif
->>>>>>> 4176b4d74c85d6316a8d08d96bbe4f9c90c854a8
 
 //
 // M_DrawMapEmblems
@@ -17906,8 +17905,8 @@ static void M_DrawVideoMode(void)
 				cv_scr_width.value, cv_scr_height.value));
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 124, (cv_fullscreen.value ? V_TRANSLUCENT : 0),
 			va("Windowed mode is %c%dx%d",
-				(SCR_IsAspectCorrect(cv_scr_width_w.value, cv_scr_height_w.value)) ? 0x83 : (!(VID_GetModeForSize(cv_scr_width_w.value, cv_scr_height_w.value)+1) ? 0x85 : 0x80),
-				cv_scr_width_w.value, cv_scr_height_w.value));
+				(SCR_IsAspectCorrect(cv_scr_width.value, cv_scr_height.value)) ? 0x83 : (!(VID_GetModeForSize(cv_scr_width.value, cv_scr_height.value)+1) ? 0x85 : 0x80),
+				cv_scr_width.value, cv_scr_height.value));
 
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 138,
 			V_GREENMAP, "Green modes are recommended.");
@@ -18133,12 +18132,8 @@ static void M_HandleVideoMode(INT32 ch)
 			S_StartSound(NULL, sfx_menu1);
 			CV_Set(&cv_scr_width, cv_scr_width.defaultvalue);
 			CV_Set(&cv_scr_height, cv_scr_height.defaultvalue);
-			CV_Set(&cv_scr_width_w, cv_scr_width_w.defaultvalue);
-			CV_Set(&cv_scr_height_w, cv_scr_height_w.defaultvalue);
 			if (cv_fullscreen.value)
 				setmodeneeded = VID_GetModeForSize(cv_scr_width.value, cv_scr_height.value)+1;
-			else
-				setmodeneeded = VID_GetModeForSize(cv_scr_width_w.value, cv_scr_height_w.value)+1;
 			break;
 
 		case KEY_F10: // Renderer toggle, also processed inside menus

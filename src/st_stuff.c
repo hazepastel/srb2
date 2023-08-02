@@ -847,6 +847,7 @@ static void ST_drawLivesArea(void)
 {
 	INT32 v_colmap = V_YELLOWMAP, livescount;
 	boolean notgreyedout = false;
+  INT32 x, y, f;
 
 	if (!stplyr->skincolor)
 		return; // Just joined a server, skin isn't loaded yet!
