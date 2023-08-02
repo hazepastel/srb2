@@ -223,6 +223,7 @@ void SCR_ResetNativeResDivider(void);
 extern float scr_resdiv;
 #endif
 
+extern consvar_t cv_renderview, cv_renderer;
 extern consvar_t cv_renderhitbox, cv_renderhitboxinterpolation, cv_renderhitboxgldepth;
 // wait for page flipping to end or not
 extern consvar_t cv_vidwait;

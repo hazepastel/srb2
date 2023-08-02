@@ -218,6 +218,7 @@ const char *I_ClipboardPaste(void)
 	return NULL;
 }
 
+<<<<<<< HEAD
 INT32 I_OnTabletDevice(void)
 {
 	return 0;
@@ -233,7 +234,7 @@ INT32 I_OnAndroidTV(void)
 	return 0;
 }
 
-INT32 I_OnAppleTV(void)
+size_t I_GetRandomBytes(char *destination, size_t amount)
 {
 	return 0;
 }

@@ -398,6 +398,7 @@ void P_GiveFinishFlags(player_t *player)
 		angle += FixedAngle(120*FRACUNIT);
 
 		P_SetTarget(&flag->target, player->mo);
+		P_SetTarget(&flag->dontdrawforviewmobj, player->mo); // Hide the flag in first-person
 	}
 }
 
@@ -676,7 +677,7 @@ static void P_DeNightserizePlayer(player_t *player)
 	player->marebonuslap = 0;
 	player->flyangle = 0;
 	player->anotherflyangle = 0;
-	player->mo->rollangle = 0;
+	player->mo->spriteroll = 0;
 
 	P_SetTarget(&player->mo->target, NULL);
 	P_SetTarget(&player->axis1, P_SetTarget(&player->axis2, NULL));
@@ -802,7 +803,7 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 	player->secondjump = 0;
 	player->flyangle = 0;
 	player->anotherflyangle = 0;
-	player->mo->rollangle = 0;
+	player->mo->spriteroll = 0;
 
 	player->powers[pw_shield] = SH_NONE;
 	player->powers[pw_super] = 0;
@@ -882,8 +883,7 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 			}
 
 			// Add score to leaderboards now
-			if (!(netgame||multiplayer) && P_IsLocalPlayer(&players[i]))
-				G_AddTempNightsRecords(players[i].marescore, leveltime - player->marebegunat, players[i].mare + 1);
+			G_AddTempNightsRecords(player, players[i].marescore, leveltime - player->marebegunat, players[i].mare + 1);
 
 			// transfer scores anyway
 			players[i].totalmarescore += players[i].marescore;
@@ -909,8 +909,7 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 		player->finishedrings = (INT16)(player->rings);
 
 		// Add score to temp leaderboards
-		if (!(netgame||multiplayer) && P_IsLocalPlayer(player))
-			G_AddTempNightsRecords(player->marescore, leveltime - player->marebegunat, (UINT8)(oldmare + 1));
+		G_AddTempNightsRecords(player, player->marescore, leveltime - player->marebegunat, (UINT8)(oldmare + 1));
 
 		// Starting a new mare, transfer scores
 		player->totalmarescore += player->marescore;
@@ -1440,6 +1439,10 @@ void P_AddPlayerScore(player_t *player, UINT32 amount)
 	if (player->score > MAXSCORE)
 		player->score = MAXSCORE;
 
+	player->recordscore += amount;
+	if (player->recordscore > MAXSCORE)
+		player->recordscore = MAXSCORE;
+
 	// check for extra lives every 50000 pts
 	if (!ultimatemode && !modeattacking && player->score > oldscore && player->score % 50000 < amount && (gametyperules & GTR_LIVES))
 	{
@@ -1838,6 +1841,7 @@ void P_SpawnShieldOrb(player_t *player)
 	shieldobj = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, orbtype);
 	shieldobj->flags2 |= MF2_SHIELD;
 	P_SetTarget(&shieldobj->target, player->mo);
+	P_SetTarget(&shieldobj->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_PINK)
 	{
 		shieldobj->color = SKINCOLOR_PINK;
@@ -1962,6 +1966,7 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 	mobj_t *ghost = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
 
 	P_SetTarget(&ghost->target, mobj);
+	P_SetTarget(&ghost->dontdrawforviewmobj, mobj); // Hide the ghost in first-person
 
 	P_SetScale(ghost, mobj->scale);
 	ghost->destscale = mobj->scale;
@@ -1976,7 +1981,9 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 	ghost->colorized = mobj->colorized; // alternatively, "true" for sonic advance style colourisation
 
 	ghost->angle = (mobj->player ? mobj->player->drawangle : mobj->angle);
-	ghost->rollangle = mobj->rollangle;
+	ghost->roll = mobj->roll;
+	ghost->pitch = mobj->pitch;
+	ghost->spriteroll = mobj->spriteroll;
 
 	ghost->sprite = mobj->sprite;
 	ghost->sprite2 = mobj->sprite2;
@@ -1995,6 +2002,7 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 
 	ghost->fuse = ghost->info->damage;
 	ghost->skin = mobj->skin;
+	ghost->standingslope = mobj->standingslope;
 
 	if (mobj->flags2 & MF2_OBJECTFLIP)
 		ghost->flags |= MF2_OBJECTFLIP;
@@ -2004,6 +2012,7 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 		mobj_t *ghost2 = P_SpawnGhostMobj(mobj->player->followmobj);
 		P_SetTarget(&ghost2->tracer, ghost);
 		P_SetTarget(&ghost->tracer, ghost2);
+		P_SetTarget(&ghost2->dontdrawforviewmobj, mobj); // Hide the follow-ghost for the non-follow object
 		ghost2->flags2 |= (mobj->player->followmobj->flags2 & MF2_LINKDRAW);
 	}
 
@@ -2014,6 +2023,7 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 	ghost->old_angle = (mobj->player ? mobj->player->old_drawangle2 : mobj->old_angle2);
 	ghost->old_pitch = mobj->old_pitch2;
 	ghost->old_roll = mobj->old_roll2;
+	ghost->old_spriteroll = mobj->old_spriteroll2;
 
 	return ghost;
 }
@@ -3117,39 +3127,41 @@ static void P_DoBubbleBreath(player_t *player)
 //
 static void P_DoPlayerHeadSigns(player_t *player)
 {
+	mobj_t *sign = NULL;
+
 	if (G_TagGametype())
 	{
-		// If you're "IT", show a big "IT" over your head for others to see.
-		if (player->pflags & PF_TAGIT && !P_IsLocalPlayer(player))
+		// If you're "IT", show a big "IT" over your head for others to see, including spectators
+		// (and even yourself if you spectate someone else).
+		if (player->pflags & PF_TAGIT && (!P_IsLocalPlayer(player) || consoleplayer != displayplayer || splitscreen))
 		{
-			mobj_t* it = P_SpawnMobjFromMobj(player->mo, 0, 0, 0, MT_TAG);
-			it->x = player->mo->x;
-			it->y = player->mo->y;
-			it->z = player->mo->z;
-			it->old_x = player->mo->old_x;
-			it->old_y = player->mo->old_y;
-			it->old_z = player->mo->old_z;
+			sign = P_SpawnMobjFromMobj(player->mo, 0, 0, 0, MT_TAG);
+			sign->x = player->mo->x;
+			sign->y = player->mo->y;
+			sign->z = player->mo->z;
+			sign->old_x = player->mo->old_x;
+			sign->old_y = player->mo->old_y;
+			sign->old_z = player->mo->old_z;
 
 			if (!(player->mo->eflags & MFE_VERTICALFLIP))
 			{
-				it->z += player->mo->height;
-				it->old_z += player->mo->height;
+				sign->z += player->mo->height;
+				sign->old_z += player->mo->height;
 			}
 			else
 			{
-				it->z -= mobjinfo[MT_TAG].height;
-				it->old_z -= mobjinfo[MT_TAG].height;
+				sign->z -= mobjinfo[MT_TAG].height;
+				sign->old_z -= mobjinfo[MT_TAG].height;
 			}
 		}
 	}
 	else if ((gametyperules & GTR_TEAMFLAGS) && (player->gotflag & (GF_REDFLAG|GF_BLUEFLAG))) // If you have the flag (duh).
 	{
-		// Spawn a got-flag message over the head of the player that
-		// has it (but not on your own screen if you have the flag).
-		if (splitscreen || player != &players[consoleplayer])
+		// Spawn a got-flag message over the head of the player that has it
+		// (but not on your own screen if you have the flag, unless you're spectating).
+		if (!P_IsLocalPlayer(player) || consoleplayer != displayplayer || splitscreen)
 		{
 			fixed_t zofs;
-			mobj_t *sign;
 			boolean player_is_flipped = (player->mo->eflags & MFE_VERTICALFLIP) > 0;
 
 			zofs = player->mo->momz;
@@ -3180,6 +3192,43 @@ static void P_DoPlayerHeadSigns(player_t *player)
 			else //if (player->gotflag & GF_BLUEFLAG)
 				sign->frame = 2|FF_FULLBRIGHT;
 		}
+	}
+
+	if (!P_MobjWasRemoved(sign) && splitscreen) // Hide the sign from yourself in splitscreen - In single-screen, it wouldn't get spawned if it shouldn't be visible
+	{
+		if (player == &players[displayplayer])
+			sign->drawonlyforplayer = &players[secondarydisplayplayer];
+		else
+			sign->drawonlyforplayer = &players[displayplayer];
+
+#ifdef QUADS
+		if (splitscreen > 1) // Can be seen by at least two local views, so we need an extra copy of the sign
+		{
+			UINT32 signframe = sign->frame; // Copy the flag frame
+			sign = P_SpawnMobjFromMobj(sign, 0, 0, 0, MT_TAG);
+			if (P_MobjWasRemoved(sign))
+				return;
+
+			sign->frame = signframe;
+			if (player == &players[displayplayer] || player == &players[secondarydisplayplayer])
+				sign->drawonlyforplayer = &players[thirddisplayplayer];
+			else
+				sign->drawonlyforplayer = &players[secondarydisplayplayer];
+
+			if (splitscreen > 2) // Can be seen by three local views
+			{
+				sign = P_SpawnMobjFromMobj(sign, 0, 0, 0, MT_TAG);
+				if (P_MobjWasRemoved(sign))
+					return;
+
+				sign->frame = signframe;
+				if (player != &players[fourthdisplayplayer])
+					sign->drawonlyforplayer = &players[fourthdisplayplayer];
+				else
+					sign->drawonlyforplayer = &players[thirddisplayplayer];
+			}
+		}
+#endif
 	}
 }
 
@@ -4701,10 +4750,11 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						mobj_t *lockon = P_LookForEnemies(player, false, true);
 						if (lockon)
 						{
-							if (P_IsLocalPlayer(player)) // Only display it on your own view.
+							if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
 							{
 								mobj_t *visual = P_SpawnMobj(lockon->x, lockon->y, lockon->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
 								P_SetTarget(&visual->target, lockon);
+								visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
 							}
 						}
 						if ((cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
@@ -5048,7 +5098,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 		{
 			if ((lockonshield = P_LookForEnemies(player, false, false)))
 			{
-				if (P_IsLocalPlayer(player)) // Only display it on your own view.
+				if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
 				{
 					boolean dovis = true;
 					if (lockonshield == lockonthok)
@@ -5062,6 +5112,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 					{
 						visual = P_SpawnMobj(lockonshield->x, lockonshield->y, lockonshield->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
 						P_SetTarget(&visual->target, lockonshield);
+						visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
 						P_SetMobjStateNF(visual, visual->info->spawnstate+1);
 					}
 				}
@@ -5165,10 +5216,11 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 
 	if ((player->charability == CA_HOMINGTHOK) && !player->homing && (player->pflags & PF_JUMPED) && (!(player->pflags & PF_THOKKED) || (player->charflags & SF_MULTIABILITY)) && (lockonthok = P_LookForEnemies(player, true, false)))
 	{
-		if (P_IsLocalPlayer(player)) // Only display it on your own view.
+		if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
 		{
 			visual = P_SpawnMobj(lockonthok->x, lockonthok->y, lockonthok->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
 			P_SetTarget(&visual->target, lockonthok);
+			visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
 		}
 	}
 
@@ -6790,9 +6842,9 @@ static void P_DoNiGHTSCapsule(player_t *player)
 	{
 		if ((player->mo->state == &states[S_PLAY_NIGHTS_PULL])
 		&& (player->mo->sprite2 == SPR2_NPUL))
-			player->mo->rollangle -= ANG30;
+			player->mo->spriteroll -= ANG30;
 		else
-			player->mo->rollangle = 0;
+			player->mo->spriteroll = 0;
 	}
 
 	if (G_IsSpecialStage(gamemap))
@@ -7245,7 +7297,7 @@ static void P_NiGHTSMovement(player_t *player)
 		&& player->mo->state <= &states[S_PLAY_NIGHTS_TRANS6])
 	{
 		player->mo->momx = player->mo->momy = player->mo->momz = 0;
-		player->mo->rollangle = 0;
+		player->mo->spriteroll = 0;
 		return;
 	}
 
@@ -7263,7 +7315,7 @@ static void P_NiGHTSMovement(player_t *player)
 		{
 			if (player->mo->state != &states[S_PLAY_NIGHTS_DRILL])
 				P_SetPlayerMobjState(player->mo, S_PLAY_NIGHTS_DRILL);
-			player->mo->rollangle = ANGLE_90;
+			player->mo->spriteroll = ANGLE_90;
 		}
 		else
 #endif
@@ -7596,9 +7648,9 @@ static void P_NiGHTSMovement(player_t *player)
 		P_SetPlayerMobjState(player->mo, flystate);
 
 	if (player->charflags & SF_NONIGHTSROTATION)
-		player->mo->rollangle = 0;
+		player->mo->spriteroll = 0;
 	else
-		player->mo->rollangle = rollangle;
+		player->mo->spriteroll = rollangle;
 
 	P_SetPlayerAngle(player, player->mo->angle);
 
@@ -11078,17 +11130,30 @@ static void P_MinecartThink(player_t *player)
 
 			// Mark interpolation; the old positions need to be relative to the displacement from the minecart _after_ it's moved.
 			// This isn't quite correct (it captures the landing wobble) but it works well enough
+			// Additionally, hide other players' marks
 			if (detleft)
 			{
-				detleft->old_x = detleft->x - (minecart->old_x - minecart->old_x2);
-				detleft->old_y = detleft->y - (minecart->old_y - minecart->old_y2);
-				detleft->old_z = detleft->z - (minecart->old_z - minecart->old_z2);
+				if (P_IsLocalPlayer(player))
+				{
+					detleft->old_x = detleft->x - (minecart->old_x - minecart->old_x2);
+					detleft->old_y = detleft->y - (minecart->old_y - minecart->old_y2);
+					detleft->old_z = detleft->z - (minecart->old_z - minecart->old_z2);
+					detleft->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
+				}
+				else // Don't see others' marks when spectating others
+					P_RemoveMobj(detleft); // Lock-on markers are only spawned client-side, so this SHOULD be safe too...
 			}
 			if (detright)
 			{
-				detright->old_x = detright->x - (minecart->old_x - minecart->old_x2);
-				detright->old_y = detright->y - (minecart->old_y - minecart->old_y2);
-				detright->old_z = detright->z - (minecart->old_z - minecart->old_z2);
+				if (P_IsLocalPlayer(player))
+				{
+					detright->old_x = detright->x - (minecart->old_x - minecart->old_x2);
+					detright->old_y = detright->y - (minecart->old_y - minecart->old_y2);
+					detright->old_z = detright->z - (minecart->old_z - minecart->old_z2);
+					detright->drawonlyforplayer = player;
+				}
+				else
+					P_RemoveMobj(detleft);
 			}
 		}
 		else
@@ -11380,12 +11445,15 @@ static void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 
 			for (i = -1; i < 2; i += 2)
 			{
+				mobj_t *bubble;
 				offsetH = i*P_ReturnThrustX(fume, fume->movedir, radiusV);
 				offsetV = i*P_ReturnThrustY(fume, fume->movedir, radiusV);
 				x = mo->x + radiusX + FixedMul(offsetH, factorX);
 				y = mo->y + radiusY + FixedMul(offsetH, factorY);
 				z = mo->z + heightoffset + offsetV;
-				P_SpawnMobj(x, y, z, MT_SMALLBUBBLE)->scale = mo->scale >> 1;
+				bubble = P_SpawnMobj(x, y, z, MT_SMALLBUBBLE);
+				bubble->scale = mo->scale >> 1;
+				P_SetTarget(&bubble->dontdrawforviewmobj, mo); // Hide the bubble in first-person
 			}
 
 			fume->movefactor = 0;
@@ -11454,7 +11522,11 @@ static void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 
 	// If dashmode is high enough, spawn a trail
 	if (player->normalspeed >= skins[player->skin].normalspeed*2)
-		P_SpawnGhostMobj(fume);
+	{
+		mobj_t *ghost = P_SpawnGhostMobj(fume);
+		if (!P_MobjWasRemoved(ghost))
+			P_SetTarget(&ghost->dontdrawforviewmobj, mo); // Hide the trail in first-person
+	}
 }
 
 //
@@ -11525,14 +11597,23 @@ void P_PlayerThink(player_t *player)
 	if (player->awayviewmobj && P_MobjWasRemoved(player->awayviewmobj))
 	{
 		P_SetTarget(&player->awayviewmobj, NULL); // remove awayviewmobj asap if invalid
-		player->awayviewtics = 0; // reset to zero
+		player->awayviewtics = 1; // reset to one, the below code will immediately set it to zero
+	}
+	
+	if (player->awayviewtics && player->awayviewtics != -1)
+	{
+		player->awayviewtics--;
+		if (!(player->awayviewtics))
+		{
+			if (player == &players[displayplayer])
+				P_ResetCamera(player, &camera); // reset p1 camera on p1 running out of awayviewtics
+			else if (splitscreen && player == &players[secondarydisplayplayer])
+				P_ResetCamera(player, &camera2);  // reset p2 camera on p2 running out of awayviewtics
+		}
 	}
 
 	if (player->flashcount)
 		player->flashcount--;
-
-	if (player->awayviewtics && player->awayviewtics != -1)
-		player->awayviewtics--;
 
 	/// \note do this in the cheat code
 	if (player->pflags & PF_NOCLIP)
@@ -11542,9 +11623,12 @@ void P_PlayerThink(player_t *player)
 
 	cmd = &player->cmd;
 
-	// Add some extra randomization.
-	if (cmd->forwardmove)
-		P_RandomFixed();
+	if (demoplayback && demo_forwardmove_rng)
+	{
+		// Smelly demo backwards compatibility
+		if (cmd->forwardmove)
+			P_RandomFixed();
+	}
 
 #ifdef PARANOIA
 	if (player->playerstate == PST_REBORN)
@@ -11723,7 +11807,7 @@ void P_PlayerThink(player_t *player)
 	if (player->spectator)
 	{
 		if (!(gametyperules & GTR_CAMPAIGN))
-			player->score = 0;
+			player->score = player->recordscore = 0;
 	}
 	else if ((netgame || multiplayer) && player->lives <= 0 && !G_CoopGametype())
 	{
@@ -12089,14 +12173,6 @@ void P_PlayerThink(player_t *player)
 				gmobj->tracer->frame |= tr_trans70<<FF_TRANSSHIFT;
 			}
 		}
-
-		// Hide the mobj from our sights if we're the displayplayer and chasecam is off,
-		// or secondarydisplayplayer and chasecam2 is off.
-		// Why not just not spawn the mobj?  Well, I'd rather only flirt with
-		// consistency so much...
-		if ((player == &players[displayplayer] && !camera.chase)
-		|| (splitscreen && player == &players[secondarydisplayplayer] && !camera2.chase))
-			gmobj->flags2 |= MF2_DONTDRAW;
 	}
 #endif
 

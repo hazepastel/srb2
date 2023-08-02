@@ -198,6 +198,7 @@ actionpointer_t actionpointers[] =
 	{{A_Boss3TakeDamage},        "A_BOSS3TAKEDAMAGE"},
 	{{A_Boss3Path},              "A_BOSS3PATH"},
 	{{A_Boss3ShockThink},        "A_BOSS3SHOCKTHINK"},
+	{{A_Shockwave},              "A_SHOCKWAVE"},
 	{{A_LinedefExecute},         "A_LINEDEFEXECUTE"},
 	{{A_LinedefExecuteFromArg},  "A_LINEDEFEXECUTEFROMARG"},
 	{{A_PlaySeeSound},           "A_PLAYSEESOUND"},
@@ -4550,6 +4551,7 @@ const char *const MSF_LIST[] = {
 const char *const SSF_LIST[] = {
 	"OUTERSPACE",
 	"DOUBLESTEPUP",
+	"NOSTEPDOWN",
 	"WINDCURRENT",
 	"CONVEYOR",
 	"SPEEDPAD",
@@ -4566,6 +4568,8 @@ const char *const SSF_LIST[] = {
 	"ZOOMTUBEEND",
 	"FINISHLINE",
 	"ROPEHANG",
+	"JUMPFLIP",
+	"GRAVITYOVERRIDE",
 	NULL
 };
 

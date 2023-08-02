@@ -108,6 +108,14 @@ FILE *fopenfile(const char*, const char*);
 
 //#define NOMD5
 
+// If you don't disable ALL debug first, you get ALL debug enabled
+#if !defined (NDEBUG)
+#define PACKETDROP
+#define PARANOIA
+#define RANGECHECK
+#define ZDEBUG
+#endif
+
 // Uncheck this to compile debugging code
 //#define RANGECHECK
 //#ifndef PARANOIA
@@ -501,7 +509,7 @@ enum {
 #endif
 
 #if defined(__ANDROID__)
-#define SHAREDSTORAGEFOLDER "Sonic Robo Blast 2"
+#define SHAREDSTORAGEFOLDER "srb2-pre"
 #endif
 
 #include "g_state.h"
@@ -698,7 +706,16 @@ UINT32 quickncasehash (const char *p, size_t n)
 #define PUNCTUATION "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 
 // Compile date and time and revision.
-extern const char *compdate, *comptime, *comprevision, *compbranch;
+extern const char
+	*compdate,
+	*comptime,
+	*comprevision,
+	*compbranch,
+	*compnote,
+	*comptype;
+extern int
+	compuncommitted,
+	compoptimized;
 
 // Disabled code and code under testing
 // None of these that are disabled in the normal build are guaranteed to work perfectly

@@ -45,7 +45,7 @@ INT32 numemblems = 0;
 INT32 numextraemblems = 0;
 
 // Temporary holding place for nights data for the current map
-nightsdata_t ntemprecords;
+nightsdata_t ntemprecords[MAXPLAYERS];
 
 // Create a new gamedata_t, for start-up
 gamedata_t *M_NewGameDataStruct(void)
@@ -113,7 +113,7 @@ void M_AddRawCondition(UINT8 set, UINT8 id, conditiontype_t c, INT32 r, INT16 x1
 	condition_t *cond;
 	UINT32 num, wnum;
 
-	I_Assert(set && set <= MAXCONDITIONSETS);
+	I_Assert(set < MAXCONDITIONSETS);
 
 	wnum = conditionSets[set - 1].numconditions;
 	num = ++conditionSets[set - 1].numconditions;

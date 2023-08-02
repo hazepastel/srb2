@@ -179,7 +179,6 @@ void G_MapEventsToControls(event_t *ev)
 				gamekeydown[ev->key] = 1;
 				if (G_KeyAssignedToControl(ev->key)) // Unnecessary?
 					controlmethod = G_InputMethodFromKey(ev->key);
-			}
 #ifdef PARANOIA
 			else
 			{
@@ -187,6 +186,7 @@ void G_MapEventsToControls(event_t *ev)
 			}
 
 #endif
+			}
 			break;
 
 		case ev_keyup:
