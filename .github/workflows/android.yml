@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: [ android-port ]
+    branches: [ android-port, 2212-pre2 ]
   pull_request:
     branches: [ android-port ]
 
