@@ -1701,7 +1701,7 @@ void F_GameEvaluationTicker(void)
 		sparklloop = 0;
 	}
 
-	if (finalecount == 5*TICRATE)
+	if (G_CoopGametype() && !stagefailed && finalecount == 5*TICRATE)
 	{
 		serverGamedata->timesBeaten++;
 		clientGamedata->timesBeaten++;
