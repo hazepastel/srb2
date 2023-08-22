@@ -1934,7 +1934,6 @@ INT32 VID_CheckRenderer(void)
 				rendererchanged = 0;
 			}
 		}
-		else
 #endif
 
 #if !defined(__ANDROID__)
