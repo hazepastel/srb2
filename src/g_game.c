@@ -314,6 +314,8 @@ consvar_t cv_consolechat = CVAR_INIT ("chatmode", "Window", CV_SAVE, consolechat
 // Pause game upon window losing focus
 consvar_t cv_pauseifunfocused = CVAR_INIT ("pauseifunfocused", "Yes", CV_SAVE, CV_YesNo, NULL);
 
+consvar_t cv_instantretry = CVAR_INIT ("instantretry", "No", CV_SAVE, CV_YesNo, NULL);
+
 consvar_t cv_crosshair = CVAR_INIT ("crosshair", "Cross", CV_SAVE, crosshair_cons_t, NULL);
 consvar_t cv_crosshair2 = CVAR_INIT ("crosshair2", "Cross", CV_SAVE, crosshair_cons_t, NULL);
 consvar_t cv_invertmouse = CVAR_INIT ("invertmouse", "Off", CV_SAVE, CV_OnOff, NULL);
@@ -2273,8 +2275,32 @@ boolean G_Responder(event_t *ev)
 			{
 				if (G_HandlePauseKey(ev->key == KEY_PAUSE))
 				{
-					G_DetectControlMethod(ev->key);
-					return true;
+				// i dont think this is required - bitten
+					//G_DetectControlMethod(ev->key);
+					//return true;
+					pausebreakkey = (ev->key == KEY_PAUSE);
+					if (menuactive || pausedelay < 0 || leveltime < 2)
+						return true;
+
+					if (!cv_instantretry.value && pausedelay < 1+(NEWTICRATE/2))
+						pausedelay = 1+(NEWTICRATE/2);
+					else if (cv_instantretry.value || ++pausedelay > 1+(NEWTICRATE/2)+(NEWTICRATE/3))
+					{
+						G_SetModeAttackRetryFlag();
+						return true;
+					}
+					pausedelay++; // counteract subsequent subtraction this frame
+				}
+				else
+				{
+					INT32 oldpausedelay = pausedelay;
+					pausedelay = (NEWTICRATE/7);
+					if (!oldpausedelay)
+					{
+						// command will handle all the checks for us
+						COM_ImmedExecute("pause");
+						return true;
+					}
 				}
 			}
 			if (ev->key == gamecontrol[GC_CAMTOGGLE][0]

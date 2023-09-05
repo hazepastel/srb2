@@ -686,7 +686,7 @@ void GeneratePolygonNormals(model_t *model, int ztag)
 #if 0
 static void Reload(void)
 {
-/*	model_t *node;
+	model_t *node;
 	for (node = modelHead; node; node = node->next)
 	{
 		int i;
@@ -707,14 +707,14 @@ static void Reload(void)
 					CreateVBO(mesh, &mesh->tinyframes[j]);
 			}
 		}
-	}*/
+	}
 }
 #endif
 
 void DeleteVBOs(model_t *model)
 {
 	(void)model;
-/*	for (int i = 0; i < model->numMeshes; i++)
+	for (int i = 0; i < model->numMeshes; i++)
 	{
 		mesh_t *mesh = &model->meshes[i];
 
@@ -725,7 +725,7 @@ void DeleteVBOs(model_t *model)
 				mdlframe_t *frame = &mesh->frames[j];
 				if (!frame->vboID)
 					continue;
-				bglDeleteBuffers(1, &frame->vboID);
+				glDeleteBuffers(1, &frame->vboID);
 				frame->vboID = 0;
 			}
 		}
@@ -736,9 +736,9 @@ void DeleteVBOs(model_t *model)
 				tinyframe_t *frame = &mesh->tinyframes[j];
 				if (!frame->vboID)
 					continue;
-				bglDeleteBuffers(1, &frame->vboID);
+				glDeleteBuffers(1, &frame->vboID);
 				frame->vboID = 0;
 			}
 		}
-	}*/
+	}
 }
