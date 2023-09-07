@@ -2174,7 +2174,7 @@ boolean G_Responder(event_t *ev)
 		INT32 key = ev->key;
 		boolean finger = (ev->type == ev_touchdown || ev->type == ev_touchup);
 
-		if (ev->type == (ev_keydown && ev->key != 301 || finger)b&& !(gamestate == GS_TITLESCREEN && finalecount < (cv_tutorialprompt.value ? TICRATE : 0)))
+		if (ev->type == ev_keydown && ev->key != 301 || finger && !(gamestate == GS_TITLESCREEN && finalecount < (cv_tutorialprompt.value ? TICRATE : 0)))
 		{
 #ifdef TOUCHINPUTS
 			if (finger)
