@@ -630,6 +630,7 @@ static boolean R_ProcessPatchableFields(skin_t *skin, char *stoken, char *value)
 	GETFLAG(NOSUPERJUMPBOOST)
 	GETFLAG(CANBUSTWALLS)
 	GETFLAG(NOSHIELDABILITY)
+	GETFLAG(DISABLETRANSFORM)
 #undef GETFLAG
 
 	else // let's check if it's a sound, otherwise error out

@@ -589,12 +589,15 @@ void Y_IntermissionDrawer(void)
 				ttheight += V_LevelNameHeight(data.spec.passed4) + 2;
 				V_DrawLevelTitle(data.spec.passedx4 + xoffset3, ttheight, 0, data.spec.passed4);
 
-				ttheight = 108;
-				V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset4 - (V_LevelNameWidth(ringtext)/2), ttheight, 0, ringtext);
-				ttheight += V_LevelNameHeight(tut1text) + 2;
-				V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset5 - (V_LevelNameWidth(tut1text)/2), ttheight, 0, tut1text);
-				ttheight += V_LevelNameHeight(tut2text) + 2;
-				V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset6 - (V_LevelNameWidth(tut2text)/2), ttheight, 0, tut2text);
+				if (!(players[consoleplayer].charflags & SF_DISABLETRANSFORM)) // don't display the tutorial text for nonstandard transformations
+				{
+					ttheight = 108;
+					V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset4 - (V_LevelNameWidth(ringtext)/2), ttheight, 0, ringtext);
+					ttheight += V_LevelNameHeight(tut1text) + 2;
+					V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset5 - (V_LevelNameWidth(tut1text)/2), ttheight, 0, tut1text);
+					ttheight += V_LevelNameHeight(tut2text) + 2;
+					V_DrawLevelTitle(BASEVIDWIDTH/2 + xoffset6 - (V_LevelNameWidth(tut2text)/2), ttheight, 0, tut2text);
+				}
 			}
 		}
 		else

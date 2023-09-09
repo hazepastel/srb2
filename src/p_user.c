@@ -4353,6 +4353,7 @@ boolean P_SuperReady(player_t *player)
 	&& !player->powers[pw_carry]
 	&& (player->charflags & SF_SUPER)
 	&& !(player->pflags & PF_THOKKED)
+	&& !(player->charflags & SF_DISABLETRANSFORM)
 	&& !(maptol & TOL_NIGHTS)
 	&& ALL7EMERALDS(emeralds)
 	&& (player->rings >= 50))
