@@ -776,7 +776,7 @@ static menuitem_t SP_TimeAttackMenu[] =
 	{IT_DISABLED,              NULL, "Guest Option...", &SP_GuestReplayDef, 100},
 	{IT_DISABLED,              NULL, "Replay...",       &SP_ReplayDef,      110},
 	{IT_DISABLED,              NULL, "Ghosts...",       &SP_GhostDef,       120},
-	{IT_WHITESTRING|IT_CALL,   NULL, "Start",           M_ChooseTimeAttack, 130},
+	{IT_WHITESTRING|IT_CALL|IT_CALL_NOTMODIFIED,   NULL, "Start",         M_ChooseTimeAttack,   130},
 };
 
 enum
@@ -875,7 +875,7 @@ static menuitem_t SP_NightsAttackMenu[] =
 	{IT_DISABLED,              NULL, "Guest Option...",  &SP_NightsGuestReplayDef,    100},
 	{IT_DISABLED,              NULL, "Replay...",        &SP_NightsReplayDef,         110},
 	{IT_DISABLED,              NULL, "Ghosts...",        &SP_NightsGhostDef,          120},
-	{IT_WHITESTRING|IT_CALL,   NULL, "Start",            M_ChooseNightsAttack,        130},
+	{IT_WHITESTRING|IT_CALL|IT_CALL_NOTMODIFIED, NULL, "Start", M_ChooseNightsAttack, 130},
 };
 
 enum
@@ -10014,8 +10014,7 @@ void M_DrawTimeAttackMenu(void)
 						'\x1D' | V_YELLOWMAP, false);
 			}
 			// Draw press ESC to exit string on main record attack menu
-			if (modifiedgame && !savemoddata)
-				V_DrawThinString(104-72, 192, 0, "\x85WARNING: \x80The game is modified. Replays will not be recorded.");
+			V_DrawString(104-72, 180, V_TRANSLUCENT, M_GetText("Press ESC to exit"));
 		}
 
 		em = M_GetLevelEmblems(cv_nextmap.value);
@@ -10279,8 +10278,7 @@ void M_DrawNightsAttackMenu(void)
 						'\x1D' | V_YELLOWMAP, false);
 			}
 			// Draw press ESC to exit string on main record attack menu
-			if (modifiedgame && !savemoddata)
-				V_DrawThinString(104-72, 192, 0, "\x85WARNING: \x80The game is modified. Replays will not be recorded.");
+			V_DrawString(104-72, 180, V_TRANSLUCENT, M_GetText("Press ESC to exit"));
 		}
 
 		// Super Sonic
@@ -10402,12 +10400,6 @@ static void M_ChooseNightsAttack(INT32 choice)
 	M_ClearMenus(true);
 	modeattacking = ATTACKING_NIGHTS;
 
-	if (modifiedgame && !savemoddata) // don't record demos for modified games yet
-	{
-		G_DeferedInitNew(false, G_BuildMapName(cv_nextmap.value), (UINT8)(cv_chooseskin.value-1), false, false);
-		return;
-	}
-
 	I_mkdir(va("%s"PATHSEP"replay", srb2home), 0755);
 	I_mkdir(va("%s"PATHSEP"replay"PATHSEP"%s", srb2home, timeattackfolder), 0755);
 
@@ -10436,12 +10428,6 @@ static void M_ChooseTimeAttack(INT32 choice)
 	memset(&luabanks, 0, sizeof(luabanks));
 	M_ClearMenus(true);
 	modeattacking = ATTACKING_RECORD;
-
-	if (modifiedgame && !savemoddata)
-	{
-		G_DeferedInitNew(false, G_BuildMapName(cv_nextmap.value), (UINT8)(cv_chooseskin.value-1), false, false);
-		return;
-	}
 
 	I_mkdir(va("%s"PATHSEP"replay", srb2home), 0755);
 	I_mkdir(va("%s"PATHSEP"replay"PATHSEP"%s", srb2home, timeattackfolder), 0755);
