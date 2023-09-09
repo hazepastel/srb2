@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 version: 2.2.12.{branch}-{build}
 os: MinGW
 
@@ -112,6 +113,9 @@ on_finish:
 # vim: et ts=1
 =======
 version: 2.2.12.{branch}-{build}
+=======
+version: 2.2.13.{branch}-{build}
+>>>>>>> a4a3b5b0944720a536a94c9d471b64c822cdac61
 os: MinGW
 
 environment:
