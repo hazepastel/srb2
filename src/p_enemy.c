@@ -174,6 +174,7 @@ void A_Boss1Spikeballs(mobj_t *actor);
 void A_Boss3TakeDamage(mobj_t *actor);
 void A_Boss3Path(mobj_t *actor);
 void A_Boss3ShockThink(mobj_t *actor);
+void A_Shockwave(mobj_t *actor);
 void A_LinedefExecute(mobj_t *actor);
 void A_LinedefExecuteFromArg(mobj_t *actor);
 void A_PlaySeeSound(mobj_t *actor);
@@ -8379,6 +8380,56 @@ void A_Boss3ShockThink(mobj_t *actor)
 	}
 }
 
+// Function: A_Shockwave
+//
+// Description: Spawns a shockwave of objects. Best used to spawn objects that call A_Boss3ShockThink.
+//
+// var1 = object spawned
+// var2 = amount of objects spawned
+//
+void A_Shockwave(mobj_t *actor)
+{
+	INT32 locvar1 = var1;
+	INT32 locvar2 = var2;
+	INT32 i;
+
+	angle_t ang = 0, interval;
+	mobj_t *shock = NULL, *sfirst = NULL, *sprev = NULL;
+
+	if (LUA_CallAction(A_SHOCKWAVE, actor))
+		return;
+
+	if (locvar2 == 0)
+		locvar2 = 24; // a sensible default, just in case
+
+	interval = FixedAngle((360 << FRACBITS) / locvar2);
+
+	for (i = 0; i < locvar2; i++)
+	{
+		shock = P_SpawnMobj(actor->x, actor->y, actor->z, locvar1);
+		P_SetTarget(&shock->target, actor);
+		shock->fuse = shock->info->painchance;
+
+		if (i % 2 == 0)
+			P_SetMobjState(shock, shock->state->nextstate);
+
+		if (!sprev)
+			sfirst = shock;
+		else
+		{
+			if (i == locvar2 - 1)
+				P_SetTarget(&shock->hnext, sfirst);
+			P_SetTarget(&sprev->hnext, shock);
+		}
+
+		P_Thrust(shock, ang, shock->info->speed);
+		ang += interval;
+		sprev = shock;
+	}
+	
+	S_StartSound(actor, shock->info->seesound);
+}
+
 // Function: A_LinedefExecute
 //
 // Description: Object's location is used to set the calling sector. The tag used is var1. Optionally, if var2 is set, the actor's angle (multiplied by var2) is added to the tag number as well.
@@ -8687,10 +8738,10 @@ void A_RollAngle(mobj_t *actor)
 
 	// relative (default)
 	if (!locvar2)
-		actor->rollangle += angle;
+		actor->spriteroll += angle;
 	// absolute
 	else
-		actor->rollangle = angle;
+		actor->spriteroll = angle;
 }
 
 // Function: A_ChangeRollAngleRelative
@@ -8715,7 +8766,7 @@ void A_ChangeRollAngleRelative(mobj_t *actor)
 		I_Error("A_ChangeRollAngleRelative: var1 is greater than var2");
 #endif
 
-	actor->rollangle += FixedAngle(P_RandomRange(amin, amax));
+	actor->spriteroll += FixedAngle(P_RandomRange(amin, amax));
 }
 
 // Function: A_ChangeRollAngleAbsolute
@@ -8740,7 +8791,7 @@ void A_ChangeRollAngleAbsolute(mobj_t *actor)
 		I_Error("A_ChangeRollAngleAbsolute: var1 is greater than var2");
 #endif
 
-	actor->rollangle = FixedAngle(P_RandomRange(amin, amax));
+	actor->spriteroll = FixedAngle(P_RandomRange(amin, amax));
 }
 
 // Function: A_PlaySound

@@ -2561,11 +2561,13 @@ static void P_ProcessLineSpecial(line_t *line, mobj_t *mo, sector_t *callsec)
 				// Change the music and apply position/fade operations
 				else
 				{
-					if (!line->stringargs[0])
-						break;
-
-					strncpy(mapmusname, line->stringargs[0], 7);
-					mapmusname[6] = 0;
+					if (!line->stringargs[0] || !strcmp(line->stringargs[0], "-"))
+						strcpy(mapmusname, "");
+					else
+					{
+						strncpy(mapmusname, line->stringargs[0], 7);
+						mapmusname[6] = 0;
+					}
 
 					mapmusflags = tracknum & MUSIC_TRACKMASK;
 					if (!(line->args[0] & TMM_NORELOAD))
@@ -2665,10 +2667,13 @@ static void P_ProcessLineSpecial(line_t *line, mobj_t *mo, sector_t *callsec)
 				// This is not revoked until overwritten; awayviewtics is ignored
 				if (titlemapinaction)
 					titlemapcameraref = altview;
-				else
-				{
+				else if (!mo->player->awayviewtics || mo->player->awayviewmobj != altview) {
 					P_SetTarget(&mo->player->awayviewmobj, altview);
-					mo->player->awayviewtics = line->args[1];
+					
+					if (mo->player == &players[displayplayer])
+						P_ResetCamera(mo->player, &camera); // reset p1 camera on p1 getting an awayviewmobj
+					else if (splitscreen && mo->player == &players[secondarydisplayplayer])
+						P_ResetCamera(mo->player, &camera2);  // reset p2 camera on p2 getting an awayviewmobj
 				}
 
 				aim = udmf ? altview->spawnpoint->pitch : line->args[2];
@@ -2678,8 +2683,10 @@ static void P_ProcessLineSpecial(line_t *line, mobj_t *mo, sector_t *callsec)
 				aim <<= 8;
 				if (titlemapinaction)
 					titlemapcameraref->cusval = (angle_t)aim;
-				else
+				else {
 					mo->player->awayviewaiming = (angle_t)aim;
+					mo->player->awayviewtics = line->args[1];
+				}
 			}
 			break;
 
@@ -3287,19 +3294,18 @@ static void P_ProcessLineSpecial(line_t *line, mobj_t *mo, sector_t *callsec)
 						foundrover = true;
 
 						// If fading an invisible FOF whose render flags we did not yet set,
-						// initialize its alpha to 1
-						// for relative alpha calc
+						// initialize its alpha to 0 for relative alpha calculation
 						if (!(line->args[3] & TMST_DONTDOTRANSLUCENT) &&      // do translucent
 							(rover->spawnflags & FOF_NOSHADE) && // do not include light blocks, which don't set FOF_NOSHADE
 							!(rover->spawnflags & FOF_RENDERSIDES) &&
 							!(rover->spawnflags & FOF_RENDERPLANES) &&
 							!(rover->fofflags & FOF_RENDERALL))
-							rover->alpha = 1;
+							rover->alpha = 0;
 
 						P_RemoveFakeFloorFader(rover);
 						P_FadeFakeFloor(rover,
 							rover->alpha,
-							max(1, min(256, (line->args[3] & TMST_RELATIVE) ? rover->alpha + destvalue : destvalue)),
+							max(0, min(255, (line->args[3] & TMST_RELATIVE) ? rover->alpha + destvalue : destvalue)),
 							0,                                         // set alpha immediately
 							false, NULL,                               // tic-based logic
 							false,                                     // do not handle FOF_EXISTS
@@ -3373,19 +3379,18 @@ static void P_ProcessLineSpecial(line_t *line, mobj_t *mo, sector_t *callsec)
 						else
 						{
 							// If fading an invisible FOF whose render flags we did not yet set,
-							// initialize its alpha to 1
-							// for relative alpha calc
+							// initialize its alpha to 1 for relative alpha calculation
 							if (!(line->args[4] & TMFT_DONTDOTRANSLUCENT) &&      // do translucent
 								(rover->spawnflags & FOF_NOSHADE) && // do not include light blocks, which don't set FOF_NOSHADE
 								!(rover->spawnflags & FOF_RENDERSIDES) &&
 								!(rover->spawnflags & FOF_RENDERPLANES) &&
 								!(rover->fofflags & FOF_RENDERALL))
-								rover->alpha = 1;
+								rover->alpha = 0;
 
 							P_RemoveFakeFloorFader(rover);
 							P_FadeFakeFloor(rover,
 								rover->alpha,
-								max(1, min(256, (line->args[4] & TMFT_RELATIVE) ? rover->alpha + destvalue : destvalue)),
+								max(0, min(255, (line->args[4] & TMFT_RELATIVE) ? rover->alpha + destvalue : destvalue)),
 								0,                                         // set alpha immediately
 								false, NULL,                               // tic-based logic
 								!(line->args[4] & TMFT_DONTDOEXISTS),      // do not handle FOF_EXISTS
@@ -5597,17 +5602,17 @@ static ffloor_t *P_AddFakeFloor(sector_t *sec, sector_t *sec2, line_t *master, I
 	fflr->target = sec;
 	fflr->bottomheight = &sec2->floorheight;
 	fflr->bottompic = &sec2->floorpic;
-	fflr->bottomxoffs = &sec2->floor_xoffs;
-	fflr->bottomyoffs = &sec2->floor_yoffs;
-	fflr->bottomangle = &sec2->floorpic_angle;
+	fflr->bottomxoffs = &sec2->floorxoffset;
+	fflr->bottomyoffs = &sec2->flooryoffset;
+	fflr->bottomangle = &sec2->floorangle;
 
 	// Add the ceiling
 	fflr->topheight = &sec2->ceilingheight;
 	fflr->toppic = &sec2->ceilingpic;
 	fflr->toplightlevel = &sec2->lightlevel;
-	fflr->topxoffs = &sec2->ceiling_xoffs;
-	fflr->topyoffs = &sec2->ceiling_yoffs;
-	fflr->topangle = &sec2->ceilingpic_angle;
+	fflr->topxoffs = &sec2->ceilingxoffset;
+	fflr->topyoffs = &sec2->ceilingyoffset;
+	fflr->topangle = &sec2->ceilingangle;
 
 	// Add slopes
 	fflr->t_slope = &sec2->c_slope;
@@ -6123,16 +6128,16 @@ void P_ApplyFlatAlignment(sector_t *sector, angle_t flatangle, fixed_t xoffs, fi
 {
 	if (floor)
 	{
-		sector->floorpic_angle = flatangle;
-		sector->floor_xoffs += xoffs;
-		sector->floor_yoffs += yoffs;
+		sector->floorangle = flatangle;
+		sector->floorxoffset += xoffs;
+		sector->flooryoffset += yoffs;
 	}
 
 	if (ceiling)
 	{
-		sector->ceilingpic_angle = flatangle;
-		sector->ceiling_xoffs += xoffs;
-		sector->ceiling_yoffs += yoffs;
+		sector->ceilingangle = flatangle;
+		sector->ceilingxoffset += xoffs;
+		sector->ceilingyoffset += yoffs;
 	}
 
 }
@@ -6566,10 +6571,10 @@ void P_SpawnSpecials(boolean fromnetsave)
 				//Cutting options
 				if (ffloorflags & FOF_RENDERALL)
 				{
-					//If inside is visible, cut inner walls
-					if ((lines[i].args[1] < 255) || (lines[i].args[3] & TMFA_SPLAT) || (lines[i].args[4] & TMFT_VISIBLEFROMINSIDE))
+					//If inside is visible from the outside, cut inner walls
+					if (lines[i].args[1] < 255 || (lines[i].args[3] & TMFA_SPLAT))
 						ffloorflags |= FOF_CUTEXTRA|FOF_EXTRA;
-					else
+					else if (!(lines[i].args[4] & TMFT_VISIBLEFROMINSIDE))
 						ffloorflags |= FOF_CUTLEVEL;
 				}
 
@@ -6625,20 +6630,19 @@ void P_SpawnSpecials(boolean fromnetsave)
 				if (lines[i].args[4] & TMFC_SPLAT)
 					ffloorflags |= FOF_SPLAT;
 
-				//If inside is visible, cut inner walls
-				if (lines[i].args[1] < 0xff || (lines[i].args[3] & TMFT_VISIBLEFROMINSIDE) || (lines[i].args[4] & TMFC_SPLAT))
+				//If inside is visible from the outside, cut inner walls
+				if (lines[i].args[1] < 255 || (lines[i].args[4] & TMFC_SPLAT))
 					ffloorflags |= FOF_CUTEXTRA|FOF_EXTRA;
-				else
-					ffloorflags |= FOF_CUTLEVEL;
-
-				//If player can enter it, render insides
-				if (lines[i].args[3] & TMFT_VISIBLEFROMINSIDE)
+				//If player can view it from the inside, render insides
+				else if (lines[i].args[3] & TMFT_VISIBLEFROMINSIDE)
 				{
 					if (ffloorflags & FOF_RENDERPLANES)
 						ffloorflags |= FOF_BOTHPLANES;
 					if (ffloorflags & FOF_RENDERSIDES)
 						ffloorflags |= FOF_ALLSIDES;
 				}
+				else
+					ffloorflags |= FOF_CUTLEVEL;
 
 				P_AddFakeFloorsByLine(i, lines[i].args[1], lines[i].args[2], ffloorflags, secthinkers);
 				if (lines[i].args[4] & TMFC_AIRBOB)
@@ -6689,10 +6693,10 @@ void P_SpawnSpecials(boolean fromnetsave)
 				//Cutting options
 				if (ffloorflags & FOF_RENDERALL)
 				{
-					//If inside is visible, cut inner walls
-					if ((lines[i].args[1] < 255) || (lines[i].args[3] & TMFA_SPLAT) || (lines[i].args[4] & TMFT_VISIBLEFROMINSIDE))
+					//If inside is visible from the outside, cut inner walls
+					if (lines[i].args[1] < 255 || (lines[i].args[3] & TMFA_SPLAT))
 						ffloorflags |= FOF_CUTEXTRA|FOF_EXTRA;
-					else
+					else if (!(lines[i].args[4] & TMFT_VISIBLEFROMINSIDE))
 						ffloorflags |= FOF_CUTLEVEL;
 				}
 
@@ -7302,14 +7306,14 @@ void T_Scroll(scroll_t *s)
 
 		case sc_floor: // scroll floor texture
 			sec = sectors + s->affectee;
-			sec->floor_xoffs += dx;
-			sec->floor_yoffs += dy;
+			sec->floorxoffset += dx;
+			sec->flooryoffset += dy;
 			break;
 
 		case sc_ceiling: // scroll ceiling texture
 			sec = sectors + s->affectee;
-			sec->ceiling_xoffs += dx;
-			sec->ceiling_yoffs += dy;
+			sec->ceilingxoffset += dx;
+			sec->ceilingyoffset += dy;
 			break;
 
 		case sc_carry:
@@ -7757,15 +7761,14 @@ static boolean P_FadeFakeFloor(ffloor_t *rover, INT16 sourcevalue, INT16 destval
 	if (rover->master->special == 258) // Laser block
 		return false;
 
-	// If fading an invisible FOF whose render flags we did not yet set,
-	// initialize its alpha to 1
+	// If fading an invisible FOF whose render flags we did not yet set, initialize its alpha to 1
 	if (dotranslucent &&
 		(rover->spawnflags & FOF_NOSHADE) && // do not include light blocks, which don't set FOF_NOSHADE
 		!(rover->fofflags & FOF_FOG) && // do not include fog
 		!(rover->spawnflags & FOF_RENDERSIDES) &&
 		!(rover->spawnflags & FOF_RENDERPLANES) &&
 		!(rover->fofflags & FOF_RENDERALL))
-		rover->alpha = 1;
+		rover->alpha = 0;
 
 	if (fadingdata)
 		alpha = fadingdata->alpha;
@@ -7851,7 +7854,7 @@ static boolean P_FadeFakeFloor(ffloor_t *rover, INT16 sourcevalue, INT16 destval
 	{
 		if (doexists && !(rover->spawnflags & FOF_BUSTUP))
 		{
-			if (alpha <= 1)
+			if (alpha <= 0)
 				rover->fofflags &= ~FOF_EXISTS;
 			else
 				rover->fofflags |= FOF_EXISTS;
@@ -7863,7 +7866,7 @@ static boolean P_FadeFakeFloor(ffloor_t *rover, INT16 sourcevalue, INT16 destval
 
 		if (dotranslucent && !(rover->fofflags & FOF_FOG))
 		{
-			if (alpha >= 256)
+			if (alpha >= 255)
 			{
 				if (!(rover->fofflags & FOF_CUTSOLIDS) &&
 					(rover->spawnflags & FOF_CUTSOLIDS))
@@ -7963,11 +7966,11 @@ static boolean P_FadeFakeFloor(ffloor_t *rover, INT16 sourcevalue, INT16 destval
 		else // clamp fadingdata->alpha to software's alpha levels
 		{
 			if (alpha < 12)
-				rover->alpha = destvalue < 12 ? destvalue : 1; // Don't even draw it
+				rover->alpha = destvalue < 12 ? destvalue : 0; // Don't even draw it
 			else if (alpha < 38)
 				rover->alpha = destvalue >= 12 && destvalue < 38 ? destvalue : 25;
 			else if (alpha < 64)
-				rover->alpha = destvalue >=38 && destvalue < 64 ? destvalue : 51;
+				rover->alpha = destvalue >= 38 && destvalue < 64 ? destvalue : 51;
 			else if (alpha < 89)
 				rover->alpha = destvalue >= 64 && destvalue < 89 ? destvalue : 76;
 			else if (alpha < 115)
@@ -7983,7 +7986,7 @@ static boolean P_FadeFakeFloor(ffloor_t *rover, INT16 sourcevalue, INT16 destval
 			else if (alpha < 243)
 				rover->alpha = destvalue >= 217 && destvalue < 243 ? destvalue : 230;
 			else // Opaque
-				rover->alpha = destvalue >= 243 ? destvalue : 256;
+				rover->alpha = destvalue >= 243 ? destvalue : 255;
 		}
 	}
 
@@ -8013,17 +8016,16 @@ static void P_AddFakeFloorFader(ffloor_t *rover, size_t sectornum, size_t ffloor
 {
 	fade_t *d;
 
-	// If fading an invisible FOF whose render flags we did not yet set,
-	// initialize its alpha to 1
+	// If fading an invisible FOF whose render flags we did not yet set, initialize its alpha to 1
 	if (dotranslucent &&
 		(rover->spawnflags & FOF_NOSHADE) && // do not include light blocks, which don't set FOF_NOSHADE
 		!(rover->spawnflags & FOF_RENDERSIDES) &&
 		!(rover->spawnflags & FOF_RENDERPLANES) &&
 		!(rover->fofflags & FOF_RENDERALL))
-		rover->alpha = 1;
+		rover->alpha = 0;
 
 	// already equal, nothing to do
-	if (rover->alpha == max(1, min(256, relative ? rover->alpha + destvalue : destvalue)))
+	if (rover->alpha == max(0, min(255, relative ? rover->alpha + destvalue : destvalue)))
 		return;
 
 	d = Z_Malloc(sizeof *d, PU_LEVSPEC, NULL);
@@ -8034,7 +8036,7 @@ static void P_AddFakeFloorFader(ffloor_t *rover, size_t sectornum, size_t ffloor
 	d->ffloornum = (UINT32)ffloornum;
 
 	d->alpha = d->sourcevalue = rover->alpha;
-	d->destvalue = max(1, min(256, relative ? rover->alpha + destvalue : destvalue)); // rover->alpha is 1-256
+	d->destvalue = max(0, min(255, relative ? rover->alpha + destvalue : destvalue)); // rover->alpha is 0-255
 
 	if (ticbased)
 	{

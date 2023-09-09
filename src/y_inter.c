@@ -1001,8 +1001,7 @@ void Y_Ticker(void)
 	if (paused || P_AutoPause())
 		return;
 
-	LUA_HookBool(intertype == int_spec && stagefailed,
-			HOOK(IntermissionThinker));
+	LUA_HookBool(stagefailed, HOOK(IntermissionThinker));
 
 	intertic++;
 
@@ -2047,7 +2046,7 @@ static void Y_AwardCoopBonuses(void)
 	y_bonus_t localbonuses[4];
 
 	// set score/total first
-	data.coop.total = 0;
+	data.coop.total = players[consoleplayer].recordscore;
 	data.coop.score = players[consoleplayer].score;
 	data.coop.gotperfbonus = -1;
 	memset(data.coop.bonuses, 0, sizeof(data.coop.bonuses));
@@ -2068,6 +2067,9 @@ static void Y_AwardCoopBonuses(void)
 			players[i].score += localbonuses[j].points;
 			if (players[i].score > MAXSCORE)
 				players[i].score = MAXSCORE;
+			players[i].recordscore += localbonuses[j].points;
+			if (players[i].recordscore > MAXSCORE)
+				players[i].recordscore = MAXSCORE;
 		}
 
 		ptlives = min(
@@ -2124,6 +2126,10 @@ static void Y_AwardSpecialStageBonus(void)
 		players[i].score += localbonuses[1].points;
 		if (players[i].score > MAXSCORE)
 			players[i].score = MAXSCORE;
+		players[i].recordscore += localbonuses[0].points;
+		players[i].recordscore += localbonuses[1].points;
+		if (players[i].recordscore > MAXSCORE)
+			players[i].recordscore = MAXSCORE;
 
 		// grant extra lives right away since tally is faked
 		ptlives = min(

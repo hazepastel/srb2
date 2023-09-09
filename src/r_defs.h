@@ -423,12 +423,12 @@ typedef struct sector_s
 	void *fadecolormapdata; // fade colormap thinker
 
 	// floor and ceiling texture offsets
-	fixed_t floor_xoffs, floor_yoffs;
-	fixed_t ceiling_xoffs, ceiling_yoffs;
+	fixed_t floorxoffset, flooryoffset;
+	fixed_t ceilingxoffset, ceilingyoffset;
 
 	// flat angle
-	angle_t floorpic_angle;
-	angle_t ceilingpic_angle;
+	angle_t floorangle;
+	angle_t ceilingangle;
 
 	INT32 heightsec; // other sector, or -1 if no other sector
 	INT32 camsec; // used for camera clipping
@@ -757,12 +757,12 @@ typedef struct drawseg_s
 	// Pointers to lists for sprite clipping, all three adjusted so [x1] is first value.
 	INT16 *sprtopclip;
 	INT16 *sprbottomclip;
-	INT16 *maskedtexturecol;
+	fixed_t *maskedtexturecol;
 
 	struct visplane_s *ffloorplanes[MAXFFLOORS];
 	INT32 numffloorplanes;
 	struct ffloor_s *thicksides[MAXFFLOORS];
-	INT16 *thicksidecol;
+	fixed_t *thicksidecol;
 	INT32 numthicksides;
 	fixed_t frontscale[MAXVIDWIDTH];
 
