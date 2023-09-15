@@ -5395,7 +5395,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 							player->pflags |= (PF_THOKKED|PF_CANCARRY);
 
 						if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
-							P_SetObjectMomZ(player->mo, 6<<FRACBITS, false);
+							P_SetObjectMomZ(player->mo, FRACUNIT, true);
 						player->fly1 = TICRATE/3;
 						player->powers[pw_strong] = STR_FLY;
 					}
@@ -5921,12 +5921,8 @@ static void P_3dMovement(player_t *player)
 	{
 		acceleration = 1280;
 
-		if (player->mo->standingslope && (!(player->mo->standingslope->flags & SL_NOPHYSICS)) && (abs(player->mo->standingslope->zdelta) >= FRACUNIT/4)
-		&& (P_MobjFlip(player->mo)*player->mo->z) < oldz)
-			acceleration >>= 1;
-
 		if (player->mo->friction > ORIG_FRICTION) // friction scaled acceleration
-			acceleration /= 3;
+			acceleration >>= 1;
 	}
 	else
 	{
@@ -8378,14 +8374,14 @@ void P_MovePlayer(player_t *player)
 				if (cmd->buttons & BT_JUMP)
 				{
 					if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
-						P_SetObjectMomZ(player->mo, 6<<FRACBITS, false);
+						P_SetObjectMomZ(player->mo, FRACUNIT, true);
 					player->fly1 = TICRATE/3;
 				}
 			}
 
 			if (player->fly1)
 			{
-				fixed_t flyspd = player->normalspeed*2/3;
+				fixed_t flyspd = (player->mo->eflags & MFE_UNDERWATER) ? player->normalspeed/3 : player->normalspeed*2/3;
 
 				P_SetPlayerMobjState(player->mo, player->mo->state->nextstate);
 
