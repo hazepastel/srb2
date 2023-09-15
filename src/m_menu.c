@@ -16853,11 +16853,7 @@ static void M_SetupMultiPlayer(INT32 choice)
 	else
 		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER|IT_STRING);
 
-	// ditto with colour
-	if (Playing() && G_GametypeHasTeams())
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
-	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
+	MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
 
 	multi_spr2 = P_GetSkinSprite2(&skins[setupm_fakeskin], SPR2_WALK, NULL);
 
@@ -16905,11 +16901,7 @@ static void M_SetupMultiPlayer2(INT32 choice)
 	else
 		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER | IT_STRING);
 
-	// ditto with colour
-	if (Playing() && G_GametypeHasTeams())
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
-	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
+	MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
 
 	multi_spr2 = P_GetSkinSprite2(&skins[setupm_fakeskin], SPR2_WALK, NULL);
 
