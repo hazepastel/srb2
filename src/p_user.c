@@ -5321,12 +5321,10 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 				case CA_HOMINGTHOK:
 					// Now it's Sonic's abilities turn!
 					// THOK!
-					fixed_t actionspd = max(FixedMul(player->actionspd, player->mo->scale), player->speed);
-					
 					if (!(player->pflags & PF_THOKKED) || (player->charflags & SF_MULTIABILITY))
 					{
 						// Catapult the player
-						P_InstaThrust(player->mo, player->mo->angle, actionspd);
+						P_InstaThrust(player->mo, player->mo->angle, player->actionspd);
 
 						if (player->charability == CA_HOMINGTHOK)
 						{
