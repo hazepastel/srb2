@@ -8358,32 +8358,17 @@ void P_MovePlayer(player_t *player)
 		// Fly counter for Tails.
 		if (player->powers[pw_tailsfly])
 		{
-			const fixed_t actionspd = player->actionspd/80;
-
-			if (player->charflags & SF_MULTIABILITY)
-			{
-				// Adventure-style flying by just holding the button down
-				if (cmd->buttons & BT_JUMP)
-				{
-					P_SetObjectMomZ(player->mo, actionspd/4, true);
-					player->fly1 = TICRATE/3;
-				}
-			}
-			else
-			{
-				if (cmd->buttons & BT_JUMP)
-				{
-					if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
-						P_SetObjectMomZ(player->mo, FRACUNIT, true);
-					player->fly1 = TICRATE/3;
-				}
-			}
+			if (cmd->buttons & BT_JUMP)
+				player->fly1 = TICRATE/3;
 
 			if (player->fly1)
 			{
 				fixed_t flyspd = (player->mo->eflags & MFE_UNDERWATER) ? player->normalspeed/3 : player->normalspeed*2/3;
 
 				P_SetPlayerMobjState(player->mo, player->mo->state->nextstate);
+
+				if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
+					P_SetObjectMomZ(player->mo, FRACUNIT, true);
 
 				if (player->speed > FixedMul(flyspd, player->mo->scale))
 				{
