@@ -14,7 +14,7 @@
 #include "ts_custom.h"
 
 #include "doomstat.h" // paused
-#include "d_netcmd.h" // cv_playercolor
+#include "netcode/d_netcmd.h" // cv_playercolor
 #include "f_finale.h" // F_GetPromptHideHud
 #include "g_game.h"
 #include "hu_stuff.h" // HU_FONTSTART
