@@ -1,0 +1,27 @@
+name: Android, WARNING BUILT ON NEXT
+
+on:
+  push:
+    branches: [ bitten-next ]
+  pull_request:
+    branches: [ bitten-next ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+    - name: Build with Gradle
+      run: cd android && ./gradlew assemblegameNoAssets
+    - uses: actions/upload-artifact@v3
+      with:
+        name: srb2-next
+        path: android/app/build/outputs/apk/gameNoAssets/
