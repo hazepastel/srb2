@@ -29,9 +29,9 @@ Documentation available here.
 #include "../i_threads.h"
 
 #if defined(__ANDROID__)
-#include "d_main.h" // srb2path
-#include "i_system.h" // I_mkdir
-#include "z_zone.h"
+#include "../d_main.h" // srb2path
+#include "../i_system.h" // I_mkdir
+#include "../z_zone.h"
 #endif
 
 /* reasonable default I guess?? */

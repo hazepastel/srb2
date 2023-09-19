@@ -1031,7 +1031,7 @@ void HU_clearChatChars(void)
 #endif
 }
 
-#if defined(VIRTUAL_KEYBOARD) && !defined(NONET)
+#if defined(VIRTUAL_KEYBOARD)
 static void HU_ChatHandleVirt(char *text, size_t length)
 {
 	size_t chatlen = strlen(w_chat);
@@ -1225,10 +1225,8 @@ boolean HU_Responder(event_t *ev)
 //                         HEADS UP DRAWING
 //======================================================================
 
-/*
 void HU_OpenChat(void)
 {
-#ifndef NONET
 	chat_on = true;
 	w_chat[0] = 0;
 	teamtalk = G_GametypeHasTeams(); // Don't teamtalk if we don't have teams.
@@ -1241,32 +1239,23 @@ void HU_OpenChat(void)
 		I_SetVirtualKeyboardCallback(HU_ChatHandleVirt);
 	}
 #endif
-#endif
 }
 
 void HU_CloseChat(void)
 {
-#ifndef NONET
 	chat_on = false;
 	c_input = 0; // reset input cursor
 	I_UpdateMouseGrab();
 #ifdef VIRTUAL_KEYBOARD
 	I_CloseScreenKeyboard();
 #endif
-#endif
 }
 
 boolean HU_IsChatOpen(void)
 {
-#ifndef NONET
 	return chat_on;
-#else
-	return false;
-#endif
 }
 
-#ifndef NONET
-*/
 
 // Precompile a wordwrapped string to any given width.
 // This is a muuuch better method than V_WORDWRAP.

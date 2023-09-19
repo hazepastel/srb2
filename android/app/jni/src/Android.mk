@@ -29,6 +29,7 @@ SRC_SDL := $(SRC_MAIN)/sdl/
 LOCAL_SRC_FILES := $(call List,$(LOCAL_PATH)/$(SRC_JNI)/Sourcefile)
 LOCAL_SRC_FILES += $(call List,$(LOCAL_PATH)/$(SRC_MAIN)/Sourcefile)
 LOCAL_SRC_FILES += $(call List,$(LOCAL_PATH)/$(SRC_MAIN)/blua/Sourcefile)
+LOCAL_SRC_FILES += $(call List,$(LOCAL_PATH)/$(SRC_MAIN)/netcode/Sourcefile)
 LOCAL_SRC_FILES += $(call List,$(LOCAL_PATH)/$(SRC_HWR)/Sourcefile)
 LOCAL_SRC_FILES += $(call List,$(LOCAL_PATH)/$(SRC_SDL)/Sourcefile)
 
