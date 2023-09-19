@@ -195,7 +195,8 @@ static char returnWadPath[256];
 #include "../i_system.h"
 #include "../i_threads.h"
 #include "../screen.h" //vid.WndParent
-#include "../d_net.h"
+#include "../netcode/d_net.h"
+#include "../netcode/commands.h"
 #include "../g_game.h"
 #include "../s_sound.h"
 #include "../filesrch.h"
@@ -217,7 +218,7 @@ static char returnWadPath[256];
 
 #if !defined(NOMUMBLE) && defined(HAVE_MUMBLE)
 // Mumble context string
-#include "../d_clisrv.h"
+#include "../netcode/d_clisrv.h"
 #include "../byteptr.h"
 #endif
 
@@ -2258,14 +2259,13 @@ void I_Quit(void)
 	/* prevent recursive I_Quit() */
 	if (quitting) goto death;
 	SDLforceUngrabMouse();
-	quitting = SDL_TRUE;
+	//quitting = SDL_TRUE;
+	quiting = SDL_FALSE;
 
 	if (I_StoragePermission())
 		M_SaveConfig(NULL); //save game config, cvars..
 
-#ifndef NONET
 	D_SaveBan(); // save the ban list
-#endif
 	G_SaveGameData(clientGamedata); // Tails 12-08-2002
 	//added:16-02-98: when recording a demo, should exit using 'q' key,
 	//        but sometimes we forget and use 'F10'.. so save here too.
@@ -2381,10 +2381,7 @@ void I_Error(const char *error, ...)
 
 	if (I_StoragePermission())
 		M_SaveConfig(NULL); // save game config, cvars..
-
-#ifndef NONET
 	D_SaveBan(); // save the ban list
-#endif
 	G_SaveGameData(clientGamedata); // Tails 12-08-2002
 
 	// Shutdown. Here might be other errors.

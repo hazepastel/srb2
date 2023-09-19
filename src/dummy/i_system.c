@@ -218,7 +218,6 @@ const char *I_ClipboardPaste(void)
 	return NULL;
 }
 
-<<<<<<< HEAD
 INT32 I_OnTabletDevice(void)
 {
 	return 0;

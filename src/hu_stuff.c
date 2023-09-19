@@ -20,7 +20,9 @@
 #include "m_cond.h" // emblems
 #include "m_misc.h" // word jumping
 
-#include "d_clisrv.h"
+#include "netcode/d_clisrv.h"
+#include "netcode/net_command.h"
+#include "netcode/gamestate.h"
 
 #include "g_game.h"
 #include "g_input.h"
@@ -182,14 +184,12 @@ static huddrawlist_h luahuddrawlist_scores;
 
 static tic_t resynch_ticker = 0;
 
-#ifndef NONET
 // just after
 static void Command_Say_f(void);
 static void Command_Sayto_f(void);
 static void Command_Sayteam_f(void);
 static void Command_CSay_f(void);
 static void Got_Saycmd(UINT8 **p, INT32 playernum);
-#endif
 
 void HU_LoadGraphics(void)
 {
@@ -334,13 +334,11 @@ void HU_LoadGraphics(void)
 //
 void HU_Init(void)
 {
-#ifndef NONET
 	COM_AddCommand("say", Command_Say_f, COM_LUA);
 	COM_AddCommand("sayto", Command_Sayto_f, COM_LUA);
 	COM_AddCommand("sayteam", Command_Sayteam_f, COM_LUA);
 	COM_AddCommand("csay", Command_CSay_f, COM_LUA);
 	RegisterNetXCmd(XD_SAY, Got_Saycmd);
-#endif
 
 	// set shift translation table
 	shiftxform = english_shiftxform;
@@ -370,7 +368,7 @@ void HU_Start(void)
 //                            EXECUTION
 //======================================================================
 
-#ifndef NONET
+// EVERY CHANGE IN THIS SCRIPT IS LOL XD! BY VINCYTM
 
 static UINT32 chat_nummsg_log = 0;
 static UINT32 chat_nummsg_min = 0;
@@ -409,11 +407,9 @@ static void HU_removeChatText_Log(void)
 		strcpy(chat_log[i], chat_log[i+1]);
 	chat_nummsg_log--; // lost 1 msg.
 }
-#endif
 
 void HU_AddChatText(const char *text, boolean playsound)
 {
-#ifndef NONET
 	if (playsound && cv_consolechat.value != 2) // Don't play the sound if we're using hidden chat.
 		S_StartSound(NULL, sfx_radio);
 
@@ -435,13 +431,7 @@ void HU_AddChatText(const char *text, boolean playsound)
 		CONS_Printf("%s\n", text);
 	else // if we aren't, still save the message to log.txt
 		CON_LogMessage(va("%s\n", text));
-#else
-	(void)playsound;
-	CONS_Printf("%s\n", text);
-#endif
 }
-
-#ifndef NONET
 
 /** Runs a say command, sending an ::XD_SAY message.
   * A say command consists of a signed 8-bit integer for the target, an
@@ -862,7 +852,6 @@ static void Got_Saycmd(UINT8 **p, INT32 playernum)
 		CONS_Printf("Dropped chat: %d %d %s\n", playernum, target, msg);
 #endif
 }
-#endif
 
 //
 //
@@ -885,7 +874,6 @@ void HU_Ticker(void)
 		HU_CloseChat();
 #endif
 
-#ifndef NONET
 	if (chat_on)
 	{
 		// count down the scroll timer.
@@ -913,15 +901,12 @@ void HU_Ticker(void)
 				HU_removeChatText_Mini();
 		}
 	}
-#endif
 
 	if (cechotimer > 0) --cechotimer;
 
 	if (hu_redownloadinggamestate)
 		resynch_ticker++;
 }
-
-#ifndef NONET
 
 static boolean teamtalk = false;
 static boolean justscrolleddown;
@@ -1034,8 +1019,6 @@ static void HU_sendChatMessage(void)
 	}
 }
 
-#endif
-
 void HU_clearChatChars(void)
 {
 	memset(w_chat, '\0', sizeof(w_chat));
@@ -1067,11 +1050,34 @@ static void HU_ChatHandleVirt(char *text, size_t length)
 //
 boolean HU_Responder(event_t *ev)
 {
+	INT32 c=0;
+
 	if (ev->type != ev_keydown)
 		return false;
 
-#ifndef NONET
-	INT32 c = (INT32)ev->key;
+	// only KeyDown events now...
+
+	/*// Shoot, to prevent P1 chatting from ruining the game for everyone else, it's either:
+	// A. completely disallow opening chat entirely in online splitscreen
+	// or B. iterate through all controls to make sure it's bound to player 1 before eating
+	// You can see which one I chose.
+	// (Unless if you're sharing a keyboard, since you probably establish when you start chatting that you have dibs on it...)
+	// (Ahhh, the good ol days when I was a kid who couldn't afford an extra USB controller...)
+
+	if (ev->key >= KEY_MOUSE1)
+	{
+		INT32 i;
+		for (i = 0; i < NUM_GAMECONTROLS; i++)
+		{
+			if (gamecontrol[i][0] == ev->key || gamecontrol[i][1] == ev->key)
+				break;
+		}
+
+		if (i == NUM_GAMECONTROLS)
+			return false;
+	}*/	//We don't actually care about that unless we get splitscreen netgames. :V
+
+	c = (INT32)ev->key;
 
 	if (!chat_on)
 	{
@@ -1210,7 +1216,6 @@ boolean HU_Responder(event_t *ev)
 
 		return true;
 	}
-#endif
 
 	return false;
 }
@@ -1220,6 +1225,7 @@ boolean HU_Responder(event_t *ev)
 //                         HEADS UP DRAWING
 //======================================================================
 
+/*
 void HU_OpenChat(void)
 {
 #ifndef NONET
@@ -1260,6 +1266,7 @@ boolean HU_IsChatOpen(void)
 }
 
 #ifndef NONET
+*/
 
 // Precompile a wordwrapped string to any given width.
 // This is a muuuch better method than V_WORDWRAP.
@@ -1839,7 +1846,6 @@ static void HU_DrawChat_Old(void)
 	if (hu_tick < 4)
 		V_DrawCharacter(HU_INPUTX + c, y, '_' | cv_constextsize.value |V_NOSCALESTART|t, true);
 }
-#endif
 
 // Draw crosshairs at the exact center of the view.
 // In splitscreen, crosshairs are stretched vertically to compensate for V_PERPLAYER squishing them.
@@ -1979,7 +1985,6 @@ static void HU_DrawDemoInfo(void)
 //
 void HU_Drawer(void)
 {
-#ifndef NONET
 #ifdef TOUCHINPUTS
 	if (takescreenshot && !cv_touchscreenshots.value)
 		mobilechat = false;
@@ -2015,7 +2020,6 @@ void HU_Drawer(void)
 		if (!OLDCHAT && cv_consolechat.value < 2 && netgame) // Don't display minimized chat if you set the mode to Window (Hidden)
 			HU_drawMiniChat(); // draw messages in a cool fashion.
 	}
-#endif
 
 	if (cechotimer)
 		HU_DrawCEcho();

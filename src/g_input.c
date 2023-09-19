@@ -21,7 +21,8 @@
 #include "keys.h"
 #include "hu_stuff.h" // need HUFONT start & end
 #include "st_stuff.h"
-#include "d_net.h"
+#include "netcode/d_net.h"
+#include "netcode/d_netcmd.h"
 #include "d_player.h"
 #include "r_main.h"
 #include "z_zone.h"
@@ -318,6 +319,12 @@ static UINT8 G_CheckDoubleClick(UINT8 state, dclick_t *dt)
 	}
 	return false;
 }
+// no fucking clue why im having to do this hack, g_game.h is included
+extern INT32 pausedelay;
+extern boolean pausebreakkey;
+
+void G_SetModeAttackRetryFlag(void);
+extern boolean demoplayback, titledemo, demorecording, timingdemo;
 
 boolean G_HandlePauseKey(boolean ispausebreak)
 {
@@ -355,7 +362,7 @@ boolean G_CanRetryModeAttack(void)
 {
 	return (modeattacking && !demoplayback && (gamestate == GS_LEVEL));
 }
-
+extern INT32 camtoggledelay, camtoggledelay2;
 // Handles the camera toggle key being pressed.
 boolean G_ToggleChaseCam(void)
 {
@@ -983,6 +990,12 @@ void G_ResetMice(void)
 	G_SetMouseDeltas(0, 0, 2);
 }
 
+#ifdef ACCELEROMETER
+extern consvar_t cv_useaccelerometer;
+extern consvar_t cv_accelscale;
+extern consvar_t cv_acceltilt;
+extern consvar_t cv_acceldeadzone;
+#endif
 // Returns true if the accelerometer can be used
 boolean G_CanUseAccelerometer(void)
 {
