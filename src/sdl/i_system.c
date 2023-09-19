@@ -386,13 +386,15 @@ static void I_ReportSignal(int num, int coredumped)
 	NDKCrashHandler_ReportSignal(sigmsg);
 #endif
 
+/*
+
 	if (!M_CheckParm("-dedicated"))
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
 			"Process killed by signal",
 			sigmsg, NULL);
-/*
 	strcat(sigttl, signame);
 	I_OutputMsg("%s\n", sigttl);
+*/
 
 	if (M_CheckParm("-dedicated"))
 		return;
@@ -401,15 +403,14 @@ static void I_ReportSignal(int num, int coredumped)
 		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0,		"OK" },
 		{ 										0, 1,  "Discord" },
 	};
-
 	const SDL_MessageBoxData messageboxdata = {
-		SDL_MESSAGEBOX_ERROR, /* .flags /
-		NULL, /* .window /
-		sigttl, /* .title /
-		va("%s %s", sigmsg, reportmsg), /* .message /
-		SDL_arraysize(buttons), /* .numbuttons /
-		buttons, /* .buttons /
-		NULL /* .colorScheme /
+		SDL_MESSAGEBOX_ERROR, /* .flags */
+		NULL, /* .window */
+		sigttl, /* .title */
+		va("%s %s", sigmsg, reportmsg), /* .message */
+		SDL_arraysize(buttons), /* .numbuttons */
+		buttons, /* .buttons */
+		NULL /* .colorScheme */
 	};
 
 	int buttonid;
@@ -420,7 +421,6 @@ static void I_ReportSignal(int num, int coredumped)
 	if (buttonid == 1)
 		SDL_OpenURL("https://www.srb2.org/discord");
 #endif
-  */
 }
 
 #ifndef NEWSIGNALHANDLER

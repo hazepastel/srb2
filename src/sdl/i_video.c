@@ -82,6 +82,7 @@
 #include "../lua_script.h"
 #include "../lua_libs.h"
 #include "../lua_hook.h"
+#include "../netcode/d_netcmd.h"
 
 #include "sdlmain.h"
 
