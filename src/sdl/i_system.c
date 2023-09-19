@@ -2259,8 +2259,8 @@ void I_Quit(void)
 	/* prevent recursive I_Quit() */
 	if (quitting) goto death;
 	SDLforceUngrabMouse();
-	//quitting = SDL_TRUE;
-	quiting = SDL_FALSE;
+	quitting = SDL_TRUE;
+	//quiting = SDL_FALSE;
 
 	if (I_StoragePermission())
 		M_SaveConfig(NULL); //save game config, cvars..

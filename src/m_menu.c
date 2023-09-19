@@ -162,15 +162,13 @@ typedef enum
 
 levellist_mode_t levellistmode = LLM_CREATESERVER;
 UINT8 maplistoption = 0;
-/*
 static struct
 {
 	char name[29];
 	INT32 index;
 } joystickInfo[MAX_JOYSTICKS+1];
-*/
 
-static char joystickInfo[MAX_JOYSTICKS+1][29];
+//static char joystickInfo[MAX_JOYSTICKS+1][29];
 static UINT32 serverlistpage;
 
 static UINT8 numsaves = 0;
@@ -2381,8 +2379,7 @@ menu_t MP_RoomDef =
 menu_t MP_PlayerSetupDef =
 {
 	MTREE3(MN_MP_MAIN, MN_MP_SPLITSCREEN, MN_MP_PLAYERSETUP),
-#endif
-	"M_SPLAYR",
+0, 	"M_SPLAYR",
 	sizeof (MP_PlayerSetupMenu)/sizeof (menuitem_t),
 	&MainDef, // doesn't matter
 	MP_PlayerSetupMenu,
