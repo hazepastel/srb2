@@ -883,7 +883,7 @@ EXPORT void HWRAPI(CreateModelVBOs) (model_t *model)
 
 #define BUFFER_OFFSET(i) ((void*)(i))
 
-static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface);{
+static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface) {
 	static GLRGBAFloat poly = {1.0f, 1.0f, 1.0f, 1.0f};
 	static GLRGBAFloat tint = {1.0f, 1.0f, 1.0f, 1.0f};
 	static GLRGBAFloat fade = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -1173,7 +1173,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 // -----------------+
 // HWRAPI DrawModel : Draw a model
 // -----------------+
-EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface);
+EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface)
 {
 	Shader_SetIfChanged(gl_shaderstate.current);
 
