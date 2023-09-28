@@ -904,7 +904,8 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		return;
 
 	// Affect input model scaling
-	scale *= 0.5f;
+	hscale *= 0.5f;
+	vscale *= 0.5f;
 	v_scale[0] = v_scale[1] = v_scale[2] = vscale;
 
 	if (duration > 0.0 && tics >= 0.0) // don't interpolate if instantaneous or infinite in length
