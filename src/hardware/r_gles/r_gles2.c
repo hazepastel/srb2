@@ -883,8 +883,7 @@ EXPORT void HWRAPI(CreateModelVBOs) (model_t *model)
 
 #define BUFFER_OFFSET(i) ((void*)(i))
 
-static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float scale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface)
-{
+static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface) {
 	static GLRGBAFloat poly = {1.0f, 1.0f, 1.0f, 1.0f};
 	static GLRGBAFloat tint = {1.0f, 1.0f, 1.0f, 1.0f};
 	static GLRGBAFloat fade = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -905,8 +904,9 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		return;
 
 	// Affect input model scaling
-	scale *= 0.5f;
-	v_scale[0] = v_scale[1] = v_scale[2] = scale;
+	hscale *= 0.5f;
+	vscale *= 0.5f;
+	v_scale[0] = v_scale[1] = v_scale[2] = vscale;
 
 	if (duration > 0.0 && tics >= 0.0) // don't interpolate if instantaneous or infinite in length
 	{
@@ -1174,7 +1174,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 // -----------------+
 // HWRAPI DrawModel : Draw a model
 // -----------------+
-EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, INT32 duration, INT32 tics, INT32 nextFrameIndex, FTransform *pos, float scale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface)
+EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface)
 {
 	Shader_SetIfChanged(gl_shaderstate.current);
 
@@ -1182,7 +1182,7 @@ EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, INT32 duration,
 	Shader_EnableVertexAttribArray(LOC_POSITION);
 	Shader_DisableVertexAttribArray(LOC_COLORS);
 
-	DrawModelEx(model, frameIndex, duration, tics, nextFrameIndex, pos, scale, flipped, hflipped, Surface);
+	DrawModelEx(model, frameIndex, duration, tics, nextFrameIndex, pos, hscale, vscale, flipped, hflipped, Surface);
 }
 
 // -----------------+

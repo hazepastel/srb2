@@ -1662,7 +1662,7 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 			p.y += ox * gl_viewcos;
 			p.z += oy;
 
-			HWD.pfnDrawModel(md2->model, frame, durs, tics, nextFrame, &p, md2->scale * xs, md2->scale * ys, flip, &Surf);
+			HWD.pfnDrawModel(md2->model, frame, durs, tics, nextFrame, &p, md2->scale * xs, md2->scale * ys, flip, hflip, &Surf);
 		}
 	}
 
