@@ -1,4 +1,3 @@
-
 #
 # Makefile for feature flags.
 #
