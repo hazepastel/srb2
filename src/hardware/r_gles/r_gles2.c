@@ -940,6 +940,13 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	if (useNormals)
 		Shader_EnableVertexAttribArray(LOC_NORMAL);
 
+	flags = (Surface->PolyFlags | PF_Modulated);
+	if (Surface->PolyFlags & (PF_Additive|PF_Subtractive|PF_ReverseSubtract|PF_Multiplicative))
+		flags |= PF_Occlude;
+	else if (Surface->PolyColor.s.alpha == 0xFF)
+		flags |= (PF_Occlude | PF_Masked);
+
+	SetBlend(flags);
 	Shader_SetUniforms(Surface, &poly, &tint, &fade);
 
 	pglEnable(GL_CULL_FACE);
