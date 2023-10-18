@@ -234,7 +234,7 @@ static inline void CL_DrawConnectionStatus(void)
 			if (snake)
 				Snake_Draw(snake);
 
-			CL_DrawConnectionStatusBox();
+			CL_DrawConnectionStatusBox(abortstring);
 			V_DrawCenteredString(BASEVIDWIDTH/2, BASEVIDHEIGHT-16-24, V_YELLOWMAP,
 				M_GetText("Waiting to download files..."));
 		}
