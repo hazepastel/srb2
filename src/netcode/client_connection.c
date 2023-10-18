@@ -539,15 +539,6 @@ static void M_ConfirmConnect(event_t *ev)
 	}
 }
 
-			TS_DefineNavigationButtons();
-			TS_HideNavigationButtons();
-
-			touchnavigation[TOUCHNAV_BACK].defined = true;
-#endif
-		}
-	}
-}
-
 static boolean CL_FinishedFileList(void)
 {
 	INT32 i;
