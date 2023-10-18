@@ -429,7 +429,10 @@ void Local_Maketic(INT32 realtics)
 	G_BuildTiccmd(&localcmds, realtics, 1);
 	if (splitscreen || botingame)
 		G_BuildTiccmd(&localcmds2, realtics, 2);
-
+#ifdef TOUCHINPUTS
+	TS_UpdateFingers(realtics);
+	TS_UpdateNavigation(realtics);
+#endif
 	localcmds.angleturn |= TICCMD_RECEIVED;
 	localcmds2.angleturn |= TICCMD_RECEIVED;
 }
