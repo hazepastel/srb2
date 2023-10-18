@@ -189,7 +189,7 @@ static inline void CL_DrawConnectionStatus(void)
 				Snake_Draw(snake);
 
 			// Draw the bottom box.
-			CL_DrawConnectionStatusBox();
+			CL_DrawConnectionStatusBox(abortstring);
 
 			if (fileneeded)
 			{
