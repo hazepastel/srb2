@@ -24,7 +24,6 @@ enum hud {
 	hud_time,
 	hud_rings,
 	hud_lives,
-	hud_input,
 	// Match / CTF / Tag / Ringslinger
 	hud_weaponrings,
 	hud_powerstones,
