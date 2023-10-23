@@ -1237,6 +1237,8 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 					xspeed = FixedMul(FINECOSINE(fa),speed);
 					yspeed = FixedMul(FINESINE(fa),speed);
 
+                    yspeed = yspeed*19/16; //gravity adjustment
+
 					P_InstaThrust(toucher, special->angle, xspeed/10);
 					toucher->momz = yspeed/11;
 
