@@ -1564,6 +1564,10 @@ static int lib_pInstaThrust(lua_State *L)
 	if (!mo)
 		return LUA_ErrInvalid(L, "mobj_t");
 	P_InstaThrust(mo, angle, move);
+    if (mo->player)
+    {
+        mo->player->powers[pw_justsprung] = TICRATE>>1;
+    }
 	return 0;
 }
 

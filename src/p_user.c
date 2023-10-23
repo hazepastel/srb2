@@ -4723,6 +4723,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						{
 							P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
 							P_InstaThrust(player->mo, player->mo->angle, (player->speed = FixedMul(player->dashspeed, player->mo->scale))); // catapult forward ho!!
+                            player->powers[pw_justsprung] = TICRATE>>1;
 						}
 						else
 						{
@@ -5783,10 +5784,7 @@ static void P_2dMovement(player_t *player)
 	}
 	else
 	{
-		if (player->speed > normalspd)
-			acceleration = 800;
-		else
-			acceleration = 600;
+		acceleration = 600;
 	}
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
@@ -5801,6 +5799,9 @@ static void P_2dMovement(player_t *player)
 		acceleration += 140;
 	}
 
+    if (player->powers[pw_justsprung] && P_GetPlayerControlDirection(player) == 2)
+	    acceleration = 62;
+
 	topspeed = normalspd; //set normal top speed
 
 	if (player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL)
@@ -5810,7 +5811,7 @@ static void P_2dMovement(player_t *player)
 		topspeed = 2*normalspd/3;
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
-		acceleration = 62;
+		acceleration = 34;
 
 //////////////////////////////////////
 	if (player->climbing)
@@ -5925,10 +5926,7 @@ static void P_3dMovement(player_t *player)
 	}
 	else
 	{
-		if (player->speed > normalspd)
-			acceleration = 800;
-		else
-			acceleration = 600;
+		acceleration = 600;
 	}
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
@@ -5943,6 +5941,9 @@ static void P_3dMovement(player_t *player)
 		acceleration += 140;
 	}
 
+    if (player->powers[pw_justsprung] && P_GetPlayerControlDirection(player) == 2)
+	    acceleration = 62;
+
 	topspeed = normalspd; //set normal top speed
 
 	if (player->charability == CA_GLIDEANDCLIMB && (player->pflags & PF_THOKKED) && !(player->pflags & (PF_JUMPED|PF_SHIELDABILITY)) && player->panim == PA_FALL)
@@ -5955,7 +5956,7 @@ static void P_3dMovement(player_t *player)
 		topspeed = oldMagnitude;
 
 	if ((player->pflags & PF_BOUNCING) && (player->mo->state-states == S_PLAY_BOUNCE_LANDING))
-		acceleration = 62;
+		acceleration = 34;
 
 	// Forward movement
 	if (player->climbing)
@@ -6071,8 +6072,11 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
+            if (player->powers[pw_justsprung])
+                turnspd -= 2*FRACUNIT/3;
 			if (!onground && !spin)
 				turnspd -= FRACUNIT>>2;
+
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
 			else
@@ -6090,8 +6094,13 @@ static void P_3dMovement(player_t *player)
 
 		if (!onground)
 			deceleration /= 3;
-		else if (player->mo->friction > ORIG_FRICTION)
-			deceleration >>= 2;
+        else if (player->mo->friction != ORIG_FRICTION)
+        {
+            if (player->mo->friction > ORIG_FRICTION)
+                deceleration >>= 2;
+            else
+                deceleration += FRACUNIT>>2;
+        }
 
 		deceleration = min(deceleration, player->speed);
 		//Get deceleration vector
@@ -11806,8 +11815,8 @@ void P_PlayerThink(player_t *player)
 			player->drawangle = player->mo->angle;
 		else if (P_PlayerInPain(player))
 			;
-		//else if (player->powers[pw_justsprung]) // restricted, potentially by lua
-			//;
+        else if (player->powers[pw_justsprung]) // restricted, potentially by lua
+			;
 		else if (player->powers[pw_carry] && player->mo->tracer) // carry
 		{
 			switch (player->powers[pw_carry])

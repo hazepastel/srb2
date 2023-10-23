@@ -319,6 +319,7 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 			object->player->powers[pw_noautobrake] = 3*(object->player->powers[pw_justsprung]);
 			if (!horizspeed)
 			{
+                object->player->powers[pw_justsprung] = 5;
 				if (abs(object->player->rmomx) > object->scale || abs(object->player->rmomy) > object->scale)
 					object->player->drawangle = R_PointToAngle2(0, 0, object->player->rmomx, object->player->rmomy);
 			}
@@ -560,8 +561,8 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 				P_ResetPlayer(p);
 				if (p->panim != PA_FALL)
 					P_SetPlayerMobjState(object, S_PLAY_FALL);
-				p->powers[pw_justsprung] = abs(speed)/FRACUNIT;
-				p->powers[pw_noautobrake] = 3*(p->powers[pw_justsprung]);
+				p->powers[pw_justsprung] = 5;
+				p->powers[pw_noautobrake] = 3*(abs(speed)/FRACUNIT);
 			}
 			break;
 		default:
