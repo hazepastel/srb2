@@ -988,7 +988,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	if (hflipped)
 		v_scale[2] = -v_scale[2];
 
-	/*if (pos->roll)
+	if (pos->roll)
 	{
 		float roll = (1.0f * pos->rollflip);
 		fvector3_t rotate;
@@ -1012,7 +1012,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		translate[0] = -translate[0];
 		translate[1] = -translate[1];
 		lzml_matrix4_translate(modelMatrix, translate);
-	}*/
+	}
 
 #ifdef USE_FTRANSFORM_ANGLEZ
 	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
