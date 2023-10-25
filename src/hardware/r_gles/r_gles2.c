@@ -999,9 +999,9 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		lzml_matrix4_translate(modelMatrix, translate);
 
 		rotate[0] = rotate[1] = rotate[2] = 0.0f;
-		rotate[0] = pos->rollx;
+		rotate[0] = -pos->rollx;
 		rotate[1] = 0.0f;
-		rotate[2] = pos->rollz;
+		rotate[2] = -pos->rollz;
 
 		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, Deg2Rad(pos->rollangle));
 
