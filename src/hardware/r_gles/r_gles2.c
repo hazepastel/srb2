@@ -988,21 +988,18 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	if (hflipped)
 		v_scale[2] = v_scale[2];
 
-	lzml_matrix4_rotate_z(modelMatrix, Deg2Rad(pos->anglez)); // rotate by slope from Kart
-	lzml_matrix4_rotate_y(modelMatrix, Deg2Rad(pos->angley));
+	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
+	lzml_matrix4_rotate_y(modelMatrix, -Deg2Rad(pos->angley));
 	lzml_matrix4_rotate_x(modelMatrix, -Deg2Rad(pos->anglex));
 
 	if (pos->roll)
 	{
-		float roll = (1.0f * pos->flip);
-		fvector3_t rotate;
-
 		translate[0] = pos->centerx;
 		translate[1] = pos->centery;
 		translate[2] = 0.0f;
 		lzml_matrix4_translate(modelMatrix, translate);
 
-		rotate[0] = rotate[1] = rotate[2] = 0.0f;
+		fvector3_t rotate;
 		rotate[0] = pos->rollx;
 		rotate[1] = 0.0f;
 		rotate[2] = pos->rollz;
@@ -1013,7 +1010,6 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		translate[1] = -translate[1];
 		lzml_matrix4_translate(modelMatrix, translate);
 	}
-
 
 	lzml_matrix4_scale(modelMatrix, v_scale);
 
