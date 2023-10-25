@@ -1003,7 +1003,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		rotate[1] = 0.0f;
 		rotate[2] = -pos->rollz;
 
-		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, Deg2Rad(pos->rollangle));
+		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, -Deg2Rad(pos->rollangle));
 
 		translate[0] = -translate[0];
 		translate[1] = -translate[1];
@@ -1011,10 +1011,10 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	}
 
 #ifdef USE_FTRANSFORM_ANGLEZ
-	lzml_matrix4_rotate_z(modelMatrix, Deg2Rad(pos->anglez)); // rotate by slope from Kart
+	lzml_matrix4_rotate_z(modelMatrix, Deg2Rad(-pos->anglez)); // rotate by slope from Kart
 #endif
 	lzml_matrix4_rotate_y(modelMatrix, Deg2Rad(pos->angley));
-	lzml_matrix4_rotate_x(modelMatrix, Deg2Rad(pos->anglex));
+	lzml_matrix4_rotate_x(modelMatrix, Deg2Rad(-pos->anglex));
 
 	lzml_matrix4_scale(modelMatrix, v_scale);
 
