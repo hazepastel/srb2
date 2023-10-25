@@ -502,6 +502,8 @@ typedef struct player_s
 	INT32 deadtimer; // End game if game over lasts too long
 	tic_t exiting; // Exitlevel timer
 
+    SINT8 rsprung; //custom gravity behaviour on springs
+
 	UINT8 homing; // Are you homing?
 	tic_t dashmode; // counter for dashmode ability
 

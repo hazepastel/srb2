@@ -13611,6 +13611,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
 			P_SetTarget(&thing->tracer, dustdevil);
 			P_SetPlayerMobjState(thing, S_PLAY_PAIN);
+            player->rsprung = 3;
 
 			if (dist > dragamount)
 			{
@@ -13628,10 +13629,11 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 		{ //Player on the top of the tornado.
 			P_ResetPlayer(player);
 			thing->z = dustdevil->z + dustdevil->height;
-			thrust = 23*FRACUNIT;
+			thrust = 22<<FRACBITS;
 			player->powers[pw_carry] = CR_NONE;
 			player->powers[pw_nocontrol] = 0;
 			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
+            player->rsprung = 3;
 			P_SetTarget(&thing->tracer, NULL);
 			S_StartSound(thing, sfx_wdjump);
 			P_SetPlayerMobjState(thing, S_PLAY_FALL);

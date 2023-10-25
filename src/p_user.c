@@ -1093,6 +1093,7 @@ void P_ResetPlayer(player_t *player)
 		player->powers[pw_carry] = CR_NONE;
 
 	player->secondjump = 0;
+    player->rsprung = 0;
 	player->glidetime = 0;
 	player->homing = 0;
 	player->climbing = 0;
@@ -2445,6 +2446,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 			player->secondjump = 0;
 			player->glidetime = 0;
 			player->climbing = 0;
+            player->rsprung = 0;
 			player->powers[pw_tailsfly] = 0;
 
 			if (player->pflags & PF_SHIELDABILITY)
@@ -4476,6 +4478,8 @@ void P_DoJump(player_t *player, boolean soundandstate)
 			return;
 		}
 
+        player->rsprung = 0;
+
 		// Jump this high.
 		if (player->powers[pw_carry] == CR_PLAYER)
 		{
@@ -4723,7 +4727,6 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						{
 							P_SetPlayerMobjState(player->mo, S_PLAY_ROLL);
 							P_InstaThrust(player->mo, player->mo->angle, (player->speed = FixedMul(player->dashspeed, player->mo->scale))); // catapult forward ho!!
-                            player->powers[pw_justsprung] = TICRATE>>1;
 						}
 						else
 						{
@@ -5222,7 +5225,10 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 		else if (player->pflags & (PF_GLIDING|PF_SLIDING|PF_SHIELDABILITY)) // If the player has used an ability previously
 			;
 		else if (P_PlayerShieldThink(player, cmd, lockonthok, visual))
+        {
 			player->pflags |= PF_JUMPED;
+            player->rsprung = 0;
+        }
 		else if ((cmd->buttons & BT_SPIN))
 		{
 			if (!(player->pflags & PF_JUMPED) || !LUA_HookPlayer(player, HOOK(JumpSpinSpecial)))
@@ -5313,6 +5319,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 			if (!(player->pflags & PF_JUMPED) && !(player->pflags & PF_THOKKED))
 			{
 				player->pflags |= P_GetJumpFlags(player);
+                player->rsprung = 0;
 				P_SetPlayerMobjState(player->mo, S_PLAY_JUMP); //this intentionally also activates with no ability
 			}
 		
@@ -7841,7 +7848,8 @@ static void P_SkidStuff(player_t *player)
 		}
 		else if (P_AproxDistance(pmx, pmy) >= FixedMul(player->runspeed/2, player->mo->scale) // if you were moving faster than half your run speed last frame
 		&& (player->mo->momx != pmx || player->mo->momy != pmy) // and you are moving differently this frame
-		&& P_GetPlayerControlDirection(player) == 2) // and your controls are pointing in the opposite direction to your movement
+		&& (P_GetPlayerControlDirection(player) == 2) // and your controls are pointing in the opposite direction to your movement
+        && !player->powers[pw_justsprung]) // and you are not sprung
 		{ // check for skidding
 			angle_t mang = R_PointToAngle2(0,0,pmx,pmy); // movement angle
 			angle_t pang = R_PointToAngle2(pmx,pmy,player->mo->momx,player->mo->momy); // push angle

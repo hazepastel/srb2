@@ -1485,7 +1485,12 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 		|| (mo->player->charability == CA_FLY && mo->player->panim == PA_ABILITY))
 			gravityadd = gravityadd/2; // less gravity while flying or gliding
 
-		if (!mo->player->powers[pw_justsprung] && (P_MobjFlip(mo)*mo->momz > FixedMul(20<<FRACBITS, mo->scale)))
+        if (mo->player->rsprung)
+        {
+            if (abs(mo->momz) < FixedMul(5<<FRACBITS, mo->scale))
+                gravityadd = gravityadd*3/4;
+        }
+		else if (P_MobjFlip(mo)*mo->momz > FixedMul(15<<FRACBITS, mo->scale))
 			gravityadd = gravityadd*4/3; // increase gravity to counter slope rocketing
 
 		if (mo->player->climbing || (mo->player->powers[pw_carry] == CR_NIGHTSMODE))

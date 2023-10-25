@@ -5019,6 +5019,7 @@ static void P_EvaluateSpecialFlags(player_t *player, sector_t *sector, sector_t 
 			P_SetPlayerMobjState(player->mo, S_PLAY_FALL);
 			P_SetTarget(&player->mo->tracer, player->mo);
 			player->powers[pw_carry] = CR_FAN;
+            player->rsprung = 2;
 		}
 	}
 	if (sector->specialflags & SSF_SUPERTRANSFORM)

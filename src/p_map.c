@@ -429,6 +429,11 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		washoming = object->player->homing;
 		P_ResetPlayer(object->player);
 
+        if (vertispeed)
+        {
+            object->player->rsprung = 1;
+        }
+
 		if (spring->info->painchance == 1) // For all those ancient, SOC'd abilities.
 		{
 			object->player->pflags |= P_GetJumpFlags(object->player);
@@ -545,6 +550,7 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 				P_SetPlayerMobjState(object, S_PLAY_FALL);
 				P_SetTarget(&object->tracer, spring);
 				p->powers[pw_carry] = CR_FAN;
+                p->rsprung = 2;
 			}
 			break;
 		case MT_STEAM: // Steam
@@ -563,6 +569,7 @@ static void P_DoFanAndGasJet(mobj_t *spring, mobj_t *object)
 					P_SetPlayerMobjState(object, S_PLAY_FALL);
 				p->powers[pw_justsprung] = 5;
 				p->powers[pw_noautobrake] = 3*(abs(speed)/FRACUNIT);
+                p->rsprung = 1;
 			}
 			break;
 		default:
