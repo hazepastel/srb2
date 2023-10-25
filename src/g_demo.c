@@ -1500,12 +1500,8 @@ void G_BeginRecording(void)
 	demo_p += 16;
 
 	// Color
-	UINT16 skincolor = players[0].skincolor;
-	if (skincolor >= numskincolors)
-		skincolor = SKINCOLOR_NONE;
-	const char *skincolor_name = skincolors[skincolor].name;
-	for (i = 0; i < MAXCOLORNAME && skincolor_name[i]; i++)
-		name[i] = skincolor_name[i];
+	for (i = 0; i < MAXCOLORNAME && cv_playercolor.string[i]; i++)
+		name[i] = cv_playercolor.string[i];
 	for (; i < MAXCOLORNAME; i++)
 		name[i] = '\0';
 	M_Memcpy(demo_p,name,MAXCOLORNAME);
@@ -2247,6 +2243,7 @@ void G_DoPlayDemo(char *defdemoname)
 			players[0].skincolor = i;
 			break;
 		}
+	CV_StealthSetValue(&cv_playercolor, players[0].skincolor);
 	if (players[0].mo)
 	{
 		players[0].mo->color = players[0].skincolor;

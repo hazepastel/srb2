@@ -7176,23 +7176,37 @@ static void P_RunLevelScript(const char *scriptname)
 
 static void P_ForceCharacter(const char *forcecharskin)
 {
-	// Don't do anything if the server is forcing a skin already.
-	if (netgame && cv_forceskin.value >= 0)
-		return;
-
-	for (unsigned i = 0; i < MAXPLAYERS; i++)
+	if (netgame)
 	{
-		if (!playeringame[i])
-			continue;
+		char skincmd[33];
+		if (splitscreen)
+		{
+			sprintf(skincmd, "skin2 %s\n", forcecharskin);
+			CV_Set(&cv_skin2, forcecharskin);
+		}
 
-		INT32 skinnum = R_SkinAvailable(forcecharskin);
-		if (skinnum == -1 || !R_SkinUsable(i, skinnum))
-			continue;
+		sprintf(skincmd, "skin %s\n", forcecharskin);
+		COM_BufAddText(skincmd);
+	}
+	else
+	{
+		if (splitscreen)
+		{
+			SetPlayerSkin(secondarydisplayplayer, forcecharskin);
+			if ((unsigned)cv_playercolor2.value != skins[players[secondarydisplayplayer].skin].prefcolor)
+			{
+				CV_StealthSetValue(&cv_playercolor2, skins[players[secondarydisplayplayer].skin].prefcolor);
+				players[secondarydisplayplayer].skincolor = skins[players[secondarydisplayplayer].skin].prefcolor;
+			}
+		}
 
-		SetPlayerSkinByNum(i, skinnum);
-
-		if (!netgame)
-			players[i].skincolor = skins[skinnum].prefcolor;
+		SetPlayerSkin(consoleplayer, forcecharskin);
+		// normal player colors in single player
+		if ((unsigned)cv_playercolor.value != skins[players[consoleplayer].skin].prefcolor)
+		{
+			CV_StealthSetValue(&cv_playercolor, skins[players[consoleplayer].skin].prefcolor);
+			players[consoleplayer].skincolor = skins[players[consoleplayer].skin].prefcolor;
+		}
 	}
 }
 

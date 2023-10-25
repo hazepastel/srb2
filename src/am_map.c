@@ -1071,6 +1071,7 @@ static inline void AM_drawPlayers(void)
 		return;
 	}
 
+	// multiplayer (how??)
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		if (!playeringame[i] || players[i].spectator)

@@ -56,8 +56,6 @@ gameaction_t gameaction;
 gamestate_t gamestate = GS_NULL;
 UINT8 ultimatemode = false;
 
-INT32 pickedchar;
-
 boolean botingame;
 UINT8 botskin;
 UINT16 botcolor;
@@ -2754,6 +2752,25 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 	//if ((netgame || multiplayer) && !p->spectator) -- moved into P_SpawnPlayer to account for forced changes there
 		//p->powers[pw_flashing] = flashingtics-1; // Babysitting deterrent
 
+	// Check to make sure their color didn't change somehow...
+	if (G_GametypeHasTeams())
+	{
+		if (p->ctfteam == 1 && p->skincolor != skincolor_redteam)
+		{
+			if (p == &players[consoleplayer])
+				CV_SetValue(&cv_playercolor, skincolor_redteam);
+			else if (p == &players[secondarydisplayplayer])
+				CV_SetValue(&cv_playercolor2, skincolor_redteam);
+		}
+		else if (p->ctfteam == 2 && p->skincolor != skincolor_blueteam)
+		{
+			if (p == &players[consoleplayer])
+				CV_SetValue(&cv_playercolor, skincolor_blueteam);
+			else if (p == &players[secondarydisplayplayer])
+				CV_SetValue(&cv_playercolor2, skincolor_blueteam);
+		}
+	}
+
 	if (betweenmaps)
 		return;
 
@@ -4789,9 +4806,12 @@ void G_LoadGame(UINT32 slot, INT16 mapoverride)
 	Z_Free(savebuffer);
 	save_p = savebuffer = NULL;
 
+//	gameaction = ga_nothing;
+//	G_SetGamestate(GS_LEVEL);
 	displayplayer = consoleplayer;
 	multiplayer = splitscreen = false;
 
+//	G_DeferedInitNew(sk_medium, G_BuildMapName(1), 0, 0, 1);
 	if (setsizeneeded)
 		R_ExecuteSetViewSize();
 
@@ -4984,9 +5004,9 @@ cleanup:
 // Can be called by the startup code or the menu task,
 // consoleplayer, displayplayer, playeringame[] should be set.
 //
-void G_DeferedInitNew(boolean pultmode, const char *mapname, INT32 character, boolean SSSG, boolean FLS)
+void G_DeferedInitNew(boolean pultmode, const char *mapname, INT32 pickedchar, boolean SSSG, boolean FLS)
 {
-	pickedchar = character;
+	UINT16 color = skins[pickedchar].prefcolor;
 	paused = false;
 
 	if (demoplayback)
@@ -5007,7 +5027,10 @@ void G_DeferedInitNew(boolean pultmode, const char *mapname, INT32 character, bo
 		SplitScreen_OnChange();
 	}
 
-	SetPlayerSkinByNum(consoleplayer, character);
+	color = skins[pickedchar].prefcolor;
+	SetPlayerSkinByNum(consoleplayer, pickedchar);
+	CV_StealthSet(&cv_skin, skins[pickedchar].name);
+	CV_StealthSetValue(&cv_playercolor, color);
 
 	if (mapname)
 		D_MapChange(M_MapNumber(mapname[3], mapname[4]), gametype, pultmode, true, 1, false, FLS);
@@ -5087,10 +5110,6 @@ void G_InitNew(UINT8 pultmode, const char *mapname, boolean resetplayer, boolean
 			CV_StealthSetValue(&cv_itemfinder, 0);
 	}
 
-	// Restore each player's skin if it was previously forced to be a specific one
-	// (Looks a bit silly, but it works.)
-	boolean reset_skin = netgame && mapheaderinfo[gamemap-1] && mapheaderinfo[gamemap-1]->forcecharacter[0] != '\0';
-
 	// internal game map
 	// well this check is useless because it is done before (d_netcmd.c::command_map_f)
 	// but in case of for demos....
@@ -5117,9 +5136,6 @@ void G_InitNew(UINT8 pultmode, const char *mapname, boolean resetplayer, boolean
 	ultimatemode = pultmode;
 	automapactive = false;
 	imcontinuing = false;
-
-	if (reset_skin)
-		D_SendPlayerConfig();
 
 	// fetch saved data if available
 	if (savedata.lives > 0)

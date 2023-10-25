@@ -5248,7 +5248,7 @@ void A_SignPlayer(mobj_t *actor)
 			return;
 
 		skin = &skins[actor->target->player->skin];
-		facecolor = P_GetPlayerColor(actor->target->player);
+		facecolor = actor->target->player->skincolor;
 
 		if (signcolor)
 			;
@@ -9059,7 +9059,7 @@ void A_Dye(mobj_t *actor)
 	if (!color)
 	{
 		target->colorized = false;
-		target->color = target->player ? P_GetPlayerColor(target->player) : SKINCOLOR_NONE;
+		target->color = target->player ? target->player->skincolor : SKINCOLOR_NONE;
 	}
 	else if (!(target->player))
 	{

@@ -2633,7 +2633,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 			}
 		}
 
-		target->color = P_GetPlayerColor(target->player);
+		target->color = target->player->skincolor;
 		target->colorized = false;
 		G_GhostAddColor(GHC_NORMAL);
 
@@ -3326,7 +3326,7 @@ static void P_KillPlayer(player_t *player, mobj_t *source, INT32 damage)
 
 	// Get rid of shield
 	player->powers[pw_shield] = SH_NONE;
-	player->mo->color = P_GetPlayerColor(player);
+	player->mo->color = player->skincolor;
 
 	// Get rid of emeralds
 	player->powers[pw_emeralds] = 0;
@@ -3443,7 +3443,7 @@ void P_RemoveShield(player_t *player)
 	{ // Second layer shields
 		if (((player->powers[pw_shield] & SH_STACK) == SH_FIREFLOWER) && !(player->powers[pw_super] || (mariomode && player->powers[pw_invulnerability])))
 		{
-			player->mo->color = P_GetPlayerColor(player);
+			player->mo->color = player->skincolor;
 			G_GhostAddColor(GHC_NORMAL);
 		}
 		player->powers[pw_shield] = SH_NONE;
