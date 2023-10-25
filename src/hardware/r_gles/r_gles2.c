@@ -990,7 +990,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 
 	if (pos->roll)
 	{
-		float roll = (1.0f * pos->rollflip);
+		float roll = (1.0f * pos->flip);
 		fvector3_t rotate;
 
 		translate[0] = pos->centerx;
@@ -999,13 +999,9 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 		lzml_matrix4_translate(modelMatrix, translate);
 
 		rotate[0] = rotate[1] = rotate[2] = 0.0f;
-
-		if (pos->rotaxis == 2) // Z
-			rotate[2] = roll;
-		else if (pos->rotaxis == 1) // Y
-			rotate[1] = roll;
-		else // X
-			rotate[0] = roll;
+		rotate[0] = pos->rollx;
+		rotate[1] = 0.0f;
+		rotate[2] = pos->rollz;
 
 		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, Deg2Rad(pos->rollangle));
 
