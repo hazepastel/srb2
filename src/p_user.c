@@ -2463,6 +2463,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 			player->climbing = 0;
             player->rsprung = 0;
 			player->powers[pw_tailsfly] = 0;
+            player->fly1 = 0;
 
 			if (player->pflags & PF_SHIELDABILITY)
 			{
