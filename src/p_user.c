@@ -5411,7 +5411,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd)
 
 						if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(6<<FRACBITS, player->mo->scale))
 							P_SetObjectMomZ(player->mo, FRACUNIT, true);
-						player->fly1 = TICRATE/3;
+						player->fly1 = 12;
 						player->powers[pw_strong] = STR_FLY;
 					}
 					break;
@@ -8377,8 +8377,12 @@ void P_MovePlayer(player_t *player)
 		if (player->powers[pw_tailsfly])
 		{
 			if (cmd->buttons & BT_JUMP)
-				player->fly1 = TICRATE/3;
-
+            {
+                if (player->fly1)
+				    player->fly1 = max(player->fly1, 3);
+                else
+                    player->fly1 = 12;
+            }
 			if (player->fly1)
 			{
 				fixed_t flyspd = (player->mo->eflags & MFE_UNDERWATER) ? player->normalspeed/3 : player->normalspeed*2/3;
@@ -8395,10 +8399,10 @@ void P_MovePlayer(player_t *player)
 					if (player->mo->momy)
 						player->mo->momy -= P_ReturnThrustY(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), FixedMul(FRACUNIT>>1, player->mo->scale));
 				}
-				if (!player->powers[pw_super])
-					player->powers[pw_tailsfly]--;
 				player->fly1--;
 			}
+			if (!player->powers[pw_super] && (player->fly1 || (P_MobjFlip(player->mo))*(player->mo->momz) > FixedMul(3<<FRACBITS, player->mo->scale)))
+			    player->powers[pw_tailsfly]--;
 
 			// Tails Put-Put noise
 			if (player->charability == CA_FLY
