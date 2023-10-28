@@ -990,7 +990,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 
 	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
 	lzml_matrix4_rotate_y(modelMatrix, -Deg2Rad(pos->angley));
-	lzml_matrix4_rotate_x(modelMatrix, -Deg2Rad(pos->anglex));
+	lzml_matrix4_rotate_x(modelMatrix, Deg2Rad(pos->anglex));
 
 	if (pos->roll)
 	{
