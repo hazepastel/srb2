@@ -23,7 +23,10 @@
 #include "../byteptr.h"
 #include "../doomstat.h"
 #include "../doomtype.h"
-
+#ifdef TOUCHINPUTS
+#include "ts_main.h"
+#include "ts_draw.h"
+#endif
 tic_t firstticstosend; // Smallest netnode.tic
 tic_t tictoclear = 0; // Optimize D_ClearTiccmd
 ticcmd_t localcmds;
