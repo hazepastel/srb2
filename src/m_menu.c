@@ -317,7 +317,7 @@ static void M_LevelPlatterTicker(void);
 #define lshli levelselectselect[2]
 
 #define lshseperation 101
-#define lsbasevseperation ((62*vid.height)/(BASEVIDHEIGHT*vid.dupy)) //62
+#define lsbasevseperation ((62*vid.height)/(BASEVIDHEIGHT*vid.dup)) //62
 #define lsheadingheight 16
 #define getheadingoffset(row) (levelselect.rows[row].header[0] ? lsheadingheight : 0)
 #define lsvseperation(row) (lsbasevseperation + getheadingoffset(row))
@@ -4291,17 +4291,16 @@ void M_RunSlideFX(INT32 slidefx[2])
 
 static boolean M_FingerTouchingSelection(INT32 fx, INT32 fy, INT32 x, INT32 y, INT32 w, INT32 h)
 {
-	INT32 dupz = (vid.dupx < vid.dupy ? vid.dupx : vid.dupy);
 
-	x *= dupz;
-	y *= dupz;
-	w *= dupz;
-	h *= dupz;
+	x *= vid.dup;
+	y *= vid.dup;
+	w *= vid.dup;
+	h *= vid.dup;
 
-	if (vid.width != BASEVIDWIDTH * dupz)
-		x += (vid.width - (BASEVIDWIDTH * dupz)) / 2;
-	if (vid.height != BASEVIDHEIGHT * dupz)
-		y += (vid.height - (BASEVIDHEIGHT * dupz)) / 2;
+	if (vid.width != BASEVIDWIDTH * vid.dup)
+		x += (vid.width - (BASEVIDWIDTH * vid.dup)) / 2;
+	if (vid.height != BASEVIDHEIGHT * vid.dup)
+		y += (vid.height - (BASEVIDHEIGHT * vid.dup)) / 2;
 
 	return (fx >= x && fx <= x+w && fy >= y && fy <= y+h);
 }
@@ -4837,7 +4836,7 @@ static boolean M_HandleFingerDownEvent(event_t *ev)
 				}
 
 				M_CVarMinMax(cv, &min, &max); // Get minimum and maximum value
-				finger->float_arr[1] = (cv->value - min) * (SLIDER_WIDTH * vid.dupx) / (max - min);
+				finger->float_arr[1] = (cv->value - min) * (SLIDER_WIDTH * vid.dup) / (max - min);
 			}
 			else
 				finger->pointer = NULL;
@@ -4875,7 +4874,7 @@ static boolean M_HandleFingerDownEvent(event_t *ev)
 	else if (ev->type == ev_touchmotion && finger->pointer && finger->u.keyinput == -1)
 	{
 		consvar_t *cv = finger->pointer;
-		INT32 min, max, sw = (SLIDER_WIDTH * vid.dupx);
+		INT32 min, max, sw = (SLIDER_WIDTH * vid.dup);
 
 		// Get minimum and maximum value
 		M_CVarMinMax(cv, &min, &max);
@@ -5593,7 +5592,7 @@ void M_Drawer(void)
 //
 void M_DrawGameVersion(void)
 {
-	INT32 y = 0, top = 0, bottom, left = vid.dupx;
+	INT32 y = 0, top = 0, bottom, left = vid.dup;
 	INT32 flags = V_NOSCALESTART|V_TRANSLUCENT|V_ALLOWLOWERCASE;
 	boolean wide = false;
 
@@ -5602,19 +5601,19 @@ void M_DrawGameVersion(void)
 	if (wide)
 	{
 #ifdef DEVELOP
-		top = 4 * vid.dupy;
-		bottom = top + 9*vid.dupy;
+		top = 4 * vid.dup;
+		bottom = top + 9*vid.dup;
 #else
-		bottom = 4 * vid.dupy;
+		bottom = 4 * vid.dup;
 #endif
 	}
 	else
 	{
-		top = y - 17*vid.dupy;
-		bottom = y - 9*vid.dupy;
+		top = vid.height - 17*vid.dup;
+		bottom = y - 9*vid.dup;
 	}
 
-#define ALIGNSTRING(str, x) (wide ? ((x) - (V_ThinStringWidth(str, flags) * vid.dupx) - 7) : (x))
+#define ALIGNSTRING(str, x) (wide ? ((x) - (V_ThinStringWidth(str, flags) * vid.dup) - 7) : (x))
 
 	if (customversionstring[0] != '\0')
 	{
@@ -7877,7 +7876,7 @@ TSNAVHANDLER(LevelPlatter)
 {
 	INT32 fx = event->x;
 	INT32 fy = event->y;
-	INT32 dy = finger->dy / vid.dupy;
+	INT32 dy = finger->dy / vid.dup;
 	menutouchfx_t *slfx = &levselfx;
 
 	INT32 threshold = (vid.height / 16), selectval;
@@ -7901,7 +7900,7 @@ TSNAVHANDLER(LevelPlatter)
 
 	LevelPlatter_GetTopRow(&iter, &y);
 
-	while (y < (vid.height/vid.dupy))
+	while (y < (vid.height/vid.dup))
 	{
 		INT32 sel = TouchPlatterRow(fx, fy, iter, y);
 
@@ -8115,16 +8114,15 @@ static void M_DrawRecordAttackForeground(void)
 
 	INT32 i;
 	INT32 height = (fg->height / 2);
-	INT32 dupz = (vid.dupx < vid.dupy ? vid.dupx : vid.dupy);
 
 	for (i = -12; i < (BASEVIDHEIGHT/height) + 12; i++)
 	{
 		INT32 y = ((i*height) - (height - ((FixedInt(recatkdrawtimer*2))%height)));
 		// don't draw above the screen
 		{
-			INT32 sy = FixedMul(y, dupz<<FRACBITS) >> FRACBITS;
-			if (vid.height != BASEVIDHEIGHT * dupz)
-				sy += (vid.height - (BASEVIDHEIGHT * dupz)) / 2;
+			INT32 sy = FixedMul(y, vid.dup<<FRACBITS) >> FRACBITS;
+			if (vid.height != BASEVIDHEIGHT * vid.dup)
+				sy += (vid.height - (BASEVIDHEIGHT * vid.dup)) / 2;
 			if ((sy+height) < 0)
 				continue;
 		}
@@ -8148,13 +8146,14 @@ static void M_DrawRecordAttackForeground(void)
 static void M_DrawMountains(const char *patch, UINT8 topcolor, UINT8 bottomcolor, INT32 offset)
 {
 	static fixed_t bgscrollx;
-	INT32 dupz = (vid.dupx < vid.dupy ? vid.dupx : vid.dupy);
+	// hope and pray - bitten
+	//INT32 dupz = (vid.dupx < vid.dupy ? vid.dupx : vid.dupy);
 	patch_t *background = W_CachePatchName(patch, PU_PATCH);
 	INT16 w = background->width;
 	INT32 x = FixedInt(-bgscrollx) % w;
 	INT32 y = BASEVIDHEIGHT - (background->height * 2);
 
-	if (vid.height != BASEVIDHEIGHT * dupz)
+	if (vid.height != BASEVIDHEIGHT * vid.dup)
 		V_DrawFill(0, 0, BASEVIDWIDTH, BASEVIDHEIGHT, topcolor);
 	V_DrawFill(0, y+(SHORT(background->height)-1), vid.width, BASEVIDHEIGHT, V_SNAPTOLEFT|bottomcolor);
 
@@ -8312,7 +8311,7 @@ static void M_DrawLevelPlatterMenu(void)
 	LevelPlatter_GetTopRow(&iter, &y);
 
 	// draw from top to bottom
-	while (y < (vid.height/vid.dupy))
+	while (y < (vid.height/vid.dup))
 	{
 		M_DrawLevelPlatterRow(iter, y);
 		y += lsvseperation(iter);
@@ -9426,7 +9425,7 @@ TSNAVHANDLER(AddonsMenu)
 			case ev_touchmotion:
 				if (addons_scrollbar == event->key)
 				{
-					fixed_t scroll = FloatToFixed((finger->fdy * (addonmenuheight / (float)m)) / (float)vid.dupy);
+					fixed_t scroll = FloatToFixed((finger->fdy * (addonmenuheight / (float)m)) / (float)vid.dup);
 
 					addons_scroll = max(0, addons_scroll - scroll);
 
@@ -10628,10 +10627,9 @@ static void M_DrawSoundTest(void)
 		}
 	}
 
-	y = (BASEVIDWIDTH-(vid.width/vid.dupx))/2;
+	y = (BASEVIDWIDTH-(vid.width/vid.dup))/2;
 
-	V_DrawFill(y, 20, vid.width/vid.dupx, 24, 159);
-
+	V_DrawFill(y, 20, vid.width/vid.dup, 24, 159);
 	{
 		static fixed_t scroll = -FRACUNIT;
 		const char* titl;
@@ -10917,7 +10915,7 @@ TSNAVHANDLER(SoundTest)
 			case ev_touchmotion:
 				if (st_scrollbar == event->key)
 				{
-					fixed_t scroll = FloatToFixed((finger->fdy * (st_list_height / (float)m)) / (float)vid.dupy);
+					fixed_t scroll = FloatToFixed((finger->fdy * (st_list_height / (float)m)) / (float)vid.dup);
 
 					st_scroll = max(0, st_scroll - scroll);
 
@@ -11393,8 +11391,8 @@ static void M_DrawLoadGameData(void)
 	INT32 i, prev_i = 1, savetodraw, x, y, hsep = 90;
 	skin_t *charskin = NULL;
 
-	if (vid.width != BASEVIDWIDTH*vid.dupx)
-		hsep = (hsep*vid.width)/(BASEVIDWIDTH*vid.dupx);
+	if (vid.width != BASEVIDWIDTH*vid.dup)
+		hsep = (hsep*vid.width)/(BASEVIDWIDTH*vid.dup);
 
 	for (i = 2; prev_i; i = -(i + ((UINT32)i >> 31))) // draws from outwards in; 2, -2, 1, -1, 0
 	{
@@ -12074,8 +12072,8 @@ static void M_GetSaveSelectSlotPosition(INT32 i, INT32 *retx, INT32 *rety)
 	INT32 hsep = 90;
 	INT32 scroll, diff;
 
-	if (vid.width != BASEVIDWIDTH*vid.dupx)
-		hsep = (hsep*vid.width)/(BASEVIDWIDTH*vid.dupx);
+	if (vid.width != BASEVIDWIDTH*vid.dup)
+		hsep = (hsep*vid.width)/(BASEVIDWIDTH*vid.dup);
 
 	scroll = FixedInt(loadgamescroll);
 
@@ -12824,7 +12822,7 @@ static void M_DrawSetupChoosePlayerMenu(void)
 	INT16 fgwidth = charfg->width;
 	INT32 x, y;
 	INT32 bw, sw;
-	INT32 w = (vid.width/vid.dupx);
+	INT32 w = (vid.width/vid.dup);
 	fixed_t scroll;
 
 	if (abs(charsel_scroll) > FRACUNIT/4)
@@ -12849,7 +12847,7 @@ static void M_DrawSetupChoosePlayerMenu(void)
 	// Background and borders
 	V_DrawFill(0, 0, bgwidth, vid.height, V_SNAPTOTOP|ramp[5]);
 
-	sw = (BASEVIDWIDTH * vid.dupx);
+	sw = (BASEVIDWIDTH * vid.dup);
 	bw = (vid.width - sw) / 2;
 	col = colormap[106];
 	if (bw)
@@ -13008,7 +13006,7 @@ static void M_DrawSetupChoosePlayerMenu(void)
 #endif // CHOOSEPLAYER_DRAWHEADER
 
 	if (currentMenu->menutitlepic
-	&& (vid.height != BASEVIDHEIGHT * vid.dupy))
+	&& (vid.height != BASEVIDHEIGHT * vid.dup))
 	{
 		patch_t *p = W_CachePatchName(currentMenu->menutitlepic, PU_PATCH);
 		INT32 xtitle = (BASEVIDWIDTH - SHORT(p->width))/2;
@@ -14421,7 +14419,7 @@ void M_DrawMarathon(void)
 	const char *cvstring;
 	char *work;
 	angle_t fa;
-	INT32 dupz = (vid.dupx < vid.dupy ? vid.dupx : vid.dupy), xspan = (vid.width/dupz), yspan = (vid.height/dupz), diffx = (xspan - BASEVIDWIDTH)/2, diffy = (yspan - BASEVIDHEIGHT)/2, maxy = BASEVIDHEIGHT + diffy;
+	INT32 xspan = (vid.width/vid.dup), yspan = (vid.height/vid.dup), diffx = (xspan - BASEVIDWIDTH)/2, diffy = (yspan - BASEVIDHEIGHT)/2, maxy = BASEVIDHEIGHT + diffy;
 
 	curbgxspeed = 0;
 	curbgyspeed = 18;
@@ -14494,16 +14492,17 @@ void M_DrawMarathon(void)
 		INT32 trans = V_60TRANS+((cnt&~3)<<(V_ALPHASHIFT-2));
 		INT32 height = fg->height / 2;
 		char patchname[7] = "CEMGx0";
+		INT32 dup;
 
-		dupz = (w*7)/6; //(w*42*120)/(360*6); -- I don't know why this works but I'm not going to complain.
-		dupz = ((dupz>>FRACBITS) % height);
+		dup = (w*7)/6; //(w*42*120)/(360*6); -- I don't know why this works but I'm not going to complain.
+		dup = ((dup>>FRACBITS) % height);
 		y = height/2;
-		while (y+dupz >= -diffy)
+		while (y+dup >= -diffy)
 			y -= height;
-		while (y-2-dupz < maxy)
+		while (y-2-dup < maxy)
 		{
-			V_DrawFixedPatch(((BASEVIDWIDTH-190)<<(FRACBITS-1)), (y-2-dupz)<<FRACBITS, FRACUNIT/2, trans, fg, NULL);
-			V_DrawFixedPatch(((BASEVIDWIDTH+190)<<(FRACBITS-1)), (y+dupz)<<FRACBITS, FRACUNIT/2, trans|V_FLIP, fg, NULL);
+			V_DrawFixedPatch(((BASEVIDWIDTH-190)<<(FRACBITS-1)), (y-2-dup)<<FRACBITS, FRACUNIT/2, trans, fg, NULL);
+			V_DrawFixedPatch(((BASEVIDWIDTH+190)<<(FRACBITS-1)), (y+dup)<<FRACBITS, FRACUNIT/2, trans|V_FLIP, fg, NULL);
 			y += height;
 		}
 
@@ -14521,16 +14520,16 @@ void M_DrawMarathon(void)
 		}
 
 		height = 18; // prevents the need for the next line
-		//dupz = (w*height)/18;
-		dupz = ((w>>FRACBITS) % height);
-		y = dupz+(height/4);
-		x = 105+dupz;
+		//dup = (w*height)/18;
+		dup = ((w>>FRACBITS) % height);
+		y = dup+(height/4);
+		x = 105+dup;
 		while (y >= -diffy)
 		{
 			x -= height;
 			y -= height;
 		}
-		while (y-dupz < maxy && x < (xspan/2))
+		while (y-dup < maxy && x < (xspan/2))
 		{
 			V_DrawFill((BASEVIDWIDTH/2)-x-height, -diffy, height, diffy+y+height, 153);
 			V_DrawFill((BASEVIDWIDTH/2)+x, (maxy-y)-height, height, height+y, 153);
