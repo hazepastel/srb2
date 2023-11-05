@@ -1001,7 +1001,7 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 
 		fvector3_t rotate;
 		rotate[0] = pos->rollx;
-		rotate[1] = 0.0f;
+		rotate[1] = -0.0f;
 		rotate[2] = pos->rollz;
 
 		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, Deg2Rad(pos->rollangle));
