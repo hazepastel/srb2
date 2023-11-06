@@ -988,37 +988,28 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	if (hflipped)
 		v_scale[2] = -v_scale[2];
 
-	/*if (pos->roll)
-	{
-		float roll = (1.0f * pos->rollflip);
-		fvector3_t rotate;
+	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
+	lzml_matrix4_rotate_y(modelMatrix, -Deg2Rad(pos->angley));
+	lzml_matrix4_rotate_x(modelMatrix, Deg2Rad(pos->anglex));
 
+	if (pos->roll)
+	{
 		translate[0] = pos->centerx;
 		translate[1] = pos->centery;
 		translate[2] = 0.0f;
 		lzml_matrix4_translate(modelMatrix, translate);
 
-		rotate[0] = rotate[1] = rotate[2] = 0.0f;
-
-		if (pos->rotaxis == 2) // Z
-			rotate[2] = roll;
-		else if (pos->rotaxis == 1) // Y
-			rotate[1] = roll;
-		else // X
-			rotate[0] = roll;
+		fvector3_t rotate;
+		rotate[0] = -pos->rollx;
+		rotate[1] = 0.0f;
+		rotate[2] = pos->rollz;
 
 		lzml_matrix4_rotate_by_vector(modelMatrix, rotate, Deg2Rad(pos->rollangle));
 
 		translate[0] = -translate[0];
 		translate[1] = -translate[1];
 		lzml_matrix4_translate(modelMatrix, translate);
-	}*/
-
-#ifdef USE_FTRANSFORM_ANGLEZ
-	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
-#endif
-	lzml_matrix4_rotate_y(modelMatrix, -Deg2Rad(pos->angley));
-	lzml_matrix4_rotate_x(modelMatrix, Deg2Rad(pos->anglex));
+	}
 
 	lzml_matrix4_scale(modelMatrix, v_scale);
 
