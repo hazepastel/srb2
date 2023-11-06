@@ -984,9 +984,9 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	lzml_matrix4_translate(modelMatrix, translate);
 
 	if (flipped)
-		v_scale[1] = v_scale[1];
+		v_scale[1] = -v_scale[1];
 	if (hflipped)
-		v_scale[2] = v_scale[2];
+		v_scale[2] = -v_scale[2];
 
 	lzml_matrix4_rotate_z(modelMatrix, -Deg2Rad(pos->anglez)); // rotate by slope from Kart
 	lzml_matrix4_rotate_y(modelMatrix, -Deg2Rad(pos->angley));
