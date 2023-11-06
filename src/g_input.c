@@ -27,8 +27,9 @@
 #include "r_main.h"
 #include "z_zone.h"
 #include "console.h"
-#include "i_system.h"
 #include "lua_hook.h"
+#include "lua_script.h"
+#include "lua_libs.h"
 
 #ifdef TOUCHINPUTS
 #include "ts_main.h"
@@ -130,7 +131,7 @@ static UINT8 G_CheckDoubleClick(UINT8 state, dclick_t *dt);
 
 boolean G_InGameInput(void)
 {
-	return (!(menuactive || CON_Ready() || chat_on));
+	return (!(menuactive || CON_Ready() || chat_on || ignoregameinputs));
 }
 
 // Detects the input method from a key, which might be virtual.
@@ -178,7 +179,7 @@ void G_MapEventsToControls(event_t *ev)
 		case ev_keydown:
 			{
 				gamekeydown[ev->key] = 1;
-				if (G_KeyAssignedToControl(ev->key)) // Unnecessary?
+				if (G_KeyAssignedToControl(ev->key) && !ignoregameinputs) // Unnecessary?
 					controlmethod = G_InputMethodFromKey(ev->key);
 #ifdef PARANOIA
 			else
@@ -1218,7 +1219,7 @@ static void setcontrol(INT32 (*gc)[2])
 	INT32 player = ((void*)gc == (void*)&gamecontrolbis ? 1 : 0);
 	boolean nestedoverride = false;
 
-	// Update me for 2.3
+	// TODO: 2.3: Delete the "use" alias
 	namectrl = (stricmp(COM_Argv(1), "use")) ? COM_Argv(1) : "spin";
 
 	for (numctrl = 0; numctrl < NUM_GAMECONTROLS && stricmp(namectrl, gamecontrolname[numctrl]);
