@@ -584,7 +584,7 @@ boolean TS_LoadSingleLayout(INT32 ilayout)
 				break;
 		}
 
-		if (igc == GC_NULL || (igc >= GC_WEPSLOT1 && igc <= GC_WEPSLOT10) || igc == NUM_GAMECONTROLS)
+		if (igc == GC_NULL || (igc >= GC_WEPSLOT1 && igc <= GC_WEPSLOT7) || igc == NUM_GAMECONTROLS)
 			continue;
 
 		button = &(layout->config[igc]);
@@ -654,7 +654,7 @@ boolean TS_SaveSingleLayout(INT32 ilayout)
 	{
 		touchconfig_t *button = &(layout->config[gc]);
 
-		if (button->hidden || (gc >= GC_WEPSLOT1 && gc <= GC_WEPSLOT10))
+		if (button->hidden || (gc >= GC_WEPSLOT1 && gc <= GC_WEPSLOT7))
 			continue;
 
 		line = va(BUTTONSAVEFORMAT,
