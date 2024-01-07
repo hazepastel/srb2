@@ -5116,46 +5116,49 @@ boolean M_Responder(event_t *ev)
 		if (ev->type == ev_keydown)
 		{
 			ch = ev->key;
-			keydown++;
-
-			// added 5-2-98 remap virtual keys (mouse & joystick buttons)
-			switch (ch)
+			if (ev->type == ev_keydown)
 			{
-				case KEY_MOUSE1:
-				case KEY_JOY1:
-				case KEY_REMOTECENTER:
-					ch = KEY_ENTER;
-					break;
-				case KEY_JOY1 + 3:
-					ch = 'n';
-					break;
-				case KEY_MOUSE1 + 1:
-				case KEY_JOY1 + 1:
-				case KEY_REMOTEBACK:
+				keydown++;
+
+				// added 5-2-98 remap virtual keys (mouse & joystick buttons)
+				switch (ch)
+				{
+					case KEY_MOUSE1:
+					case KEY_JOY1:
+					case KEY_REMOTECENTER:
+						ch = KEY_ENTER;
+						break;
+					case KEY_JOY1 + 3:
+						ch = 'n';
+						break;
+					case KEY_MOUSE1 + 1:
+					case KEY_JOY1 + 1:
+					case KEY_REMOTEBACK:
 #ifdef BREADCRUMB
-					breadcrumb = (ch == KEY_REMOTEBACK);
+						breadcrumb = (ch == KEY_REMOTEBACK);
 #endif
-					ch = KEY_ESCAPE;
-					break;
-				case KEY_JOY1 + 2:
-					ch = KEY_BACKSPACE;
-					break;
-				case KEY_HAT1:
-				case KEY_REMOTEUP:
-					ch = KEY_UPARROW;
-					break;
-				case KEY_HAT1 + 1:
-				case KEY_REMOTEDOWN:
-					ch = KEY_DOWNARROW;
-					break;
-				case KEY_HAT1 + 2:
-				case KEY_REMOTELEFT:
-					ch = KEY_LEFTARROW;
-					break;
-				case KEY_HAT1 + 3:
-				case KEY_REMOTERIGHT:
-					ch = KEY_RIGHTARROW;
-					break;
+						ch = KEY_ESCAPE;
+						break;
+					case KEY_JOY1 + 2:
+						ch = KEY_BACKSPACE;
+						break;
+					case KEY_HAT1:
+					case KEY_REMOTEUP:
+						ch = KEY_UPARROW;
+						break;
+					case KEY_HAT1 + 1:
+					case KEY_REMOTEDOWN:
+						ch = KEY_DOWNARROW;
+						break;
+					case KEY_HAT1 + 2:
+					case KEY_REMOTELEFT:
+						ch = KEY_LEFTARROW;
+						break;
+					case KEY_HAT1 + 3:
+					case KEY_REMOTERIGHT:
+						ch = KEY_RIGHTARROW;
+						break;
+				}
 			}
 
 			M_DetectInputMethod(ev->key);
@@ -5351,8 +5354,11 @@ boolean M_Responder(event_t *ev)
 	// Handle menuitems which need a specific key handling
 	if (routine && (currentMenu->menuitems[itemOn].status & IT_TYPE) == IT_KEYHANDLER)
 	{
-		if (shiftdown && ch >= 32 && ch <= 127)
-			ch = shiftxform[ch];
+		// ignore ev_keydown events if the key maps to a character, since
+		// the ev_text event will follow immediately after in that case.
+		if (ev->type == ev_keydown && ch >= 32 && ch <= 127)
+			return true;
+
 		routine(ch);
 		return true;
 	}
@@ -5402,6 +5408,11 @@ boolean M_Responder(event_t *ev)
 	{
 		if ((currentMenu->menuitems[itemOn].status & IT_CVARTYPE) == IT_CV_STRING)
 		{
+			// ignore ev_keydown events if the key maps to a character, since
+			// the ev_text event will follow immediately after in that case.
+			if (ev->type == ev_keydown && ch >= 32 && ch <= 127)
+				return false;
+
 			if (M_ChangeStringCvar(ch))
 				return true;
 			else
