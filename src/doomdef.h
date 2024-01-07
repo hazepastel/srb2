@@ -607,7 +607,7 @@ void M_UnGetToken(void);
 UINT32 M_GetTokenPos(void);
 void M_SetTokenPos(UINT32 newPos);
 
-extern void *(*M_Memcpy)(void* dest, const void* src, size_t n) FUNCNONNULL;
+void *M_Memcpy(void* dest, const void* src, size_t n);
 
 // d_main.c
 extern int    VERSION;
