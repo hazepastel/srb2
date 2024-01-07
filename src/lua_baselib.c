@@ -1347,6 +1347,17 @@ static int lib_pSetObjectMomZ(lua_State *L)
 	return 0;
 }
 
+static int lib_pIsLocalPlayer(lua_State *L)
+{
+	player_t *player = *((player_t **)luaL_checkudata(L, 1, META_PLAYER));
+	//NOHUD
+	//INLEVEL
+	if (!player)
+		return LUA_ErrInvalid(L, "player_t");
+	lua_pushboolean(L, P_IsLocalPlayer(player));
+	return 1;
+}
+
 static int lib_pPlayJingle(lua_State *L)
 {
 	player_t *player = NULL;
@@ -1686,6 +1697,19 @@ static int lib_pHomingAttack(lua_State *L)
 	return 1;
 }
 
+static int lib_pResetCamera(lua_State *L)
+{
+	player_t *player = *((player_t **)luaL_checkudata(L, 1, META_PLAYER));
+	camera_t *cam = *((camera_t **)luaL_checkudata(L, 2, META_CAMERA));
+
+	if (!player)
+		return LUA_ErrInvalid(L, "player_t");
+	if (!cam)
+		return LUA_ErrInvalid(L, "camera_t");
+	P_ResetCamera(player, cam);
+	return 0;
+}
+
 static int lib_pSuperReady(lua_State *L)
 {
 	player_t *player = *((player_t **)luaL_checkudata(L, 1, META_PLAYER));
@@ -1702,11 +1726,12 @@ static int lib_pDoJump(lua_State *L)
 {
 	player_t *player = *((player_t **)luaL_checkudata(L, 1, META_PLAYER));
 	boolean soundandstate = (boolean)lua_opttrueboolean(L, 2);
+	boolean allowflip = (boolean)lua_opttrueboolean(L, 3);
 	NOHUD
 	INLEVEL
 	if (!player)
 		return LUA_ErrInvalid(L, "player_t");
-	P_DoJump(player, soundandstate);
+	P_DoJump(player, soundandstate, allowflip);
 	return 0;
 }
 
@@ -3754,10 +3779,10 @@ static int lib_gAddPlayer(lua_State *L)
 	if (!lua_isnoneornil(L, 2))
 		newplayer->skincolor = R_GetColorByName(luaL_checkstring(L, 2));
 	else
-		newplayer->skincolor = skins[skinnum].prefcolor;
+		newplayer->skincolor = skins[skinnum]->prefcolor;
 
 	// Set the bot default name as the skin
-	strcpy(player_names[newplayernum], skins[skinnum].realname);
+	strcpy(player_names[newplayernum], skins[skinnum]->realname);
 
 	// Read the bot name, if given
 	if (!lua_isnoneornil(L, 3))
@@ -4278,6 +4303,7 @@ static luaL_Reg lib[] = {
 	{"P_InQuicksand",lib_pInQuicksand},
 	{"P_InJumpFlipSector",lib_pInJumpFlipSector},
 	{"P_SetObjectMomZ",lib_pSetObjectMomZ},
+	{"P_IsLocalPlayer",lib_pIsLocalPlayer},
 	{"P_PlayJingle",lib_pPlayJingle},
 	{"P_PlayJingleMusic",lib_pPlayJingleMusic},
 	{"P_RestoreMusic",lib_pRestoreMusic},
@@ -4304,6 +4330,7 @@ static luaL_Reg lib[] = {
 	{"P_NukeEnemies",lib_pNukeEnemies},
 	{"P_Earthquake",lib_pEarthquake},
 	{"P_HomingAttack",lib_pHomingAttack},
+	{"P_ResetCamera",lib_pResetCamera},
 	{"P_SuperReady",lib_pSuperReady},
 	{"P_DoJump",lib_pDoJump},
 	{"P_DoSpinDashDust",lib_pDoSpinDashDust},
