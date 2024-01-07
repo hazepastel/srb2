@@ -57,7 +57,6 @@ boolean GLBackend_LoadFunctions(void)
 	GETOPENGLFUNC(ColorPointer)
 	GETOPENGLFUNC(EnableClientState)
 	GETOPENGLFUNC(DisableClientState)
-
 	GETOPENGLFUNC(TexEnvi)
 
     if (!GLBackend_LoadLegacyFunctions())
@@ -1435,6 +1434,10 @@ EXPORT void HWRAPI(SetSpecialState) (hwdspecialstate_t IdState, INT32 Value)
 				anisotropic_filter = min(Value, maximumAnisotropy);
 				GLTexture_Flush(); //??? if we want to change filter mode by texture, remove this
 			}
+			break;
+
+		case HWD_SET_WIREFRAME:
+			pglPolygonMode(GL_FRONT_AND_BACK, Value ? GL_LINE : GL_FILL);
 			break;
 
 		default:

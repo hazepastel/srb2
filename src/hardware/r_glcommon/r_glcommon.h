@@ -129,6 +129,8 @@ typedef void (R_GL_APIENTRY * PFNglClear) (GLbitfield mask);
 extern PFNglClear pglClear;
 typedef void (R_GL_APIENTRY * PFNglGetFloatv) (GLenum pname, GLfloat *params);
 extern PFNglGetFloatv pglGetFloatv;
+typedef void (R_GL_APIENTRY * PFNglPolygonMode) (GLenum, GLenum);
+extern PFNglPolygonMode pglPolygonMode;
 typedef void (R_GL_APIENTRY * PFNglGetIntegerv) (GLenum pname, GLint *params);
 extern PFNglGetIntegerv pglGetIntegerv;
 typedef const GLubyte * (R_GL_APIENTRY * PFNglGetString) (GLenum name);

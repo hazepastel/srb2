@@ -134,6 +134,7 @@ static void PrintExtensions(const GLubyte *extensions);
 /* Miscellaneous */
 PFNglClear pglClear;
 PFNglGetFloatv pglGetFloatv;
+PFNglPolygonMode pglPolygonMode;
 PFNglGetIntegerv pglGetIntegerv;
 PFNglGetString pglGetString;
 PFNglGetError pglGetError;
@@ -284,6 +285,7 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(GetFloatv)
 	GETOPENGLFUNC(GetIntegerv)
 	GETOPENGLFUNC(GetString)
+	GETOPENGLFUNC(PolygonMode)
 	GETOPENGLFUNC(GetError)
 
 	GETOPENGLFUNC(DepthFunc)
