@@ -5697,9 +5697,12 @@ void M_StartControlPanel(void)
 	}
 	else if (!(netgame || multiplayer)) // Single Player
 	{
+		// Devmode unlocks Pandora's Box in the pause menu
+		boolean pandora = ((M_SecretUnlocked(SECRET_PANDORA, serverGamedata) || cv_debug || devparm) && !marathonmode);
+		
 		if (gamestate != GS_LEVEL || ultimatemode) // intermission, so gray out stuff.
 		{
-			SPauseMenu[spause_pandora].status = (M_SecretUnlocked(SECRET_PANDORA, serverGamedata)) ? (IT_GRAYEDOUT) : (IT_DISABLED);
+			SPauseMenu[spause_pandora].status = (pandora) ? (IT_GRAYEDOUT) : (IT_DISABLED);
 			SPauseMenu[spause_retry].status = IT_GRAYEDOUT;
 		}
 		else
@@ -5708,7 +5711,7 @@ void M_StartControlPanel(void)
 			if (players[consoleplayer].playerstate != PST_LIVE)
 				++numlives;
 
-			SPauseMenu[spause_pandora].status = (M_SecretUnlocked(SECRET_PANDORA, serverGamedata) && !marathonmode) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
+			SPauseMenu[spause_pandora].status = (pandora) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
 
 			// The list of things that can disable retrying is (was?) a little too complex
 			// for me to want to use the short if statement syntax
@@ -5719,7 +5722,11 @@ void M_StartControlPanel(void)
 		}
 
 		// We can always use level select though. :33
-		SPauseMenu[spause_levelselect].status = (maplistoption != 0) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
+		// Guarantee it if we have either it unlocked or devmode is enabled
+		if ((maplistoption != 0 || M_SecretUnlocked(SECRET_LEVELSELECT, serverGamedata) || cv_debug || devparm) && !marathonmode)
+			SPauseMenu[spause_levelselect].status = (IT_STRING | IT_CALL);
+		else
+			SPauseMenu[spause_levelselect].status = (IT_DISABLED);
 
 		// And emblem hints.
 		SPauseMenu[spause_hints].status = (M_SecretUnlocked(SECRET_EMBLEMHINTS, clientGamedata) && !marathonmode) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
@@ -7253,7 +7260,8 @@ static boolean M_CanShowLevelOnPlatter(INT32 mapnum, INT32 gt)
 			return false;
 
 		case LLM_LEVELSELECT:
-			if (!(mapheaderinfo[mapnum]->levelselect & maplistoption))
+			if (!(mapheaderinfo[mapnum]->levelselect & maplistoption)
+			&& !(cv_debug || devparm)) //Allow ALL levels in devmode!
 				return false;
 
 			return true;
@@ -10416,9 +10424,12 @@ static void M_PauseLevelSelect(INT32 choice)
 	SP_PauseLevelSelectDef.prevMenu = currentMenu;
 	levellistmode = LLM_LEVELSELECT;
 
-	// maplistoption is NOT specified, so that this
+	// maplistoption is only specified if not set already
+	// and we have the level select unlocked so that it
 	// transfers the level select list from the menu
 	// used to enter the game to the pause menu.
+	if (maplistoption == 0 && M_SecretUnlocked(SECRET_LEVELSELECT, serverGamedata))
+		maplistoption = 1;
 
 	if (!M_PrepareLevelPlatter(-1, true))
 	{

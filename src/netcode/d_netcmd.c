@@ -1873,7 +1873,7 @@ static void Command_Map_f(void)
 		return;
 	}
 
-	option_force    =   COM_CheckPartialParm("-f");
+	option_force    =   COM_CheckPartialParm("-f") || (cv_debug || devparm);
 	option_gametype =   COM_CheckPartialParm("-g");
 	newresetplayers = ! COM_CheckParm("-noresetplayers");
 
