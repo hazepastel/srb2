@@ -101,7 +101,6 @@ extern consvar_t cv_glmodellighting;
 extern consvar_t cv_glframebuffer, cv_glrenderbufferdepth;
 extern consvar_t cv_glfiltermode;
 extern consvar_t cv_glanisotropicmode;
-extern consvar_t cv_fovchange;
 extern consvar_t cv_glsolvetjoin;
 extern consvar_t cv_glshearing;
 extern consvar_t cv_glspritebillboarding;

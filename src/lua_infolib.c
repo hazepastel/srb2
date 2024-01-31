@@ -22,6 +22,7 @@
 #include "r_patch.h"
 #include "r_picformats.h"
 #include "r_things.h"
+#include "r_translation.h"
 #include "r_draw.h" // R_GetColorByName
 #include "doomstat.h" // luabanks[]
 

@@ -8351,17 +8351,6 @@ static void M_DrawNightsAttackBackground(void)
 	}
 }
 
-// NiGHTS Attack floating Super Sonic.
-static patch_t *ntssupersonic[2];
-
-static void M_DrawNightsAttackSuperSonic(void)
-{
-	const UINT8 *colormap = R_GetTranslationColormap(TC_DEFAULT, SKINCOLOR_YELLOW, GTC_CACHE);
-	INT32 timer = FixedInt(ntsatkdrawtimer/4) % 2;
-	angle_t fa = (FixedAngle((FixedInt(ntsatkdrawtimer * 4) % 360)<<FRACBITS)>>ANGLETOFINESHIFT) & FINEMASK;
-	V_DrawFixedPatch(235<<FRACBITS, (120<<FRACBITS) - (8*FINESINE(fa)), FRACUNIT, 0, ntssupersonic[timer], colormap);
-}
-
 static void M_DrawLevelPlatterMenu(void)
 {
 	UINT8 iter, sizeselect = (lswide(lsrow) ? 1 : 0);
@@ -13788,8 +13777,8 @@ static void M_LoadModeAttackMenu(UINT8 mode)
 		SP_NightsAttackDef.prevMenu = &MainDef;
 		levellistmode = LLM_NIGHTSATTACK; // Don't be dependent on cv_newgametype
 
-		ntssupersonic[0] = W_CachePatchName("NTSSONC1", PU_PATCH);
-		ntssupersonic[1] = W_CachePatchName("NTSSONC2", PU_PATCH);
+		//ntssupersonic[0] = W_CachePatchName("NTSSONC1", PU_PATCH);
+		//ntssupersonic[1] = W_CachePatchName("NTSSONC2", PU_PATCH);
 	}
 	else
 	{
@@ -13955,8 +13944,38 @@ void M_DrawNightsAttackMenu(void)
 			V_DrawString(104-72, 180, V_TRANSLUCENT, M_GetModeAttackExitString());
 		}
 
-		// Super Sonic
-		M_DrawNightsAttackSuperSonic();
+		// Draw selected character's NiGHTS sprite
+		patch_t *natksprite; //The patch for the sprite itself
+		INT32 spritetimer; //Timer for animating NiGHTS sprite
+		INT32 skinnumber; //Number for skin
+		UINT16 color; //natkcolor
+
+		if (skins[cv_chooseskin.value-1]->sprites[SPR2_NFLY].numframes == 0) //If we don't have NiGHTS sprites
+			skinnumber = 0; //Default to Sonic
+		else
+			skinnumber = (cv_chooseskin.value-1);
+			
+		spritedef_t *sprdef = &skins[skinnumber]->sprites[SPR2_NFLY]; //Make our patch the selected character's NFLY sprite
+		spritetimer = FixedInt(ntsatkdrawtimer/2) % skins[skinnumber]->sprites[SPR2_NFLY].numframes; //Make the sprite timer cycle though all the frames at 2 tics per frame
+		spriteframe_t *sprframe = &sprdef->spriteframes[spritetimer]; //Our animation frame is equal to the number on the timer
+
+		natksprite = W_CachePatchNum(sprframe->lumppat[6], PU_PATCH); //Draw the right facing angle
+
+		if (skins[skinnumber]->natkcolor) //If you set natkcolor use it
+			color = skins[skinnumber]->natkcolor;
+		else if ((skins[skinnumber]->flags & SF_SUPER) && !(skins[skinnumber]->flags & SF_NONIGHTSSUPER)) //If you go super in NiGHTS, use supercolor
+			color = skins[skinnumber]->supercolor+4;
+		else //If you don't go super in NiGHTS or at all, use prefcolor
+			color = skins[skinnumber]->prefcolor;
+				
+		angle_t fa = (FixedAngle(((FixedInt(ntsatkdrawtimer * 4)) % 360)<<FRACBITS)>>ANGLETOFINESHIFT) & FINEMASK;
+
+		V_DrawFixedPatch(270<<FRACBITS, (186<<FRACBITS) - 8*FINESINE(fa),
+						 FixedDiv(skins[skinnumber]->highresscale, skins[skinnumber]->shieldscale), 
+						 (sprframe->flip & 1<<6) ? V_FLIP : 0,
+						 natksprite,
+						 R_GetTranslationColormap(TC_BLINK, color, GTC_CACHE));
+
 		//if (P_HasGrades(cv_nextmap.value, 0))
 		//	V_DrawScaledPatch(235 - (((ngradeletters[bestoverall])->width)*3)/2, 135, 0, ngradeletters[bestoverall]);
 
@@ -14036,7 +14055,29 @@ static void M_NightsAttackLevelSelect(INT32 choice)
 static void M_NightsAttack(INT32 choice)
 {
 	(void)choice;
-	M_ModeAttackNights();
+	// lactozilla, WHY IS THIS ONLY IN THE ANDROID PORT?
+	//M_ModeAttackNights();
+
+	SP_NightsAttackDef.prevMenu = &MainDef;
+	levellistmode = LLM_NIGHTSATTACK; // Don't be dependent on cv_newgametype
+
+	if (!M_PrepareLevelPlatter(-1, true))
+	{
+		M_StartMessage(M_GetText("No NiGHTS-attackable levels found.\n"),NULL,MM_NOTHING);
+		return;
+	}
+	// This is really just to make sure Sonic is the played character, just in case
+	M_PatchSkinNameTable();
+
+	G_SetGamestate(GS_TIMEATTACK); // do this before M_SetupNextMenu so that menu meta state knows that we're switching
+	titlemapinaction = TITLEMAP_OFF; // Nope don't give us HOMs please
+	M_SetupNextMenu(&SP_NightsAttackDef);
+	if (!M_CanShowLevelInList(cv_nextmap.value-1, -1) && levelselect.rows[0].maplist[0])
+		CV_SetValue(&cv_nextmap, levelselect.rows[0].maplist[0]);
+	else
+		Nextmap_OnChange();
+
+	itemOn = nastart; // "Start" is selected.
 }
 
 static void M_StartModeAttack(UINT8 mode)

@@ -39,6 +39,7 @@
 #include "../m_cheat.h"
 #include "../f_finale.h"
 #include "../r_things.h" // R_GetShadowZ
+#include "../r_translation.h"
 #include "../d_main.h"
 #include "../p_slopes.h"
 #include "hw_md2.h"
@@ -1538,7 +1539,7 @@ static void HWR_ProcessSeg(void) // Sort of like GLWall::Process in GZDoom
 				wallVerts[3].t += (gl_frontsector->ceilingheight - worldtop) * yscale * grTex->scaleY;
 				wallVerts[2].t += (gl_frontsector->ceilingheight - worldtopslope) * yscale * grTex->scaleY;
 				wallVerts[0].t += (gl_frontsector->floorheight - worldbottom) * yscale * grTex->scaleY;
-				wallVerts[1].t += (gl_frontsector->floorheight - worldbottomslope) * yscale * yscale;
+				wallVerts[1].t += (gl_frontsector->floorheight - worldbottomslope) * yscale * grTex->scaleY;
 			} else if (gl_linedef->flags & ML_DONTPEGBOTTOM) {
 				wallVerts[3].t = wallVerts[0].t + ((worldbottom - worldtop) * yscale) * grTex->scaleY;
 				wallVerts[2].t = wallVerts[1].t + ((worldbottomslope - worldtopslope) * yscale) * grTex->scaleY;
@@ -1631,17 +1632,22 @@ static void HWR_ProcessSeg(void) // Sort of like GLWall::Process in GZDoom
 
 				side_t *side = &sides[rover->master->sidenum[0]];
 
-				INT16 lineflags;
+				boolean do_texture_skew;
+				boolean dont_peg_bottom;
 
 				if (rover->master->flags & ML_TFERLINE)
 				{
 					size_t linenum = gl_curline->linedef-gl_backsector->lines[0];
 					newline = rover->master->frontsector->lines[0] + linenum;
 					side = &sides[newline->sidenum[0]];
-					lineflags = newline->flags;
+					do_texture_skew = newline->flags & ML_SKEWTD;
+					dont_peg_bottom = newline->flags & ML_DONTPEGBOTTOM;
 				}
 				else
-					lineflags = gl_curline->linedef->flags;
+				{
+					do_texture_skew = rover->master->flags & ML_SKEWTD;
+					dont_peg_bottom = gl_curline->linedef->flags & ML_DONTPEGBOTTOM;
+				}
 
 				texnum = R_GetTextureNum(side->midtexture);
 
@@ -1680,15 +1686,14 @@ static void HWR_ProcessSeg(void) // Sort of like GLWall::Process in GZDoom
 					// ...Oh well, anyway, Lower Unpegged now changes pegging of FOFs like in software
 					// -- Monster Iestyn 26/06/18
 					fixed_t texturevpeg = side->rowoffset + side->offsety_mid;
-					boolean attachtobottom = !!(lineflags & ML_DONTPEGBOTTOM);
 
 					grTex = HWR_GetTexture(texnum);
 					xscale = FixedToFloat(side->scalex_mid);
 					yscale = FixedToFloat(side->scaley_mid);
 
-					if (!(lineflags & ML_SKEWTD)) // no skewing
+					if (!do_texture_skew) // no skewing
 					{
-						if (attachtobottom)
+						if (dont_peg_bottom)
 							texturevpeg -= (*rover->topheight - *rover->bottomheight) * yscale;
 
 						wallVerts[3].t = (((*rover->topheight - h) * yscale) + texturevpeg) * grTex->scaleY;
@@ -1698,7 +1703,7 @@ static void HWR_ProcessSeg(void) // Sort of like GLWall::Process in GZDoom
 					}
 					else
 					{
-						if (!attachtobottom) // skew by top
+						if (!dont_peg_bottom) // skew by top
 						{
 							wallVerts[3].t = wallVerts[2].t = texturevpeg * grTex->scaleY;
 							wallVerts[0].t = (((h - l) * yscale) + texturevpeg) * grTex->scaleY;
@@ -5075,6 +5080,8 @@ static void HWR_ProjectSprite(mobj_t *thing)
 	boolean vflip = (!(thing->eflags & MFE_VERTICALFLIP) != !R_ThingVerticallyFlipped(thing));
 	boolean mirrored = thing->mirrored;
 	boolean hflip = (!R_ThingHorizontallyFlipped(thing) != !mirrored);
+	skincolornum_t color;
+	UINT16 translation;
 	INT32 dispoffset;
 
 	angle_t ang;
@@ -5506,45 +5513,19 @@ static void HWR_ProjectSprite(mobj_t *thing)
 		vis->gpatch = (patch_t *)W_CachePatchNum(sprframe->lumppat[rot], PU_SPRITE);
 
 	vis->mobj = thing;
+
 	if ((thing->flags2 & MF2_LINKDRAW) && thing->tracer && thing->color == SKINCOLOR_NONE)
-		vis->color = thing->tracer->color;
+		color = thing->tracer->color;
 	else
-		vis->color = thing->color;
+		color = thing->color;
+
+	if ((thing->flags2 & MF2_LINKDRAW) && thing->tracer && thing->translation == 0)
+		translation = thing->tracer->translation;
+	else
+		translation = thing->translation;
 
 	//Hurdler: 25/04/2000: now support colormap in hardware mode
-	if ((vis->mobj->flags & (MF_ENEMY|MF_BOSS)) && (vis->mobj->flags2 & MF2_FRET) && !(vis->mobj->flags & MF_GRENADEBOUNCE) && (leveltime & 1)) // Bosses "flash"
-	{
-		if (vis->mobj->type == MT_CYBRAKDEMON || vis->mobj->colorized)
-			vis->colormap = R_GetTranslationColormap(TC_ALLWHITE, 0, GTC_CACHE);
-		else if (vis->mobj->type == MT_METALSONIC_BATTLE)
-			vis->colormap = R_GetTranslationColormap(TC_METALSONIC, 0, GTC_CACHE);
-		else
-			vis->colormap = R_GetTranslationColormap(TC_BOSS, vis->color, GTC_CACHE);
-	}
-	else if (vis->color)
-	{
-		// New colormap stuff for skins Tails 06-07-2002
-		if (thing->colorized)
-			vis->colormap = R_GetTranslationColormap(TC_RAINBOW, vis->color, GTC_CACHE);
-		else if (thing->player && thing->player->dashmode >= DASHMODE_THRESHOLD
-			&& (thing->player->charflags & SF_DASHMODE)
-			&& ((leveltime/2) & 1))
-		{
-			if (thing->player->charflags & SF_MACHINE)
-				vis->colormap = R_GetTranslationColormap(TC_DASHMODE, 0, GTC_CACHE);
-			else
-				vis->colormap = R_GetTranslationColormap(TC_RAINBOW, vis->color, GTC_CACHE);
-		}
-		else if (thing->skin && thing->sprite == SPR_PLAY) // This thing is a player!
-		{
-			UINT8 skinnum = ((skin_t*)thing->skin)->skinnum;
-			vis->colormap = R_GetTranslationColormap(skinnum, vis->color, GTC_CACHE);
-		}
-		else
-			vis->colormap = R_GetTranslationColormap(TC_DEFAULT, vis->color ? vis->color : SKINCOLOR_CYAN, GTC_CACHE);
-	}
-	else
-		vis->colormap = NULL;
+	vis->colormap = R_GetTranslationForThing(vis->mobj, color, translation);
 
 	// set top/bottom coords
 	vis->gzt = gzt;
@@ -5670,7 +5651,6 @@ static void HWR_ProjectPrecipitationSprite(precipmobj_t *thing)
 	vis->gpatch = (patch_t *)W_CachePatchNum(sprframe->lumppat[rot], PU_SPRITE);
 	vis->flip = flip;
 	vis->mobj = (mobj_t *)thing;
-	vis->color = SKINCOLOR_NONE;
 
 	vis->colormap = NULL;
 
@@ -5902,6 +5882,7 @@ static void HWR_DrawSkyBackground(player_t *player)
 	{
 		FTransform dometransform;
 		const float fpov = HWR_GetFOV(player);
+		//const float fpov = FixedToFloat(R_GetPlayerFov(player));
 		postimg_t *type;
 		angle_t viewrollangle = R_GetLocalViewRollAngle(player);
 
@@ -6171,6 +6152,8 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 {
 	const float fpov = HWR_GetFOV(player);
 	angle_t viewrollangle = R_GetLocalViewRollAngle(player);
+	// fuck it, its renderer code
+	const float fpov = FixedToFloat(R_GetPlayerFov(player));
 	postimg_t *type;
 
 	if (splitscreen && player == &players[secondarydisplayplayer])
@@ -6300,34 +6283,6 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 
 	HWR_RenderBSPNode((INT32)numnodes-1);
 
-#ifndef NEWCLIP
-	// Make a viewangle int so we can render things based on mouselook
-	if (player == &players[consoleplayer])
-		viewangle = localaiming;
-	else if (splitscreen && player == &players[secondarydisplayplayer])
-		viewangle = localaiming2;
-
-	// Handle stuff when you are looking farther up or down.
-	if ((gl_aimingangle || HWR_GetFOV(player) > 90.0f))
-	{
-		dup_viewangle += ANGLE_90;
-		HWR_ClearClipSegs();
-		HWR_RenderBSPNode((INT32)numnodes-1); //left
-
-		dup_viewangle += ANGLE_90;
-		if (((INT32)gl_aimingangle > ANGLE_45 || (INT32)gl_aimingangle<-ANGLE_45))
-		{
-			HWR_ClearClipSegs();
-			HWR_RenderBSPNode((INT32)numnodes-1); //back
-		}
-
-		dup_viewangle += ANGLE_90;
-		HWR_ClearClipSegs();
-		HWR_RenderBSPNode((INT32)numnodes-1); //right
-
-		dup_viewangle += ANGLE_90;
-	}
-#endif
 
 	if (cv_glbatching.value)
 		HWR_RenderBatches();
@@ -6385,6 +6340,8 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 {
 	const float fpov = HWR_GetFOV(player);
 	angle_t viewrollangle = R_GetLocalViewRollAngle(player);
+	// fuck it -bitten
+	//const float fpov = FixedToFloat(R_GetPlayerFov(player));
 	postimg_t *type;
 
 	const boolean skybox = (skyboxmo[0] && cv_skybox.value); // True if there's a skybox object and skyboxes are on
@@ -6542,35 +6499,6 @@ void HWR_RenderPlayerView(INT32 viewnumber, player_t *player)
 
 	HWR_RenderBSPNode((INT32)numnodes-1);
 
-#ifndef NEWCLIP
-	// Make a viewangle int so we can render things based on mouselook
-	if (player == &players[consoleplayer])
-		viewangle = localaiming;
-	else if (splitscreen && player == &players[secondarydisplayplayer])
-		viewangle = localaiming2;
-
-	// Handle stuff when you are looking farther up or down.
-	if ((gl_aimingangle || HWR_GetFOV(player) > 90.0f))
-	{
-		dup_viewangle += ANGLE_90;
-		HWR_ClearClipSegs();
-		HWR_RenderBSPNode((INT32)numnodes-1); //left
-
-		dup_viewangle += ANGLE_90;
-		if (((INT32)gl_aimingangle > ANGLE_45 || (INT32)gl_aimingangle<-ANGLE_45))
-		{
-			HWR_ClearClipSegs();
-			HWR_RenderBSPNode((INT32)numnodes-1); //back
-		}
-
-		dup_viewangle += ANGLE_90;
-		HWR_ClearClipSegs();
-		HWR_RenderBSPNode((INT32)numnodes-1); //right
-
-		dup_viewangle += ANGLE_90;
-	}
-#endif
-
 	PS_STOP_TIMING(ps_bsptime);
 
 	if (cv_glbatching.value)
@@ -6676,7 +6604,6 @@ CV_PossibleValue_t glanisotropicmode_cons_t[] = {{1, "MIN"}, {16, "MAX"}, {0, NU
 
 consvar_t cv_glshaders = CVAR_INIT ("gr_shaders", "On", CV_SAVE, glshaders_cons_t, NULL);
 consvar_t cv_glallowshaders = CVAR_INIT ("gr_allowclientshaders", "On", CV_NETVAR, CV_OnOff, NULL);
-consvar_t cv_fovchange = CVAR_INIT ("gr_fovchange", "Off", CV_SAVE, CV_OnOff, NULL);
 
 #ifdef ALAM_LIGHTING
 consvar_t cv_gldynamiclighting = CVAR_INIT ("gr_dynamiclighting", "On", CV_SAVE, CV_OnOff, NULL);
@@ -6733,8 +6660,6 @@ static void CV_glanisotropic_OnChange(void)
 //added by Hurdler: console varibale that are saved
 void HWR_AddCommands(void)
 {
-	CV_RegisterVar(&cv_fovchange);
-
 #ifdef ALAM_LIGHTING
 	CV_RegisterVar(&cv_glstaticlighting);
 	CV_RegisterVar(&cv_gldynamiclighting);

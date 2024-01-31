@@ -24,10 +24,6 @@
 
 #include "screen.h" // MAXVIDWIDTH, MAXVIDHEIGHT
 
-#ifdef HWRENDER
-#include "m_aatree.h"
-#endif
-
 #include "taglist.h"
 
 //
