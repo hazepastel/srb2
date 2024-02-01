@@ -6153,7 +6153,7 @@ void HWR_RenderSkyboxView(INT32 viewnumber, player_t *player)
 	const float fpov = HWR_GetFOV(player);
 	angle_t viewrollangle = R_GetLocalViewRollAngle(player);
 	// fuck it, its renderer code
-	const float fpov = FixedToFloat(R_GetPlayerFov(player));
+	//const float fpov = FixedToFloat(R_GetPlayerFov(player));
 	postimg_t *type;
 
 	if (splitscreen && player == &players[secondarydisplayplayer])

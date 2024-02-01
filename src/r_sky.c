@@ -75,7 +75,6 @@ void R_SetupSkyDraw(void)
 */
 void R_SetSkyScale(void)
 {
-<<<<<<< HEAD
 	// hope and pray - bitten
 	//fixed_t difference = vid.sky.fdup-(vid.sky.dup<<FRACBITS);
 	//skyscale = FixedDiv(fovtan, vid.sky.fdup+difference);

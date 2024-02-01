@@ -362,9 +362,6 @@ boolean CL_CheckDownloadable(void)
 		case 4:
 			CONS_Printf(M_GetText("One or more addons were added as a folder, which the server cannot send.\n"));
 			break;
-		case 4:
-			CONS_Printf(M_GetText("All files downloadable, but the game doesn't have storage access permission.\n"));
-			break;
 	}
 	return false;
 }

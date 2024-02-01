@@ -442,6 +442,7 @@ static void R_GenerateTranslationColormap(UINT8 *dest_colormap, INT32 translatio
 		{
 			case TC_ALLWHITE:
 			case TC_DASHMODE:
+			{
 				remaptable_t *tr = R_GetBuiltInTranslation((SINT8)translation);
 				if (tr)
 				{
@@ -449,6 +450,7 @@ static void R_GenerateTranslationColormap(UINT8 *dest_colormap, INT32 translatio
 					return;
 				}
 				break;
+			}
 			case TC_RAINBOW:
 				if (color >= numskincolors)
 					I_Error("Invalid skin color #%hu", (UINT16)color);
