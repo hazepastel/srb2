@@ -439,7 +439,6 @@ static void D_Display(void)
 		case GS_LEVEL:
 			if (!gametic)
 				break;
-			HU_Erase();
 			AM_Drawer();
 			break;
 
@@ -448,7 +447,6 @@ static void D_Display(void)
 #ifdef TOUCHINPUTS
 			TS_DrawControlsNotInGame();
 #endif
-			HU_Erase();
 			HU_Drawer();
 			break;
 
@@ -463,13 +461,11 @@ static void D_Display(void)
 
 		case GS_ENDING:
 			F_EndingDrawer();
-			HU_Erase();
 			HU_Drawer();
 			break;
 
 		case GS_CUTSCENE:
 			F_CutsceneDrawer();
-			HU_Erase();
 			HU_Drawer();
 			break;
 
@@ -479,7 +475,6 @@ static void D_Display(void)
 
 		case GS_EVALUATION:
 			F_GameEvaluationDrawer();
-			HU_Erase();
 			HU_Drawer();
 			break;
 
@@ -489,7 +484,6 @@ static void D_Display(void)
 
 		case GS_CREDITS:
 			F_CreditDrawer();
-			HU_Erase();
 			HU_Drawer();
 			break;
 
@@ -499,7 +493,6 @@ static void D_Display(void)
 			{
 				// I don't think HOM from nothing drawing is independent...
 				F_WaitingPlayersDrawer();
-				HU_Erase();
 				HU_Drawer();
 			}
 		case GS_DEDICATEDSERVER:
@@ -514,11 +507,21 @@ static void D_Display(void)
 	{
 		wipegamestate = gamestate;
 
-		// clean up border stuff
-		// see if the border needs to be initially drawn
 		if (gamestate == GS_LEVEL || (gamestate == GS_TITLESCREEN && titlemapinaction && curbghide && (!hidetitlemap)))
 		{
 			// draw the view directly
+			if (cv_debug)
+			{
+				r_renderwalls = cv_renderwalls.value;
+				r_renderfloors = cv_renderfloors.value;
+				r_renderthings = cv_renderthings.value;
+			}
+			else
+			{
+				r_renderwalls = true;
+				r_renderfloors = true;
+				r_renderthings = true;
+			}
 
 			if (!automapactive && !dedicated && cv_renderview.value)
 			{
@@ -543,23 +546,21 @@ static void D_Display(void)
 				// render the second screen
 				if (splitscreen && players[secondarydisplayplayer].mo)
 				{
-	#ifdef HWRENDER
-					if (rendermode != render_soft)
+					viewwindowy = vid.height / 2;
+
+#ifdef HWRENDER
+					if (rendermode == render_opengl)
 						HWR_RenderPlayerView(1, &players[secondarydisplayplayer]);
 					else
-	#endif
+#endif
 					if (rendermode != render_none)
 					{
-						viewwindowy = vid.height / 2;
-						M_Memcpy(ylookup, ylookup2, viewheight*sizeof (ylookup[0]));
-
 						topleft = screens[0] + viewwindowy*vid.width + viewwindowx;
 
 						R_RenderPlayerView(&players[secondarydisplayplayer]);
-
-						viewwindowy = 0;
-						M_Memcpy(ylookup, ylookup1, viewheight*sizeof (ylookup[0]));
 					}
+
+					viewwindowy = 0;
 				}
 
 				if (I_AppOnBackground())
@@ -1416,7 +1417,7 @@ void D_SRB2Main(void)
 #endif
 
 	// for dedicated server
-#if !defined (_WINDOWS) //already check in win_main.c
+#if !defined (_WINDOWS) && !defined (DEDICATED) //already check in win_main.c
 	dedicated = M_CheckParm("-dedicated") != 0;
 #endif
 
@@ -1602,9 +1603,7 @@ void D_SRB2Main(void)
 	TS_LoadUserLayouts(); // will call TS_LoadLayouts
 #endif
 
-#if defined (__unix__) || defined (UNIXCOMMON) || defined (HAVE_SDL)
 	VID_PrepareModeList(); // Regenerate Modelist according to cv_fullscreen
-#endif
 
 	// set user default mode or mode set at cmdline
 	SCR_CheckDefaultMode();

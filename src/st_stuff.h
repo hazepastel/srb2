@@ -94,6 +94,7 @@ typedef enum
 {
 	HUD_LIVES,
 	HUD_LIVESALT,
+	HUD_INPUT,
 
 	HUD_RINGS,
 	HUD_RINGSNUM,

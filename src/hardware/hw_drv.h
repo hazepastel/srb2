@@ -33,7 +33,7 @@ EXPORT void HWRAPI(RecreateContext) (void);
 #ifdef _WINDOWS
 EXPORT void HWRAPI(GetModeList) (vmode_t **pvidmodes, INT32 *numvidmodes);
 #endif
-EXPORT void HWRAPI(SetPalette) (RGBA_t *ppal);
+EXPORT void HWRAPI(SetTexturePalette) (RGBA_t *ppal);
 EXPORT void HWRAPI(FinishUpdate) (INT32 waitvbl);
 EXPORT void HWRAPI(Draw2DLine) (F2DCoord *v1, F2DCoord *v2, RGBA_t Color);
 EXPORT void HWRAPI(DrawPolygon) (FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPts, FBITFIELD PolyFlags);
@@ -46,8 +46,10 @@ EXPORT void HWRAPI(SetTexture) (GLMipmap_t *TexInfo);
 EXPORT void HWRAPI(UpdateTexture) (GLMipmap_t *TexInfo);
 EXPORT void HWRAPI(DeleteTexture) (GLMipmap_t *TexInfo);
 EXPORT void HWRAPI(ReadRect) (INT32 x, INT32 y, INT32 width, INT32 height, INT32 dst_stride, UINT32 *dst_data);
+EXPORT void HWRAPI(ReadScreenTexture) (int tex, UINT8 *dst_data);
 EXPORT void HWRAPI(GClipRect) (INT32 minx, INT32 miny, INT32 maxx, INT32 maxy, float nearclip);
 EXPORT void HWRAPI(ClearMipMapCache) (void);
+
 EXPORT void HWRAPI(SetSpecialState) (hwdspecialstate_t IdState, INT32 Value);
 //Hurdler: added for new development
 EXPORT void HWRAPI(DrawModel) (model_t *model, INT32 frameIndex, float duration, float tics, INT32 nextFrameIndex, FTransform *pos, float hscale, float vscale, UINT8 flipped, UINT8 hflipped, FSurfaceInfo *Surface);
@@ -58,25 +60,26 @@ EXPORT void HWRAPI(SetTransform) (FTransform *ptransform);
 EXPORT INT32 HWRAPI(GetTextureUsed) (void);
 
 EXPORT void HWRAPI(FlushScreenTextures) (void);
-EXPORT void HWRAPI(StartScreenWipe) (void);
-EXPORT void HWRAPI(EndScreenWipe) (void);
-EXPORT void HWRAPI(DoScreenWipe) (void);
-EXPORT void HWRAPI(DoTintedWipe) (boolean isfadingin, boolean istowhite);
-EXPORT void HWRAPI(DrawIntermissionBG) (void);
-EXPORT void HWRAPI(MakeScreenTexture) (void);
-EXPORT void HWRAPI(MakeFinalScreenTexture) (void);
-EXPORT void HWRAPI(DrawFinalScreenTexture) (int width, int height);
+EXPORT void HWRAPI(DoScreenWipe) (int wipeStart, int wipeEnd, FSurfaceInfo *surf, FBITFIELD polyFlags);
+EXPORT void HWRAPI(DrawScreenTexture) (int tex, FSurfaceInfo *surf, FBITFIELD polyflags);
+EXPORT void HWRAPI(MakeScreenTexture) (int tex);
+EXPORT void HWRAPI(DrawScreenFinalTexture) (int tex, int width, int height);
 
 #define SCREENVERTS 10
 EXPORT void HWRAPI(PostImgRedraw) (float points[SCREENVERTS][SCREENVERTS][2]);
 
-EXPORT boolean HWRAPI(CompileShaders) (void);
-EXPORT void HWRAPI(CleanShaders) (void);
-EXPORT void HWRAPI(SetShader) (int type);
+EXPORT boolean HWRAPI(InitShaders) (void);
+EXPORT void HWRAPI(LoadShader) (int slot, char *code, hwdshaderstage_t stage);
+EXPORT boolean HWRAPI(CompileShader) (int slot);
+EXPORT void HWRAPI(SetShader) (int slot);
 EXPORT void HWRAPI(UnSetShader) (void);
 
 EXPORT void HWRAPI(SetShaderInfo) (hwdshaderinfo_t info, INT32 value);
-EXPORT void HWRAPI(LoadCustomShader) (int number, char *code, size_t size, boolean isfragment);
+
+EXPORT void HWRAPI(SetPaletteLookup)(UINT8 *lut);
+EXPORT UINT32 HWRAPI(CreateLightTable)(RGBA_t *hw_lighttable);
+EXPORT void HWRAPI(ClearLightTables)(void);
+EXPORT void HWRAPI(SetScreenPalette)(RGBA_t *palette);
 
 // ==========================================================================
 //                                      HWR DRIVER OBJECT, FOR CLIENT PROGRAM
@@ -87,7 +90,7 @@ EXPORT void HWRAPI(LoadCustomShader) (int number, char *code, size_t size, boole
 struct hwdriver_s
 {
 	Init                pfnInit;
-	SetPalette          pfnSetPalette;
+	SetTexturePalette   pfnSetTexturePalette;
 	FinishUpdate        pfnFinishUpdate;
 	RecreateContext     pfnRecreateContext;
 	Draw2DLine          pfnDraw2DLine;
@@ -100,7 +103,7 @@ struct hwdriver_s
 	SetTexture          pfnSetTexture;
 	UpdateTexture       pfnUpdateTexture;
 	DeleteTexture       pfnDeleteTexture;
-	ReadRect            pfnReadRect;
+	ReadScreenTexture   pfnReadScreenTexture;
 	GClipRect           pfnGClipRect;
 	ClearMipMapCache    pfnClearMipMapCache;
 	SetSpecialState     pfnSetSpecialState;
@@ -116,22 +119,24 @@ struct hwdriver_s
 #endif
 	PostImgRedraw       pfnPostImgRedraw;
 	FlushScreenTextures pfnFlushScreenTextures;
-	StartScreenWipe     pfnStartScreenWipe;
-	EndScreenWipe       pfnEndScreenWipe;
 	DoScreenWipe        pfnDoScreenWipe;
-	DoTintedWipe        pfnDoTintedWipe;
-	DrawIntermissionBG  pfnDrawIntermissionBG;
+	DrawScreenTexture   pfnDrawScreenTexture;
 	MakeScreenTexture   pfnMakeScreenTexture;
-	MakeFinalScreenTexture  pfnMakeFinalScreenTexture;
-	DrawFinalScreenTexture  pfnDrawFinalScreenTexture;
+	DrawScreenFinalTexture  pfnDrawScreenFinalTexture;
+	ReadRect        		pfnReadRect;
 
-	CompileShaders      pfnCompileShaders;
-	CleanShaders        pfnCleanShaders;
+	InitShaders         pfnInitShaders;
+	LoadShader          pfnLoadShader;
+	CompileShader       pfnCompileShader;
 	SetShader           pfnSetShader;
 	UnSetShader         pfnUnSetShader;
 
 	SetShaderInfo       pfnSetShaderInfo;
-	LoadCustomShader    pfnLoadCustomShader;
+
+	SetPaletteLookup    pfnSetPaletteLookup;
+	CreateLightTable    pfnCreateLightTable;
+	ClearLightTables    pfnClearLightTables;
+	SetScreenPalette    pfnSetScreenPalette;
 };
 
 extern struct hwdriver_s hwdriver;

@@ -100,12 +100,10 @@ void OglSdlFinishUpdate(boolean waitvbl)
 	oldwaitvbl = waitvbl;
 
 	SDL_GetWindowSize(window, &sdlw, &sdlh);
-	MakeFinalScreenTexture();
 
 	GLFramebuffer_Disable();
 	RenderToFramebuffer = FramebufferEnabled;
 
-	DrawFinalScreenTexture(sdlw, sdlh);
 
 	if (RenderToFramebuffer)
 	{

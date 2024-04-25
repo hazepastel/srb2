@@ -11,3 +11,4 @@ hw_model.c
 hw_batching.c
 r_glcommon/r_glcommon.c
 shaders/gl_shaders.c
+hw_shaders.c

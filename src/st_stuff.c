@@ -141,11 +141,17 @@ static patch_t *minicaps;
 static patch_t *gotrflag;
 static patch_t *gotbflag;
 static patch_t *fnshico;
+static patch_t *fireflower;
 
 hudinfo_t hudinfo[NUMHUDITEMS] =
 {
 	{  16, 176, V_SNAPTOLEFT |V_SNAPTOBOTTOM}, // HUD_LIVES
 	{ 250,   4, V_SNAPTORIGHT|V_SNAPTOTOP},    // HUD_LIVESALT
+#if 0
+	// BITTEN CHECK THIS SHIT OUT
+	{  16, 176, V_SNAPTOLEFT|V_SNAPTOBOTTOM}, // HUD_LIVES
+	{  16, 152, V_SNAPTOLEFT|V_SNAPTOBOTTOM}, // HUD_INPUT
+#endif
 
 	{  16,  42, V_SNAPTOLEFT|V_SNAPTOTOP}, // HUD_RINGS
 	{  96,  42, V_SNAPTOLEFT|V_SNAPTOTOP}, // HUD_RINGSNUM
@@ -257,8 +263,8 @@ void ST_doPaletteStuff(void)
 		palette = 0;
 
 #ifdef HWRENDER
-	if (rendermode == render_opengl)
-		palette = 0; // No flashpals here in OpenGL
+	if (rendermode == render_opengl && !HWR_ShouldUsePaletteRendering())
+		palette = 0; // Don't set the palette to a flashpal in OpenGL's truecolor mode
 #endif
 
 	if (palette != st_palette)
@@ -282,10 +288,6 @@ void ST_UnloadGraphics(void)
 void ST_LoadGraphics(void)
 {
 	int i;
-
-	// SRB2 border patch
-	// st_borderpatchnum = W_GetNumForName("GFZFLR01");
-	// scr_borderpatch = W_CacheLumpNum(st_borderpatchnum, PU_HUDGFX);
 
 	// the original Doom uses 'STF' as base name for all face graphics
 	// Graue 04-08-2004: face/name graphics are now indexed by skins
@@ -346,6 +348,8 @@ void ST_LoadGraphics(void)
 	sneakers = W_CachePatchName("TVSSICON", PU_HUDGFX);
 	gravboots = W_CachePatchName("TVGVICON", PU_HUDGFX);
 
+	fireflower = W_CachePatchName("GOTFFLOW", PU_HUDGFX);
+
 	tagico = W_CachePatchName("TAGICO", PU_HUDGFX);
 	gotrflag = W_CachePatchName("GOTRFLAG", PU_HUDGFX);
 	gotbflag = W_CachePatchName("GOTBFLAG", PU_HUDGFX);
@@ -402,9 +406,11 @@ void ST_LoadFaceGraphics(INT32 skinnum)
 		spritedef_t *sprdef = &skins[skinnum]->sprites[SPR2_XTRA];
 		spriteframe_t *sprframe = &sprdef->spriteframes[XTRA_LIFEPIC];
 		faceprefix[skinnum] = W_CachePatchNum(sprframe->lumppat[0], PU_HUDGFX);
-		if (skins[skinnum]->sprites[(SPR2_XTRA|FF_SPR2SUPER)].numframes > XTRA_LIFEPIC)
+
+		spritedef_t *super_sprdef = P_GetSkinSpritedef(skins[skinnum], SPR2_XTRA|SPR2F_SUPER);
+		if (super_sprdef->numframes > XTRA_LIFEPIC)
 		{
-			sprdef = &skins[skinnum]->sprites[SPR2_XTRA|FF_SPR2SUPER];
+			sprdef = super_sprdef;
 			sprframe = &sprdef->spriteframes[0];
 			superprefix[skinnum] = W_CachePatchNum(sprframe->lumppat[0], PU_HUDGFX);
 		}
@@ -538,7 +544,7 @@ static void ST_DrawNightsOverlayNum(fixed_t x /* right border */, fixed_t y, fix
 static void ST_drawDebugInfo(void)
 {
 	INT32 height = 0, h = 8, w = 18, lowh;
-	void (*textfunc)(INT32, INT32, INT32, const char *);
+	fixed_t textscale = FRACUNIT/2;
 
 	if (!(stplyr->mo && cv_debug))
 		return;
@@ -547,12 +553,12 @@ static void ST_drawDebugInfo(void)
 
 	if ((moviemode == MM_GIF && cv_gif_downscale.value) || vid.dup == 1)
 	{
-		textfunc = V_DrawRightAlignedString;
+		textscale = FRACUNIT;
 		lowh = ((vid.height/vid.dup) - 16);
 	}
 	else
 	{
-		textfunc = V_DrawRightAlignedSmallString;
+		textscale = FRACUNIT/2;
 		h /= 2;
 		w /= 2;
 		lowh = 0;
@@ -563,10 +569,10 @@ static void ST_drawDebugInfo(void)
 								V_DrawRightAlignedThinString(320,  8+lowh, VFLAGS|V_REDMAP, "SOME INFO NOT VISIBLE");\
 								return;\
 							}\
-							textfunc(320, height, VFLAGS, str);\
+							V_DrawAlignedFontString(320, height, VFLAGS, textscale, textscale, str, hu_font, alignright);\
 							height += h;
 
-#define V_DrawDebugFlag(f, str) textfunc(width, height, VFLAGS|f, str);\
+#define V_DrawDebugFlag(f, str) V_DrawAlignedFontString(width, height, VFLAGS|f, textscale, textscale, str, hu_font, alignright);\
 								width -= w
 
 	if (cv_debug & DBG_MEMORY)
@@ -846,7 +852,7 @@ static inline void ST_drawRings(void)
 
 static void ST_drawLivesArea(void)
 {
-	INT32 v_colmap = V_YELLOWMAP, livescount;
+	INT32 v_colmap = V_YELLOWMAP, livescount = -1;
 	boolean notgreyedout = false;
   INT32 x, y, f;
 
@@ -1091,13 +1097,14 @@ static void ST_drawInput(void)
 	INT32 col;
 	UINT8 offs;
 
+	// android shit, assming it moves the hud based on if you are using touchinputs or not
 	INT32 x, y, f;
 
 	if (ST_UseAltLivesHUD())
 	{
-		x = hudinfo[HUD_LIVES].x;
-		y = hudinfo[HUD_LIVES].y;
-		f = hudinfo[HUD_LIVES].f;
+		x = hudinfo[HUD_INPUT].x;
+		y = hudinfo[HUD_INPUT].y;
+		f = hudinfo[HUD_INPUT].f;
 	}
 	else
 	{
@@ -1107,7 +1114,11 @@ static void ST_drawInput(void)
 	}
 
 	if (stplyr->powers[pw_carry] == CR_NIGHTSMODE)
-		y -= 16;
+		y += 8;
+	else if (modeattacking || !LUA_HudEnabled(hud_lives))
+		y += 24;
+	else if (G_RingSlingerGametype() && LUA_HudEnabled(hud_powerstones))
+		y -= 5;
 
 	if (F_GetPromptHideHud(y))
 		return;
@@ -1233,8 +1244,10 @@ static void ST_drawInput(void)
 	V_DrawFill(x+16+(xoffs), y+(yoffs)-offs, 10, 10, col);\
 	V_DrawCharacter(x+16+1+(xoffs), y+1+(yoffs)-offs, f|symb, false)
 
-	drawbutt( 4,-3, BT_JUMP, 'J');
-	drawbutt(15,-3, BT_SPIN, 'S');
+	drawbutt( 4,-3, BT_JUMP,   'J' );
+	drawbutt(15,-3, BT_SPIN,   'S' );
+	drawbutt(26,-3, BT_SHIELD, '\0'); // Instead of a wide 'J' or 'S', we'll draw a thin "SH" for Shield
+	V_DrawThinString(x+16+26, y+2+(-3)-offs, hudinfo[HUD_LIVES].f, "SH");
 
 	V_DrawFill(x+16+4, y+8, 21, 10, f|20); // sundial backing
 	if (stplyr->mo)
@@ -1311,12 +1324,7 @@ static void ST_drawInput(void)
 	}
 
 	if (!demosynced) // should always be last, so it doesn't push anything else around
-	{
 		V_DrawThinString(x, y, f|((leveltime & 4) ? V_YELLOWMAP : V_REDMAP), "BAD DEMO!!");
-		y -= 8;
-	}
-
-	demoinputdrawn = y;
 }
 
 static patch_t *lt_patches[3];
@@ -1580,7 +1588,7 @@ static void ST_drawPowerupHUD(void)
 	UINT16 invulntime = 0;
 	INT32 offs = hudinfo[HUD_POWERUPS].x;
 	const UINT8 q = ((splitscreen && stplyr == &players[secondarydisplayplayer]) ? 1 : 0);
-	static INT32 flagoffs[2] = {0, 0}, shieldoffs[2] = {0, 0}, finishoffs[2] = {0, 0};
+	static INT32 flagoffs[2] = {0, 0}, shieldoffs[2] = {0, 0}, finishoffs[2] = {0, 0}, stackoffs[2] = {0,0};
 
 	if (F_GetPromptHideHud(hudinfo[HUD_POWERUPS].y))
 		return;
@@ -1617,13 +1625,16 @@ static void ST_drawPowerupHUD(void)
 	{
 		shieldoffs[q] = ICONSEP;
 
-		if ((stplyr->powers[pw_shield] & SH_NOSTACK & ~SH_FORCEHP) == SH_FORCE)
+		if ((stplyr->powers[pw_shield] & SH_NOSTACK & ~SH_FORCEHP) == SH_FORCE
+		&& (stplyr->powers[pw_shield] & SH_FORCEHP) > 0) // Special handling for >1HP Force Shields
 		{
-			UINT8 i, max = (stplyr->powers[pw_shield] & SH_FORCEHP);
-			for (i = 0; i <= max; i++)
-			{
-				V_DrawSmallScaledPatch(offs-(i<<1), hudinfo[HUD_POWERUPS].y-(i<<1), (V_PERPLAYER|hudinfo[HUD_POWERUPS].f)|((i == max) ? V_HUDTRANS : V_HUDTRANSHALF), forceshield);
-			}
+			UINT8 max = (stplyr->powers[pw_shield] & SH_FORCEHP);
+
+			V_DrawSmallScaledPatch(offs,   hudinfo[HUD_POWERUPS].y,   V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANSHALF, forceshield);
+			V_DrawSmallScaledPatch(offs-2, hudinfo[HUD_POWERUPS].y-2, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS,     forceshield);
+
+			if (max > 1) // if the shield has more than 2 hits, show the extra n hits as "+n"
+				V_DrawRightAlignedThinString(offs+16, hudinfo[HUD_POWERUPS].y, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS, va("+%d", max - 1));
 		}
 		else
 		{
@@ -1633,6 +1644,7 @@ static void ST_drawPowerupHUD(void)
 				case SH_ELEMENTAL:   p = watershield;   break;
 				case SH_ARMAGEDDON:  p = bombshield;    break;
 				case SH_ATTRACT:     p = ringshield;    break;
+				case SH_FORCE:       p = forceshield;   break;
 				case SH_PITY:        p = pityshield;    break;
 				case SH_PINK:        p = pinkshield;    break;
 				case SH_FLAMEAURA:   p = flameshield;   break;
@@ -1654,6 +1666,22 @@ static void ST_drawPowerupHUD(void)
 	}
 
 	offs -= shieldoffs[q];
+
+	//Fire Flower "shield"
+	if ((stplyr->powers[pw_shield] & SH_FIREFLOWER) == SH_FIREFLOWER)
+	{
+		stackoffs[q] = ICONSEP;
+		V_DrawSmallScaledPatch(offs, hudinfo[HUD_POWERUPS].y, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS, fireflower);
+	}
+	else if (stackoffs[q])
+	{
+		if (stackoffs[q] > 1)
+			stackoffs[q] = 2*stackoffs[q]/3;
+		else
+			stackoffs[q] = 0;
+	}
+
+	offs -= stackoffs[q];
 
 // ---------
 // CTF flags
@@ -1998,7 +2026,7 @@ static void ST_drawNiGHTSHUD(void)
 		total_ringcount = stplyr->spheres;
 	}
 
-	if (stplyr->capsule)
+	if (!P_MobjWasRemoved(stplyr->capsule))
 	{
 		INT32 amount;
 		const INT32 length = 88;
@@ -2883,14 +2911,14 @@ static void ST_overlayDrawer(void)
 		|| ((splitscreen && stplyr == &players[secondarydisplayplayer]) && !camera2.chase))
 		{
 			ST_drawFirstPersonHUD();
-			if (cv_powerupdisplay.value)
+			if (cv_powerupdisplay.value && LUA_HudEnabled(hud_powerups))
 				ST_drawPowerupHUD();  // same as it ever was...
 		}
-		else if (cv_powerupdisplay.value == 2)
+		else if (cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 			ST_drawPowerupHUD();  // same as it ever was...
 		
 	}
-	else if (!(netgame || multiplayer) && cv_powerupdisplay.value == 2)
+	else if (!(netgame || multiplayer) && cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 		ST_drawPowerupHUD(); // same as it ever was...
 
 	if (!(netgame || multiplayer) || !hu_showscores)
@@ -2911,6 +2939,7 @@ static void ST_overlayDrawer(void)
 	if (!hu_showscores && (netgame || multiplayer) && LUA_HudEnabled(hud_textspectator))
 		ST_drawTextHUD();
 
+	// thx touchinputs making shit a pain in the ass - bitten
 	demoinputdrawn = 0;
 
 #ifdef TOUCHINPUTS
@@ -2938,11 +2967,12 @@ static void ST_overlayDrawer(void)
 	}
 	else
 #endif
-	if (modeattacking && !(demoplayback && hu_showscores)
+	if ((cv_showinput.value && !players[displayplayer].spectator) || (modeattacking && !(demoplayback && hu_showscores)
 #ifdef TOUCHINPUTS
 	&& !drawtouchbuttons
 #endif
-	)
+	))
+	
 		ST_drawInput();
 
 	ST_drawDebugInfo();
@@ -2987,7 +3017,7 @@ void ST_Drawer(void)
 	//25/08/99: Hurdler: palette changes is done for all players,
 	//                   not only player1! That's why this part
 	//                   of code is moved somewhere else.
-	if (rendermode == render_soft)
+	if (rendermode == render_soft || HWR_ShouldUsePaletteRendering())
 #endif
 		if (rendermode != render_none) ST_doPaletteStuff();
 

@@ -68,6 +68,27 @@ EXPORT void HWRAPI(SetShader) (int type)
 	(void)type;
 }
 
+EXPORT boolean HWRAPI(InitShaders) (void)
+{
+#ifdef GL_SHADERS
+	if (!pglUseProgram)
+		return false;
+	
+	gl_fallback_shader.vertex_shader = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
+	gl_fallback_shader.fragment_shader = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
+
+	if (!Shader_CompileProgram(&gl_fallback_shader, -1))
+	{
+		GL_MSG_Error("Failed to compile the fallback shader program!\n");
+		return false;
+	}
+
+	return true;
+#else
+	return false;
+#endif
+}
+
 EXPORT boolean HWRAPI(CompileShaders) (void)
 {
 	return false;
@@ -1458,7 +1479,7 @@ EXPORT void HWRAPI(DoTintedWipe)(boolean istowhite, boolean isfadingin)
 }
 
 // Create a texture from the screen.
-EXPORT void HWRAPI(MakeScreenTexture) (void)
+EXPORT void HWRAPI(MakeScreenTexture) (int tex)
 {
 	INT32 texsize = 512;
 	boolean firstTime = (screentexture == 0);

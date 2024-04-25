@@ -41,12 +41,6 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #include <ntsecapi.h>
 #undef SystemFunction036
 
-// A little more than the minimum sleep duration on Windows.
-// May be incorrect for other platforms, but we don't currently have a way to
-// query the scheduler granularity. SDL will do what's needed to make this as
-// low as possible though.
-#define MIN_SLEEP_DURATION_MS 2.1
-
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,7 +104,11 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #endif
 #endif
 
-#if (defined (__unix__) || defined (UNIXCOMMON)) && !(defined(__APPLE__) || defined(__ANDROID__))
+#if defined(UNIXCOMMON)
+#include <poll.h>
+#endif
+
+#if defined (__unix__) || (defined (UNIXCOMMON) && !(defined (__APPLE__) || defined(__ANDROID__)))
 #include <errno.h>
 #include <sys/wait.h>
 #define NEWSIGNALHANDLER
@@ -230,6 +228,33 @@ static char returnWadPath[256];
 #include "../byteptr.h"
 #endif
 
+#if 0
+// BITTEN FIX SHIT
+// A little more than the minimum sleep duration on Windows.
+// May be incorrect for other platforms, but we don't currently have a way to
+// query the scheduler granularity. SDL will do what's needed to make this as
+// low as possible though.
+#define MIN_SLEEP_DURATION_MS 2.1
+
+/**	\brief	The JoyReset function
+
+	\param	JoySet	Joystick info to reset
+
+	\return	void
+*/
+static void JoyReset(SDLJoyInfo_t *JoySet)
+{
+	if (JoySet->dev)
+	{
+		SDL_JoystickClose(JoySet->dev);
+	}
+	JoySet->dev = NULL;
+	JoySet->oldjoy = -1;
+	JoySet->axises = JoySet->buttons = JoySet->hats = JoySet->balls = 0;
+	//JoySet->scale
+}
+
+#endif
 /**	\brief First joystick up and running
 */
 static INT32 joystick_started  = 0;
@@ -656,51 +681,60 @@ void I_GetConsoleEvents(void)
 	// we use this when sending back commands
 	event_t ev = {0};
 	char key = 0;
-	ssize_t d;
+	struct pollfd pfd =
+	{
+		.fd = STDIN_FILENO,
+		.events = POLLIN,
+		.revents = 0,
+	};
 
 	if (!consolevent)
 		return;
 
-	ev.type = ev_console;
-	ev.key = 0;
-	if (read(STDIN_FILENO, &key, 1) == -1 || !key)
-		return;
+	for (;;)
+	{
+		if (poll(&pfd, 1, 0) < 1 || !(pfd.revents & POLLIN))
+			return;
 
-	// we have something
-	// backspace?
-	// NOTE TTimo testing a lot of values .. seems it's the only way to get it to work everywhere
-	if ((key == tty_erase) || (key == 127) || (key == 8))
-	{
-		if (tty_con.cursor > 0)
+		ev.type = ev_console;
+		ev.key = 0;
+		if (read(STDIN_FILENO, &key, 1) == -1 || !key)
+			return;
+
+		// we have something
+		// backspace?
+		// NOTE TTimo testing a lot of values .. seems it's the only way to get it to work everywhere
+		if ((key == tty_erase) || (key == 127) || (key == 8))
 		{
-			tty_con.cursor--;
-			tty_con.buffer[tty_con.cursor] = '\0';
-			tty_Back();
+			if (tty_con.cursor > 0)
+			{
+				tty_con.cursor--;
+				tty_con.buffer[tty_con.cursor] = '\0';
+				tty_Back();
+			}
+			ev.key = KEY_BACKSPACE;
 		}
-		ev.key = KEY_BACKSPACE;
-	}
-	else if (key < ' ') // check if this is a control char
-	{
-		if (key == '\n')
+		else if (key < ' ') // check if this is a control char
 		{
-			tty_Clear();
-			tty_con.cursor = 0;
-			ev.key = KEY_ENTER;
+			if (key == '\n')
+			{
+				tty_Clear();
+				tty_con.cursor = 0;
+				ev.key = KEY_ENTER;
+			}
+			else continue;
 		}
-		else return;
+		else if (tty_con.cursor < sizeof (tty_con.buffer))
+		{
+			// push regular character
+			ev.key = tty_con.buffer[tty_con.cursor] = key;
+			tty_con.cursor++;
+			// print the current line (this is differential)
+			write(STDOUT_FILENO, &key, 1);
+		}
+		if (ev.key) D_PostEvent(&ev);
+		//tty_FlushIn();
 	}
-	else if (tty_con.cursor < sizeof (tty_con.buffer))
-	{
-		// push regular character
-		ev.type = ev_text;
-		ev.key = tty_con.buffer[tty_con.cursor] = key;
-		tty_con.cursor++;
-		// print the current line (this is differential)
-		d = write(STDOUT_FILENO, &key, 1);
-	}
-	if (ev.key) D_PostEvent(&ev);
-	//tty_FlushIn();
-	(void)d;
 }
 
 #elif defined (_WIN32)
@@ -1517,7 +1551,7 @@ const char *I_GetJoyName(INT32 joyindex)
 	{
 		tempname = SDL_JoystickNameForIndex(joyindex);
 		if (tempname)
-			strncpy(joyname, tempname, 255);
+			strncpy(joyname, tempname, sizeof(joyname)-1);
 	}
 	return joyname;
 }
@@ -2819,7 +2853,7 @@ size_t I_GetRandomBytes(char *destination, size_t count)
 {
 #if defined (__unix__) || defined (UNIXCOMMON) || defined(__APPLE__)
 	FILE *rndsource;
-	size_t actual_bytes;
+	size_t actual_bytes = 0;
 
 	if (!(rndsource = fopen("/dev/urandom", "r")))
 		if (!(rndsource = fopen("/dev/random", "r")))
@@ -3369,4 +3403,10 @@ const CPUInfoFlags *I_CPUInfo(void)
 
 // note CPUAFFINITY code used to reside here
 void I_RegisterSysCommands(void) {}
+
+const char *I_GetSysName(void)
+{
+	return SDL_GetPlatform();
+}
+
 #endif

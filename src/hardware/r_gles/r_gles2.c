@@ -87,14 +87,50 @@ boolean GLBackend_LoadExtraFunctions(void)
 	return true;
 }
 
+EXPORT void HWRAPI(LoadShader) (int slot, char *code, hwdshaderstage_t stage)
+{
+	(void)slot;
+	(void)code;
+	(void)stage;
+}
+
 EXPORT void HWRAPI(SetShader) (int type)
 {
 	Shader_Set(GLBackend_GetShaderType(type));
 }
 
+EXPORT boolean HWRAPI(InitShaders) (void)
+{
+#ifdef GL_SHADERS
+	return Shader_Compile();
+#else
+	return false;
+#endif
+}
+
 EXPORT boolean HWRAPI(CompileShaders) (void)
 {
 	return Shader_Compile();
+}
+
+EXPORT boolean HWRAPI(CompileShader) (int slot)
+{
+#ifdef GL_SHADERS
+	if (slot < 0 || slot >= HWR_MAXSHADERS)
+		I_Error("CompileShader: Invalid slot %d", slot);
+
+	if (Shader_Compile())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+#else
+	(void)slot;
+	return false;
+#endif
 }
 
 EXPORT void HWRAPI(SetShaderInfo) (hwdshaderinfo_t info, INT32 value)
@@ -324,15 +360,38 @@ EXPORT void HWRAPI(ClearMipMapCache) (void)
 }
 
 
-// -----------------+
-// ReadRect         : Read a rectangle region of the truecolor framebuffer
-//                  : store pixels as RGBA8888
-// Returns          : RGBA8888 pixel array stored in dst_data
-// -----------------+
-EXPORT void HWRAPI(ReadRect) (INT32 x, INT32 y, INT32 width, INT32 height, INT32 dst_stride, UINT32 *dst_data)
+// Writes screen texture tex into dst_data.
+// Pixel format is 24-bit RGB. Row order is top to bottom.
+// Dimensions are screen_width * screen_height.
+EXPORT void HWRAPI(ReadScreenTexture) (int tex, UINT8 *dst_data)
 {
-	(void)dst_stride;
-	GLBackend_ReadRectRGBA(x, y, width, height, dst_data);
+	INT32 i;
+	int dst_stride = screen_width * 3; // stride between rows of image data
+	GLubyte*top = (GLvoid*)dst_data, *bottom = top + dst_stride * (screen_height - 1);
+	GLubyte *row;
+	row = malloc(dst_stride);
+	if (!row) return;
+	// at the time this function is called, generic2 can be found drawn on the framebuffer
+	// if some other screen texture is needed, draw it to the framebuffer
+	// and draw generic2 back after reading the framebuffer.
+	// this hack is for some reason **much** faster than the simple solution of using glGetTexImage.
+	if (tex != HWD_SCREENTEXTURE_GENERIC2)
+		DrawScreenTexture(tex, NULL, 0);
+	pglPixelStorei(GL_PACK_ALIGNMENT, 1);
+	pglReadPixels(0, 0, screen_width, screen_height, GL_RGB, GL_UNSIGNED_BYTE, dst_data);
+	if (tex != HWD_SCREENTEXTURE_GENERIC2)
+		DrawScreenTexture(HWD_SCREENTEXTURE_GENERIC2, NULL, 0);
+	// Flip image upside down.
+	// In other words, convert OpenGL's "bottom->top" row order into "top->bottom".
+	for(i = 0; i < screen_height/2; i++)
+	{
+		memcpy(row, top, dst_stride);
+		memcpy(top, bottom, dst_stride);
+		memcpy(bottom, row, dst_stride);
+		top += dst_stride;
+		bottom -= dst_stride;
+	}
+	free(row);
 }
 
 
@@ -849,7 +908,7 @@ EXPORT void HWRAPI(SetSpecialState) (hwdspecialstate_t IdState, INT32 Value)
 			break;
 
 		case HWD_SET_SHADERS:
-			gl_allowshaders = (hwdshaderoption_t)Value;
+			gl_allowshaders = (hwdshaderstage_t)Value;
 			break;
 
 		case HWD_SET_TEXTUREFILTERMODE:
@@ -1568,7 +1627,14 @@ static void DoWipe(boolean tinted, boolean isfadingin, boolean istowhite)
 	tex_downloaded = endScreenWipe;
 }
 
-EXPORT void HWRAPI(DoScreenWipe)(void)
+EXPORT void HWRAPI(DrawScreenTexture)(int tex, FSurfaceInfo *surf, FBITFIELD polyflags)
+{
+	return; //bitten todo
+}
+
+
+//EXPORT void HWRAPI(DoScreenWipe)(void)
+EXPORT void HWRAPI(DoScreenWipe) (int wipeStart, int wipeEnd, FSurfaceInfo *surf, FBITFIELD polyFlags)
 {
 	DoWipe(false, false, false);
 }
@@ -1579,7 +1645,7 @@ EXPORT void HWRAPI(DoTintedWipe)(boolean isfadingin, boolean istowhite)
 }
 
 // Create a texture from the screen.
-EXPORT void HWRAPI(MakeScreenTexture) (void)
+EXPORT void HWRAPI(MakeScreenTexture) (int tex)
 {
 	INT32 texsize = 512;
 	boolean firstTime = (screentexture == 0);
@@ -1708,6 +1774,26 @@ EXPORT void HWRAPI(DrawFinalScreenTexture)(int width, int height)
 	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	tex_downloaded = finalScreenTexture;
+}
+
+EXPORT void HWRAPI(SetPaletteLookup)(UINT8 *lut)
+{
+	return; //bitten todo
+}
+
+EXPORT UINT32 HWRAPI(CreateLightTable)(RGBA_t *hw_lighttable)
+{
+	return 1; // bitten todo
+}
+
+EXPORT void HWRAPI(ClearLightTables)(void)
+{
+	return; // bitten todo
+}
+
+EXPORT void HWRAPI(SetScreenPalette)(RGBA_t *palette)
+{
+	return; //bitten todo
 }
 
 #endif //HWRENDER

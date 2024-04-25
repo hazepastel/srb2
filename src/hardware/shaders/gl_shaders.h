@@ -19,7 +19,7 @@
 #include "../r_glcommon/r_glcommon.h"
 
 extern boolean gl_shadersenabled;
-extern hwdshaderoption_t gl_allowshaders;
+extern hwdshaderstage_t gl_allowshaders;
 
 #ifdef GL_SHADERS
 
@@ -90,6 +90,8 @@ typedef enum
 
 typedef struct gl_shader_s
 {
+	char *vertex_shader;
+	char *fragment_shader;
 	GLuint program;
 	boolean custom;
 

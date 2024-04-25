@@ -73,6 +73,8 @@ endif
 
 ifeq ($(SDL), 1)
 include $(MAKE_DIR)/sdl.mk
+else ifeq ($(DEDICATED), 1)
+include $(MAKE_DIR)/dedicated.mk
 else ifndef ANDROID
 include $(MAKE_DIR)/dummy.mk
 endif

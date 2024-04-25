@@ -103,7 +103,10 @@ extern consvar_t cv_inttime, cv_coopstarposts, cv_cooplives, cv_advancemap, cv_p
 extern consvar_t cv_overtime;
 extern consvar_t cv_startinglives;
 
-// for F_finale.c
+extern consvar_t cv_gravity, cv_movebob;
+extern consvar_t cv_tailspickup;
+
+// for f_finale.c
 extern consvar_t cv_rollingdemos;
 
 extern consvar_t cv_ringslinger, cv_soundtest;
@@ -156,6 +159,7 @@ typedef enum
 	XD_LUACMD,      // 22
 	XD_LUAVAR,      // 23
 	XD_LUAFILE,     // 24
+	XD_MUTEPLAYER,  // 25
 	MAXNETXCMD
 } netxcmd_t;
 

@@ -567,12 +567,11 @@ INT32 GLBackend_GetAlphaTestShader(INT32 type)
 #ifdef HAVE_GLES2
 	switch (type)
 	{
-		case SHADER_DEFAULT: return SHADER_ALPHA_TEST;
+		case SHADER_NONE: return SHADER_ALPHA_TEST;
 		case SHADER_FLOOR: return SHADER_FLOOR_ALPHA_TEST;
 		case SHADER_WALL: return SHADER_WALL_ALPHA_TEST;
 		case SHADER_SPRITE: return SHADER_SPRITE_ALPHA_TEST;
 		case SHADER_MODEL: return SHADER_MODEL_ALPHA_TEST;
-		case SHADER_MODEL_LIGHTING: return SHADER_MODEL_LIGHTING_ALPHA_TEST;
 		case SHADER_WATER: return SHADER_WATER_ALPHA_TEST;
 		default: break;
 	}
@@ -586,12 +585,11 @@ INT32 GLBackend_InvertAlphaTestShader(INT32 type)
 #ifdef HAVE_GLES2
 	switch (type)
 	{
-		case SHADER_ALPHA_TEST: return SHADER_DEFAULT;
+		case SHADER_ALPHA_TEST: return SHADER_NONE;
 		case SHADER_FLOOR_ALPHA_TEST: return SHADER_FLOOR;
 		case SHADER_WALL_ALPHA_TEST: return SHADER_WALL;
 		case SHADER_SPRITE_ALPHA_TEST: return SHADER_SPRITE;
 		case SHADER_MODEL_ALPHA_TEST: return SHADER_MODEL;
-		case SHADER_MODEL_LIGHTING_ALPHA_TEST: return SHADER_MODEL_LIGHTING;
 		case SHADER_WATER_ALPHA_TEST: return SHADER_WATER;
 		default: break;
 	}
@@ -602,13 +600,6 @@ INT32 GLBackend_InvertAlphaTestShader(INT32 type)
 
 INT32 GLBackend_GetShaderType(INT32 type)
 {
-#ifdef GL_SHADERS
-	// If using model lighting, set the appropriate shader.
-	// However don't override a custom shader.
-	if (type == SHADER_MODEL && model_lighting
-	&& !(gl_shaders[SHADER_MODEL].custom && !gl_shaders[SHADER_MODEL_LIGHTING].custom))
-		type = SHADER_MODEL_LIGHTING;
-#endif
 
 #ifdef HAVE_GLES2
 	if (!alpha_test)
@@ -616,12 +607,11 @@ INT32 GLBackend_GetShaderType(INT32 type)
 
 	switch (type)
 	{
-		case SHADER_DEFAULT:
+		case SHADER_NONE:
 		case SHADER_FLOOR:
 		case SHADER_WALL:
 		case SHADER_SPRITE:
 		case SHADER_MODEL:
-		case SHADER_MODEL_LIGHTING:
 		case SHADER_WATER:
 		{
 			INT32 newshader = GLBackend_GetAlphaTestShader(type);

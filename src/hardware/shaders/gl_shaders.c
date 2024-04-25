@@ -14,7 +14,7 @@
 #include "../../r_local.h" // For rendertimefrac, used for the leveltime shader uniform
 
 boolean gl_shadersenabled = false;
-hwdshaderoption_t gl_allowshaders = HWD_SHADEROPTION_OFF;
+hwdshaderstage_t gl_allowshaders = 0;
 
 typedef GLuint 	(R_GL_APIENTRY *PFNglCreateShader)		(GLenum);
 typedef void 	(R_GL_APIENTRY *PFNglShaderSource)		(GLuint, GLsizei, const GLchar**, GLint*);
@@ -320,7 +320,7 @@ void Shader_Set(int type)
 	gl_shader_t *shader = gl_shaderstate.current;
 
 #ifndef HAVE_GLES2
-	if (gl_allowshaders == HWD_SHADEROPTION_OFF)
+	if (gl_allowshaders == 0)
 		return;
 #endif
 
@@ -338,17 +338,17 @@ void Shader_Set(int type)
 
 				if (!baseshader->program)
 				{
-					baseshader = &gl_shaders[SHADER_DEFAULT];
+					baseshader = &gl_shaders[NULL];
 					alpha_test = false;
 				}
 			}
 			else
 #endif
-				baseshader = &gl_shaders[SHADER_DEFAULT];
+				baseshader = &gl_shaders[NULL];
 		}
 
 		if (usershader->program)
-			shader = (gl_allowshaders == HWD_SHADEROPTION_NOCUSTOM) ? baseshader : usershader;
+			shader = (gl_allowshaders == 2) ? baseshader : usershader;
 		else
 			shader = baseshader;
 
@@ -374,7 +374,7 @@ void Shader_Set(int type)
 void Shader_UnSet(void)
 {
 #ifdef HAVE_GLES2
-	Shader_Set(SHADER_DEFAULT);
+	Shader_Set(SHADER_NONE);
 	Shader_SetUniforms(NULL, NULL, NULL, NULL);
 #else
 	gl_shaderstate.current = NULL;
@@ -583,8 +583,8 @@ boolean Shader_Compile(void)
 	if (!GLExtension_shaders)
 		return false;
 
-	gl_customshaders[SHADER_DEFAULT].vertex = NULL;
-	gl_customshaders[SHADER_DEFAULT].fragment = NULL;
+	gl_customshaders[SHADER_NONE].vertex = NULL;
+	gl_customshaders[SHADER_NONE].fragment = NULL;
 
 	for (i = 0; gl_shadersources[i].vertex && gl_shadersources[i].fragment; i++)
 	{
@@ -610,13 +610,13 @@ boolean Shader_Compile(void)
 		{
 			shader->program = 0;
 #ifdef HAVE_GLES2
-			if (i == SHADER_DEFAULT)
+			if (i == SHADER_NONE)
 				return false;
 #endif
 		}
 
 		// Compile custom shader
-		if ((i == SHADER_DEFAULT) || !(gl_customshaders[i].vertex || gl_customshaders[i].fragment))
+		if ((i == SHADER_NONE) || !(gl_customshaders[i].vertex || gl_customshaders[i].fragment))
 			continue;
 
 		// 18032019
@@ -633,7 +633,7 @@ boolean Shader_Compile(void)
 	}
 
 #ifdef HAVE_GLES2
-	Shader_Set(SHADER_DEFAULT);
+	Shader_Set(SHADER_NONE);
 	pglUseProgram(gl_shaderstate.program);
 	gl_shaderstate.changed = false;
 #endif

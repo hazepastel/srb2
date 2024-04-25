@@ -647,7 +647,7 @@ static void DrawNavigationButton(INT32 nav)
 		if (!symb)
 			return;
 
-		font = hu_font[toupper(symb) - HU_FONTSTART];
+		font = hu_font.chars[toupper(symb) - HU_FONTSTART];
 		if (!font)
 			return;
 

@@ -203,7 +203,7 @@ HMS_set_cert (CURL *curl)
 }
 #endif
 
-static struct HMS_buffer *
+FUNCDEBUG static struct HMS_buffer *
 HMS_connect (int proto, const char *format, ...)
 {
 	va_list ap;
@@ -566,7 +566,8 @@ HMS_unlist (void)
 	if (! hms)
 		return 0;
 
-	curl_easy_setopt(hms->curl, CURLOPT_CUSTOMREQUEST, "POST");
+	curl_easy_setopt(hms->curl, CURLOPT_POST, 1);
+	curl_easy_setopt(hms->curl, CURLOPT_POSTFIELDSIZE, 0);
 
 	ok = HMS_do(hms);
 	HMS_end(hms);
@@ -581,7 +582,8 @@ HMS_unlist (void)
 		if (! hms)
 			return 0;
 
-		curl_easy_setopt(hms->curl, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_easy_setopt(hms->curl, CURLOPT_POST, 1);
+		curl_easy_setopt(hms->curl, CURLOPT_POSTFIELDSIZE, 0);
 
 		ok = HMS_do(hms);
 		HMS_end(hms);
