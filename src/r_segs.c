@@ -3170,7 +3170,7 @@ void R_StoreWallRange(INT32 start, INT32 stop)
 
 	didsolidcol = false;
 
-	if (!segtextured && !numffloors)
+	if (!segtextured && !numffloors && !numbackffloors)
 	{
 		if (markfloor || markceiling)
 			R_MarkSegBounds();
