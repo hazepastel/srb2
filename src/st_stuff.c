@@ -566,6 +566,7 @@ static void ST_drawDebugInfo(void)
 		const fixed_t d = AngleFixed(stplyr->drawangle);
 
 		V_DrawDebugLine(va("SHIELD: %5x", stplyr->powers[pw_shield]));
+		V_DrawDebugLine(va("STRONG: %5x", stplyr->powers[pw_strong]));
 		V_DrawDebugLine(va("SCALE: %5d%%", (stplyr->mo->scale*100)>>FRACBITS));
 		V_DrawDebugLine(va("CARRY: %5x", stplyr->powers[pw_carry]));
 		V_DrawDebugLine(va("AIR: %4d, %3d", stplyr->powers[pw_underwater], stplyr->powers[pw_spacetime]));
@@ -589,7 +590,7 @@ static void ST_drawDebugInfo(void)
 		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
 		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
-		V_DrawDebugFlag(((stplyr->pflags & PF_APPLYAUTOBRAKE) ? V_GREENMAP : V_REDMAP), "AA");
+		V_DrawDebugFlag(((stplyr->charflags & SF_NOSHIELDABILITY) ? V_GREENMAP : V_REDMAP), "NS");
 		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
 		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GLIDING)        ? V_GREENMAP : V_REDMAP), "GL");
@@ -1212,23 +1213,10 @@ static void ST_drawInput(void)
 	y -= 13;
 	if (stplyr->powers[pw_carry] != CR_NIGHTSMODE)
 	{
-		if (stplyr->pflags & PF_AUTOBRAKE)
-		{
-			V_DrawThinString(x, y,
-				hudinfo[HUD_INPUT].f|
-				((!stplyr->powers[pw_carry]
-				&& (stplyr->pflags & PF_APPLYAUTOBRAKE)
-				&& !(stplyr->cmd.sidemove || stplyr->cmd.forwardmove)
-				&& (stplyr->rmomx || stplyr->rmomy)
-				&& (!stplyr->capsule || (stplyr->capsule->reactiontime != (stplyr-players)+1)))
-				? 0 : V_GRAYMAP),
-				"AUTOBRAKE");
-			y -= 8;
-		}
 		switch (P_ControlStyle(stplyr))
 		{
 		case CS_LMAOGALOG:
-			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "ANALOG");
+			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "BAD TIME");
 			y -= 8;
 			break;
 
@@ -1238,12 +1226,12 @@ static void ST_drawInput(void)
 			break;
 
 		case CS_STANDARD:
-			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "MANUAL");
+			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "WANUAL");
 			y -= 8;
 			break;
 
 		case CS_LEGACY:
-			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "STRAFE");
+			V_DrawThinString(x, y, hudinfo[HUD_INPUT].f, "MANUAL");
 			y -= 8;
 			break;
 
@@ -1269,19 +1257,19 @@ tic_t lt_exitticker = 0, lt_endtime = 0;
 //
 static void ST_cacheLevelTitle(void)
 {
-#define SETPATCH(default, warning, custom, idx) \
+#define SETPATCH(def, warning, custom, idx) \
 { \
 	lumpnum_t patlumpnum = LUMPERROR; \
 	if (mapheaderinfo[gamemap-1]->custom[0] != '\0') \
 	{ \
-		patlumpnum = W_CheckNumForName(mapheaderinfo[gamemap-1]->custom); \
+		patlumpnum = W_CheckNumForPatchName(mapheaderinfo[gamemap-1]->custom); \
 		if (patlumpnum != LUMPERROR) \
 			lt_patches[idx] = (patch_t *)W_CachePatchNum(patlumpnum, PU_HUDGFX); \
 	} \
 	if (patlumpnum == LUMPERROR) \
 	{ \
 		if (!(mapheaderinfo[gamemap-1]->levelflags & LF_WARNINGTITLE)) \
-			lt_patches[idx] = (patch_t *)W_CachePatchName(default, PU_HUDGFX); \
+			lt_patches[idx] = (patch_t *)W_CachePatchName(def, PU_HUDGFX); \
 		else \
 			lt_patches[idx] = (patch_t *)W_CachePatchName(warning, PU_HUDGFX); \
 	} \
@@ -2841,7 +2829,7 @@ static void ST_overlayDrawer(void)
 		}
 		else if (cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 			ST_drawPowerupHUD();  // same as it ever was...
-		
+
 	}
 	else if (!(netgame || multiplayer) && cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 		ST_drawPowerupHUD(); // same as it ever was...

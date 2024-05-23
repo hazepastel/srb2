@@ -4483,6 +4483,8 @@ const char *const PLAYERFLAG_LIST[] = {
 	"CANCARRY", // Can carry?
 	"FINISHED",
 
+	"SHIELDDOWN", // Shield has been pressed.
+
 	NULL // stop loop here.
 };
 
@@ -4829,7 +4831,9 @@ const char *const POWERS_LIST[] = {
 
 	"IGNORELATCH",
 
-	"STRONG"
+	"STRONG",
+
+	"SPRINGLOCK"
 };
 
 const char *const HUDITEMS_LIST[] = {
@@ -5246,6 +5250,9 @@ struct int_const_s const INT_CONST[] = {
 	// Dashmode constants
 	{"DASHMODE_THRESHOLD",DASHMODE_THRESHOLD},
 	{"DASHMODE_MAX",DASHMODE_MAX},
+
+	// rphys global
+	{"rphys", rphys},
 
 	// Character abilities!
 	// Primary

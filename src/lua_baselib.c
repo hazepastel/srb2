@@ -641,7 +641,7 @@ static int lib_pSpawnMobj(lua_State *L)
 	NOHUD
 	INLEVEL
 	NOSPAWNNULL
-	LUA_PushUserdata(L, P_SpawnMobj(x, y, z, type), META_MOBJ);
+	LUA_PushUserdata(L, P_SpawnMobj(x, y, z, type, NULL), META_MOBJ);
 	return 1;
 }
 
@@ -1607,6 +1607,10 @@ static int lib_pInstaThrust(lua_State *L)
 	if (!mo)
 		return LUA_ErrInvalid(L, "mobj_t");
 	P_InstaThrust(mo, angle, move);
+	if (mo->player)
+	{
+		mo->player->powers[pw_justsprung] = TICRATE>>1;
+	}
 	return 0;
 }
 
@@ -1923,7 +1927,7 @@ static int lib_pTeleportMove(lua_State *L)
 	INLEVEL
 	if (!thing)
 		return LUA_ErrInvalid(L, "mobj_t");
-	LUA_Deprecated(L, "P_TeleportMove", "P_SetOrigin\" or \"P_MoveOrigin");
+	//LUA_Deprecated(L, "P_TeleportMove", "P_SetOrigin\" or \"P_MoveOrigin");
 	lua_pushboolean(L, P_MoveOrigin(thing, x, y, z));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
 	P_SetTarget(&tmthing, ptmthing);
@@ -1974,7 +1978,7 @@ static int lib_pLineIsBlocking(lua_State *L)
 		return LUA_ErrInvalid(L, "mobj_t");
 	if (!line)
 		return LUA_ErrInvalid(L, "line_t");
-	
+
 	// P_LineOpening in P_LineIsBlocking sets these variables.
 	// We want to keep their old values after so that whatever
 	// map collision code uses them doesn't get messed up.
@@ -1987,9 +1991,9 @@ static int lib_pLineIsBlocking(lua_State *L)
 	pslope_t *oldopenbottomslope = openbottomslope;
 	ffloor_t *oldopenfloorrover = openfloorrover;
 	ffloor_t *oldopenceilingrover = openceilingrover;
-	
+
 	lua_pushboolean(L, P_LineIsBlocking(mo, line));
-	
+
 	opentop = oldopentop;
 	openbottom = oldopenbottom;
 	openrange = oldopenrange;
@@ -1999,7 +2003,7 @@ static int lib_pLineIsBlocking(lua_State *L)
 	openbottomslope = oldopenbottomslope;
 	openfloorrover = oldopenfloorrover;
 	openceilingrover = oldopenceilingrover;
-	
+
 	return 1;
 }
 

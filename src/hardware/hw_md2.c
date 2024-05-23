@@ -1399,8 +1399,6 @@ boolean HWR_DrawModel(gl_vissprite_t *spr)
 				{
 					if (spr->mobj->player->charflags & SF_MACHINE)
 						skinnum = TC_DASHMODE;
-					else
-						skinnum = TC_RAINBOW;
 				}
 				else if (spr->mobj->skin && spr->mobj->sprite == SPR_PLAY)
 					skinnum = ((skin_t*)spr->mobj->skin)->skinnum;
