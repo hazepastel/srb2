@@ -359,7 +359,7 @@ static void I_ReportSignal(int num, int coredumped)
 	const char *sigmsg, *signame;
 	char ttl[128];
 	char sigttl[512] = "Process killed by signal: ";
-	const char *reportmsg = "\n\nTo help us figure out the cause, you can visit our official Discord server\nwhere you will find more instructions on how to submit a crash report.\n\nSorry for the inconvenience!";
+	const char *reportmsg = "\n\nIf this doesn't happen in vanilla SRB2, send the author your srb2win-reveries.rpt file.";
 
 	switch (num)
 	{
@@ -368,15 +368,15 @@ static void I_ReportSignal(int num, int coredumped)
 //		sigmsg = "SRB2 was interrupted prematurely by the user.";
 //		break;
 	case SIGILL:
-		sigmsg = "SRB2 has attempted to execute an illegal instruction and needs to close.";
+		sigmsg = "Labyrinth zone moment?\nSRB2R Error: illegal instruction";
 		signame = "SIGILL"; // illegal instruction - invalid function image
 		break;
 	case SIGFPE:
-		sigmsg = "SRB2 has encountered a mathematical exception and needs to close.";
+		sigmsg = "Someone divided by zero again!\nSRB2R Error: mathematical exception";
 		signame = "SIGFPE"; // mathematical exception
 		break;
 	case SIGSEGV:
-		sigmsg = "SRB2 has attempted to access a memory location that it shouldn't and needs to close.";
+		sigmsg = "Suddenly, a SIGSEGV attacks!\nSRB2R Error: segment violation";
 		signame = "SIGSEGV"; // segment violation
 		break;
 //	case SIGTERM:
@@ -388,11 +388,11 @@ static void I_ReportSignal(int num, int coredumped)
 //		sigttl = "SIGBREAK" // Ctrl-Break sequence
 //		break;
 	case SIGABRT:
-		sigmsg = "SRB2 was terminated by an abort signal.";
+		sigmsg = "All abort!\nSRB2R Error: abnormal termination";
 		signame = "SIGABRT"; // abnormal termination triggered by abort call
 		break;
 	default:
-		sigmsg = "SRB2 was terminated by an unknown signal.";
+		sigmsg = "I'll have two number 9s, a number 9 large...\nSRB2R Error: termination by unknown signal:";
 
 		sprintf(ttl, "number %d", num);
 		if (coredumped)
@@ -418,8 +418,8 @@ static void I_ReportSignal(int num, int coredumped)
 		return;
 
 	const SDL_MessageBoxButtonData buttons[] = {
-		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0,		"OK" },
-		{ 										0, 1,  "Discord" },
+		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0,		"Close" },
+		{ 										0, 1,  "Report" },
 	};
 
 	const SDL_MessageBoxData messageboxdata = {
@@ -438,7 +438,7 @@ static void I_ReportSignal(int num, int coredumped)
 
 #if SDL_VERSION_ATLEAST(2,0,14)
 	if (buttonid == 1)
-		SDL_OpenURL("https://www.srb2.org/discord");
+		SDL_OpenURL("https://mb.srb2.org/threads/reveries.35447");
 #endif
 }
 
