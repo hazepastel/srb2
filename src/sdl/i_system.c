@@ -1802,7 +1802,7 @@ void I_UpdateMumble(const mobj_t *mobj, const listener_t listener)
 		return;
 
 	if(mumble->uiVersion != 2) {
-		wcsncpy(mumble->name, L"SRB2 "VERSIONSTRINGW, 256);
+		wcsncpy(mumble->name, L"SRB2R "VERSIONSTRINGW, 256);
 		wcsncpy(mumble->description, L"Sonic Robo Blast 2 with integrated Mumble Link support.", 2048);
 		mumble->uiVersion = 2;
 	}
@@ -2455,7 +2455,7 @@ INT32 I_StartupSystem(void)
 	I_OutputMsg("Linked with SDL version: %d.%d.%d\n",
 	 SDLlinked.major, SDLlinked.minor, SDLlinked.patch);
 	if (SDL_Init(0) < 0)
-		I_Error("SRB2: SDL System Error: %s", SDL_GetError()); //Alam: Oh no....
+		I_Error("SRB2R: SDL System Error: %s", SDL_GetError()); //Alam: Oh no....
 #ifndef NOMUMBLE
 	I_SetupMumble();
 #endif
@@ -2571,7 +2571,7 @@ void I_Error(const char *error, ...)
 			// on the target system
 			if (!M_CheckParm("-dedicated"))
 				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-					"SRB2 "VERSIONSTRING" Recursive Error",
+					"SRB2R "VERSIONSTRING" Recursive Error",
 					buffer, NULL);
 
 			W_Shutdown();
@@ -2614,7 +2614,7 @@ void I_Error(const char *error, ...)
 	// on the target system
 	if (!M_CheckParm("-dedicated"))
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-			"SRB2 "VERSIONSTRING" Error",
+			"SRB2R "VERSIONSTRING" Error",
 			buffer, NULL);
 	// Note that SDL_ShowSimpleMessageBox does *not* require SDL to be
 	// initialized at the time, so calling it after SDL_Quit() is
