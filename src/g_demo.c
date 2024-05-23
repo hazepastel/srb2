@@ -549,6 +549,9 @@ void G_ConsGhostTic(void)
 
 	testmo = players[0].mo;
 
+	if (P_MobjWasRemoved(testmo))
+		return; // No valid mobj exists, probably because of unexpected quit
+
 	// Grab ghost data.
 	ziptic = READUINT8(demo_p);
 	if (ziptic & GZT_XYZ)
@@ -1581,11 +1584,6 @@ void G_BeginRecording(void)
 			buf |= 0x04;
 			pflags |= PF_DIRECTIONCHAR;
 		}
-		if (cv_autobrake.value)
-		{
-			buf |= 0x08;
-			pflags |= PF_AUTOBRAKE;
-		}
 		if (cv_usejoystick.value)
 			buf |= 0x10;
 		CV_SetValue(&cv_showinputjoy, !!(cv_usejoystick.value));
@@ -2220,8 +2218,6 @@ void G_DoPlayDemo(char *defdemoname)
 			pflags |= PF_ANALOGMODE;
 		if (buf & 0x04)
 			pflags |= PF_DIRECTIONCHAR;
-		if (buf & 0x08)
-			pflags |= PF_AUTOBRAKE;
 		CV_SetValue(&cv_showinputjoy, !!(buf & 0x10));
 	}
 

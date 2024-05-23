@@ -1040,6 +1040,7 @@ boolean F_IntroResponder(event_t *event)
 // =========
 static const char *credits[] = {
 	"\1Sonic Robo Blast 2",
+	"\1rphys edition",
 	"\1Credits",
 	"",
 	"\1Game Design",
@@ -1057,6 +1058,7 @@ static const char *credits[] = {
 	"Sally \"TehRealSalt\" Cochenour",
 	"Gregor \"Oogaland\" Dick",
 	"Callum Dickinson",
+	"Claire \"clairebun\" Ellis",
 	"Scott \"Graue\" Feeney",
 	"Victor \"SteelT\" Fuentes",
 	"Nathan \"Jazz\" Giroux",
@@ -1070,8 +1072,7 @@ static const char *credits[] = {
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"\"Kaito Sinclaire\"",
 	"\"Kalaron\"", // Coded some of Sryder13's collection of OpenGL fixes, especially fog
-	"\"katsy\"",
-	"Ronald \"Furyhunter\" Kinard", // The SDL2 port
+	"Ronald \"Eidolon\" Kinard", // The SDL2 port, uncapped
 	"\"Lat'\"", // SRB2-CHAT, the chat window from Kart
 	"\"LZA\"",
 	"Matthew \"Shuffle\" Marsalko",
@@ -1086,6 +1087,7 @@ static const char *credits[] = {
 	"Tasos \"tatokis\" Sahanidis", // Corrected C FixedMul, making 64-bit builds netplay compatible
 	"Riku \"Ors\" Salminen", // Demo consistency improvements
 	"Jonas \"MascaraSnake\" Sauer",
+	"Fainche \"katsy\" Shear",
 	"Wessel \"sphere\" Smit",
 	"\"SSNTails\"",
 	"\"VelocitOni\"", // Wrote the original dashmode script
@@ -1116,6 +1118,7 @@ static const char *credits[] = {
 	"Kepa \"Nev3r\" Iceta",
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"William \"GuyWithThePie\" Kloppenberg",
+	"\"Krabs\"",
 	"Alice \"Alacroix\" de Lemos",
 	"Logan \"Hyperchaotix\" McCloud",
 	"Alexander \"DrTapeworm\" Moench-Ford",
@@ -1422,9 +1425,6 @@ boolean F_CreditResponder(event_t *event)
 			key = KEY_RIGHTARROW;
 			break;
 	}
-
-	if (!(serverGamedata->timesBeaten) && !(netgame || multiplayer) && !cv_debug)
-		return false;
 
 	if (event->type != ev_keydown)
 		return false;
@@ -2336,7 +2336,7 @@ void F_SkyScroll(const char *patchname)
 }
 
 #define LOADTTGFX(arr, name, maxf) \
-lumpnum = W_CheckNumForName(name); \
+lumpnum = W_CheckNumForPatchName(name); \
 if (lumpnum != LUMPERROR) \
 { \
 	arr[0] = W_CachePatchName(name, PU_PATCH_LOWPRIORITY); \
@@ -2350,7 +2350,7 @@ else if (strlen(name) <= 6) \
 	{ \
 		sprintf(&lumpname[cnt], "%.2hu", (UINT16)(i+1)); \
 		lumpname[8] = 0; \
-		lumpnum = W_CheckNumForName(lumpname); \
+		lumpnum = W_CheckNumForPatchName(lumpname); \
 		if (lumpnum != LUMPERROR) \
 			arr[i] = W_CachePatchName(lumpname, PU_PATCH_LOWPRIORITY); \
 		else \
@@ -4116,7 +4116,7 @@ static void F_GetPageTextGeometry(UINT8 *pagelines, boolean *rightside, INT32 *b
 	// reuse:
 	// cutnum -> promptnum
 	// scenenum -> pagenum
-	lumpnum_t iconlump = W_CheckNumForName(textprompts[cutnum]->page[scenenum].iconname);
+	lumpnum_t iconlump = W_CheckNumForPatchName(textprompts[cutnum]->page[scenenum].iconname);
 
 	*pagelines = textprompts[cutnum]->page[scenenum].lines ? textprompts[cutnum]->page[scenenum].lines : 4;
 	*rightside = (iconlump != LUMPERROR && textprompts[cutnum]->page[scenenum].rightside);
@@ -4508,7 +4508,7 @@ void F_TextPromptDrawer(void)
 	if (!promptactive)
 		return;
 
-	iconlump = W_CheckNumForName(textprompts[cutnum]->page[scenenum].iconname);
+	iconlump = W_CheckNumForPatchName(textprompts[cutnum]->page[scenenum].iconname);
 	F_GetPageTextGeometry(&pagelines, &rightside, &boxh, &texth, &texty, &namey, &chevrony, &textx, &textr);
 
 	// Draw gfx first

@@ -1308,7 +1308,7 @@ static void SendNameAndColor(void)
 
 		SetColorLocal(consoleplayer, cv_playercolor.value);
 
-		if (splitscreen)
+		if (splitscreen || pickedchar == -1)
 			SetSkinLocal(consoleplayer, R_SkinAvailable(cv_skin.string));
 		else
 			SetSkinLocal(consoleplayer, pickedchar);
@@ -1508,8 +1508,6 @@ void SendWeaponPref(void)
 		buf[0] |= 2;
 	if (cv_directionchar[0].value == 1)
 		buf[0] |= 4;
-	if (cv_autobrake.value)
-		buf[0] |= 8;
 	SendNetXCmd(XD_WEAPONPREF, buf, 1);
 }
 
@@ -1524,8 +1522,6 @@ void SendWeaponPref2(void)
 		buf[0] |= 2;
 	if (cv_directionchar[1].value == 1)
 		buf[0] |= 4;
-	if (cv_autobrake2.value)
-		buf[0] |= 8;
 	SendNetXCmd2(XD_WEAPONPREF, buf, 1);
 }
 
@@ -1533,15 +1529,13 @@ static void Got_WeaponPref(UINT8 **cp,INT32 playernum)
 {
 	UINT8 prefs = READUINT8(*cp);
 
-	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_AUTOBRAKE);
+	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR);
 	if (prefs & 1)
 		players[playernum].pflags |= PF_FLIPCAM;
 	if (prefs & 2)
 		players[playernum].pflags |= PF_ANALOGMODE;
 	if (prefs & 4)
 		players[playernum].pflags |= PF_DIRECTIONCHAR;
-	if (prefs & 8)
-		players[playernum].pflags |= PF_AUTOBRAKE;
 }
 
 void D_SendPlayerConfig(void)
@@ -4608,7 +4602,7 @@ static void Command_ExitLevel_f(void)
 			SendNetXCmd(XD_EXITLEVEL, NULL, 0);
 			return;
 		}
-		
+
 		// Allow exiting without cheating if at least one player beat the level
 		// Consistent with just setting playersforexit to one
 		if (splitscreen || multiplayer)
@@ -4622,7 +4616,7 @@ static void Command_ExitLevel_f(void)
 					continue;
 				if (players[i].lives <= 0)
 					continue;
-		
+
 				if ((players[i].pflags & PF_FINISHED) || players[i].exiting)
 				{
 					SendNetXCmd(XD_EXITLEVEL, NULL, 0);
@@ -4630,7 +4624,7 @@ static void Command_ExitLevel_f(void)
 				}
 			}
 		}
-		
+
 		// Only consider it a cheat if we're not allowed to go to the next map
 		if (M_CampaignWarpIsCheat(gametype, G_GetNextMap(true, true) + 1, serverGamedata))
 			CONS_Alert(CONS_NOTICE, M_GetText("Cheats must be enabled to force exit to a locked level!\n"));
@@ -4769,7 +4763,7 @@ static void Command_Cheats_f(void)
 			G_SetUsedCheats(false);
 		return;
 	}
-	
+
 	if (usedCheats)
 		CONS_Printf(M_GetText("Cheats are enabled, the game cannot be saved.\n"));
 	else
@@ -4941,8 +4935,10 @@ static boolean Skin2_CanChange(const char *valstr)
   */
 static void Skin_OnChange(void)
 {
+	pickedchar = R_SkinAvailable(cv_skin.string); // Update picked character for single player
+	
 	if (!Playing())
-		return;
+		return; // do whatever you want
 
 	if (!(multiplayer || netgame)) // In single player.
 	{
@@ -4957,8 +4953,7 @@ static void Skin_OnChange(void)
 		SetSkinLocal(consoleplayer, R_SkinAvailable(cv_skin.string));
 		return;
 	}
-
-	SendNameAndColor();
+	SendNameAndColor(); // Send skin to server
 }
 
 /** Sends a skin change for the secondary splitscreen player, unless that

@@ -158,7 +158,7 @@ typedef enum
 	PF_FORCESTRAFE = 1<<28, // Turning inputs are translated into strafing inputs
 	PF_CANCARRY    = 1<<29, // Can carry another player?
 	PF_FINISHED    = 1<<30, // The player finished the level. NOT the same as exiting
-	
+
 	// True if shield button down last tic
 	// This may be the final flag, but 2.3 could free up the others
 	PF_SHIELDDOWN    = 1<<31,
@@ -330,6 +330,8 @@ typedef enum
 	pw_ignorelatch, // Don't grab onto CR_GENERIC, add 32768 (powers[pw_ignorelatch] & 1<<15) to avoid ALL not-NiGHTS CR_ types
 
 	pw_strong, // Additional properties for powerful attacks
+
+	pw_springlock, // nocontrol sucks so here's nocontrol but better
 
 	NUMPOWERS
 } powertype_t;
@@ -515,10 +517,14 @@ typedef struct player_s
 	INT32 deadtimer; // End game if game over lasts too long
 	tic_t exiting; // Exitlevel timer
 
+	SINT8 rsprung; //custom gravity behaviour on springs
+
 	UINT8 homing; // Are you homing?
 	tic_t dashmode; // counter for dashmode ability
 
 	tic_t skidtime; // Skid timer
+
+	tic_t jerboatime; // Coyote jump timer
 
 	////////////////////////////
 	// Conveyor Belt Movement //
@@ -629,9 +635,11 @@ typedef struct player_s
 
 // Values for dashmode
 #define DASHMODE_THRESHOLD (3*TICRATE)
-#define DASHMODE_MAX (DASHMODE_THRESHOLD + 3)
+#define DASHMODE_MAX (DASHMODE_THRESHOLD + 2)
 
 // Value for infinite lives
 #define INFLIVES 0x7F
+
+#define rphys 62
 
 #endif

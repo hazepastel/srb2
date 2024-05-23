@@ -1347,6 +1347,7 @@ void PT_FileFragment(SINT8 node, INT32 netconsole)
 		&& strcmp(filename, "zones.pk3")
 		&& strcmp(filename, "player.dta")
 		&& strcmp(filename, "patch.pk3")
+		&& strcmp(filename, "rphys.pk3")
 		&& strcmp(filename, "music.dta")
 		))
 		I_Error("Tried to download \"%s\"", filename);

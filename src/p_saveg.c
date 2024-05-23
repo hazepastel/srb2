@@ -193,9 +193,11 @@ static void P_NetArchivePlayers(void)
 		WRITEUINT8(save_p, players[i].climbing);
 		WRITEINT32(save_p, players[i].deadtimer);
 		WRITEUINT32(save_p, players[i].exiting);
+		WRITESINT8(save_p, players[i].rsprung);
 		WRITEUINT8(save_p, players[i].homing);
 		WRITEUINT32(save_p, players[i].dashmode);
 		WRITEUINT32(save_p, players[i].skidtime);
+		WRITEUINT32(save_p, players[i].jerboatime);
 
 		//////////
 		// Bots //
@@ -424,9 +426,11 @@ static void P_NetUnArchivePlayers(void)
 		players[i].climbing = READUINT8(save_p); // Climbing on the wall
 		players[i].deadtimer = READINT32(save_p); // End game if game over lasts too long
 		players[i].exiting = READUINT32(save_p); // Exitlevel timer
+		players[i].rsprung = READSINT8(save_p); // rphys spring gravity
 		players[i].homing = READUINT8(save_p); // Are you homing?
 		players[i].dashmode = READUINT32(save_p); // counter for dashmode ability
 		players[i].skidtime = READUINT32(save_p); // Skid timer
+		players[i].jerboatime = READUINT32(save_p); // coyote timer
 
 		//////////
 		// Bots //
@@ -1983,6 +1987,7 @@ static void SaveMobjThinker(const thinker_t *th, const UINT8 type)
 		|| (slope->normal.z != FRACUNIT))
 			diff2 |= MD2_FLOORSPRITESLOPE;
 	}
+
 	if (mobj->drawonlyforplayer)
 		diff2 |= MD2_DRAWONLYFORPLAYER;
 	if (mobj->dontdrawforviewmobj)
@@ -3228,6 +3233,7 @@ static thinker_t* LoadMobjThinker(actionf_p1 thinker)
 
 		slope->moved = true;
 	}
+
 	if (diff2 & MD2_DRAWONLYFORPLAYER)
 		mobj->drawonlyforplayer = &players[READUINT8(save_p)];
 	if (diff2 & MD2_DONTDRAWFORVIEWMOBJ)

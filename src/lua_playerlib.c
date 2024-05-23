@@ -150,6 +150,7 @@ enum player_e
 	player_homing,
 	player_dashmode,
 	player_skidtime,
+	player_jerboatime,
 	player_cmomx,
 	player_cmomy,
 	player_rmomx,
@@ -298,6 +299,7 @@ static const char *const player_opt[] = {
 	"homing",
 	"dashmode",
 	"skidtime",
+	"jerboatime",
 	"cmomx",
 	"cmomy",
 	"rmomx",
@@ -606,6 +608,9 @@ static int player_get(lua_State *L)
 		break;
 	case player_skidtime:
 		lua_pushinteger(L, plr->skidtime);
+		break;
+	case player_jerboatime:
+		lua_pushinteger(L, plr->jerboatime);
 		break;
 	case player_cmomx:
 		lua_pushfixed(L, plr->cmomx);
@@ -1083,6 +1088,9 @@ static int player_set(lua_State *L)
 		break;
 	case player_skidtime:
 		plr->skidtime = (tic_t)luaL_checkinteger(L, 3);
+		break;
+	case player_jerboatime:
+		plr->jerboatime = (tic_t)luaL_checkinteger(L, 3);
 		break;
 	case player_cmomx:
 		plr->cmomx = luaL_checkfixed(L, 3);
