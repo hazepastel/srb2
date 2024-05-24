@@ -1031,7 +1031,7 @@ boolean F_IntroResponder(event_t *event)
 	if (keypressed)
 		return false;
 
-	keypressed = true;
+	//keypressed = true;
 	return true;
 }
 
@@ -1127,9 +1127,11 @@ static const char *credits[] = {
 	"Alexander \"DrTapeworm\" Moench-Ford",
 	"Andrew \"Senku Niola\" Moran",
 	"\"MotorRoach\"",
+	"\"Revolution\"", // HUD tweaks
 	"Phillip \"TelosTurntable\" Robinson",
 	"\"Scizor300\"",
 	"Wessel \"sphere\" Smit",
+	"\"SonicX8000\"", // title card and fonts
 	"David \"Instant Sonic\" Spencer Jr.",
 	"\"SSNTails\"",
 	"Daniel \"Inazuma\" Trinh",
