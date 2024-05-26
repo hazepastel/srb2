@@ -374,7 +374,7 @@ void Shader_Set(int type)
 void Shader_UnSet(void)
 {
 #ifdef HAVE_GLES2
-	Shader_Set(NULL);
+	Shader_Set(SHADER_FLOOR);
 	Shader_SetUniforms(NULL, NULL, NULL, NULL);
 #else
 	gl_shaderstate.current = NULL;
@@ -633,7 +633,7 @@ boolean Shader_Compile(void)
 	}
 
 #ifdef HAVE_GLES2
-	Shader_Set(NULL);
+	Shader_Set(SHADER_FLOOR);
 	pglUseProgram(gl_shaderstate.program);
 	gl_shaderstate.changed = false;
 #endif
