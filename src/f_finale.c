@@ -1127,6 +1127,7 @@ static const char *credits[] = {
 	"Alexander \"DrTapeworm\" Moench-Ford",
 	"Andrew \"Senku Niola\" Moran",
 	"\"MotorRoach\"",
+	"\"Princess Plushima\"", // flowbubble
 	"\"Revolution\"", // HUD tweaks
 	"Phillip \"TelosTurntable\" Robinson",
 	"\"Scizor300\"",

@@ -530,7 +530,7 @@ UINT32 P_GetScoreForGradeOverall(INT16 map, UINT8 grade)
 void P_AddNiGHTSTimes(INT16 i, char *gtext)
 {
 	char *spos = gtext;
-	
+
 	for (UINT8 n = 0; n < 8; n++)
 	{
 		if (spos != NULL)
@@ -2926,7 +2926,7 @@ static void P_LoadTextmap(void)
 	side_t     *sd;
 	mapthing_t *mt;
 
-	CONS_Alert(CONS_NOTICE, "UDMF support is still a work-in-progress; its specs and features are prone to change until it is fully implemented.\n");
+	//CONS_Alert(CONS_NOTICE, "UDMF support is still a work-in-progress; its specs and features are prone to change until it is fully implemented.\n");
 
 	/// Given the UDMF specs, some fields are given a default value.
 	/// If an element's field has a default value set, it is omitted
@@ -3006,7 +3006,7 @@ static void P_LoadTextmap(void)
 			// TODO: remove this limitation in a backwards-compatible way (UDMF versioning?)
 			UINT8 lightalpha = (textmap_colormap.lightalpha * 102) / 10;
 			UINT8 fadealpha = (textmap_colormap.fadealpha * 102) / 10;
-			
+
 			INT32 rgba = P_ColorToRGBA(textmap_colormap.lightcolor, lightalpha);
 			INT32 fadergba = P_ColorToRGBA(textmap_colormap.fadecolor, fadealpha);
 			sc->extra_colormap = sc->spawn_extra_colormap = R_CreateColormap(rgba, fadergba, textmap_colormap.fadestart, textmap_colormap.fadeend, textmap_colormap.flags);

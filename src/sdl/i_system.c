@@ -359,7 +359,7 @@ static void I_ReportSignal(int num, int coredumped)
 	const char *sigmsg, *signame;
 	char ttl[128];
 	char sigttl[512] = "Process killed by signal: ";
-	const char *reportmsg = "\n\nIf this doesn't happen in vanilla SRB2, send the author your srb2win-reveries.rpt file.";
+	const char *reportmsg = "\n\nIf this doesn't happen in vanilla SRB2, send the author your srb2r.rpt file.";
 
 	switch (num)
 	{
@@ -376,7 +376,7 @@ static void I_ReportSignal(int num, int coredumped)
 		signame = "SIGFPE"; // mathematical exception
 		break;
 	case SIGSEGV:
-		sigmsg = "Suddenly, a SIGSEGV attacks!\nSRB2R Error: segment violation";
+		sigmsg = "Snooping into unallocated memory as usual, I see!\nSRB2R Error: segment violation";
 		signame = "SIGSEGV"; // segment violation
 		break;
 //	case SIGTERM:
