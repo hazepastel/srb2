@@ -374,7 +374,7 @@ void Shader_Set(int type)
 void Shader_UnSet(void)
 {
 #ifdef HAVE_GLES2
-	Shader_Set(SHADER_NONE);
+	Shader_Set(NULL);
 	Shader_SetUniforms(NULL, NULL, NULL, NULL);
 #else
 	gl_shaderstate.current = NULL;
@@ -583,8 +583,8 @@ boolean Shader_Compile(void)
 	if (!GLExtension_shaders)
 		return false;
 
-	gl_customshaders[SHADER_NONE].vertex = NULL;
-	gl_customshaders[SHADER_NONE].fragment = NULL;
+	gl_customshaders[SHADER_FLOOR].vertex = NULL;
+	gl_customshaders[SHADER_FLOOR].fragment = NULL;
 
 	for (i = 0; gl_shadersources[i].vertex && gl_shadersources[i].fragment; i++)
 	{
@@ -610,13 +610,13 @@ boolean Shader_Compile(void)
 		{
 			shader->program = 0;
 #ifdef HAVE_GLES2
-			if (i == SHADER_NONE)
+			if (i == SHADER_FLOOR)
 				return false;
 #endif
 		}
 
 		// Compile custom shader
-		if ((i == SHADER_NONE) || !(gl_customshaders[i].vertex || gl_customshaders[i].fragment))
+		if ((i == SHADER_FLOOR) || !(gl_customshaders[i].vertex || gl_customshaders[i].fragment))
 			continue;
 
 		// 18032019
@@ -633,7 +633,7 @@ boolean Shader_Compile(void)
 	}
 
 #ifdef HAVE_GLES2
-	Shader_Set(SHADER_NONE);
+	Shader_Set(NULL);
 	pglUseProgram(gl_shaderstate.program);
 	gl_shaderstate.changed = false;
 #endif
