@@ -338,13 +338,13 @@ void Shader_Set(int type)
 
 				if (!baseshader->program)
 				{
-					baseshader = &gl_shaders[NULL];
+					baseshader = &gl_shaders[SHADER_FLOOR];
 					alpha_test = false;
 				}
 			}
 			else
 #endif
-				baseshader = &gl_shaders[NULL];
+				baseshader = &gl_shaders[SHADER_FLOOR];
 		}
 
 		if (usershader->program)
