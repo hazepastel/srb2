@@ -4791,7 +4791,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if ((onground || (player->pflags & PF_JUMPED)) && !(player->pflags & (PF_THOKKED|PF_BOUNCING)) && !player->weapondelay && !player->powers[pw_carry])
+				if ((onground || (player->pflags & PF_JUMPED)) && !(player->pflags & (PF_THOKKED|PF_SPINNING|PF_BOUNCING)) && !player->weapondelay && !player->powers[pw_carry])
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)

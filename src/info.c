@@ -719,7 +719,7 @@ state_t states[NUMSTATES] =
 	{SPR_PLAY, SPR2_DEAD|FF_ANIMATE,     -1, {NULL}, 0,  4, S_NULL, 0},      // S_PLAY_DEAD
 	{SPR_PLAY, SPR2_DRWN|FF_ANIMATE,     -1, {NULL}, 0,  4, S_NULL, 0},      // S_PLAY_DRWN
 	{SPR_PLAY, SPR2_ROLL,                 1, {NULL}, 0,  0, S_PLAY_ROLL, 0}, // S_PLAY_ROLL
-	{SPR_PLAY, SPR2_GASP|FF_ANIMATE,     14, {NULL}, 0,  4, S_PLAY_WALK, 0}, // S_PLAY_GASP
+	{SPR_PLAY, SPR2_GASP|FF_ANIMATE,     10, {NULL}, 0,  4, S_PLAY_WALK, 0}, // S_PLAY_GASP
 	{SPR_PLAY, SPR2_JUMP,                 1, {NULL}, 0,  0, S_PLAY_JUMP, 0}, // S_PLAY_JUMP
 	{SPR_PLAY, SPR2_SPNG,                 2, {NULL}, 0,  0, S_PLAY_SPRING, 0}, // S_PLAY_SPRING
 	{SPR_PLAY, SPR2_FALL,                 2, {NULL}, 0,  0, S_PLAY_FALL, 0}, // S_PLAY_FALL

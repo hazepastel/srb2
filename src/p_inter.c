@@ -1791,12 +1791,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			return;
 
 		case MT_EXTRALARGEBUBBLE:
-			if (player->powers[pw_shield] & SH_PROTECTWATER)
+			if (!player->powers[pw_underwater]) // water shields, nights mode, and mariomode set the air timer to zero
 				return;
-			if (maptol & TOL_NIGHTS)
-				return;
-			if (mariomode)
-				return;
+
 			if (special->state-states != S_EXTRALARGEBUBBLE)
 				return; // Don't grab the bubble during its spawn animation
 			else if (toucher->eflags & MFE_VERTICALFLIP)
@@ -1809,25 +1806,18 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				|| special->z > toucher->z + (toucher->height*2/3))
 				return; // Only go in the mouth
 
-			// Eaten by player!
-			if ((!player->bot || player->bot == BOT_MPAI) && (player->powers[pw_underwater] && player->powers[pw_underwater] <= 12*TICRATE + 1))
+			if (player->powers[pw_underwater] < underwatertics + 1)
 			{
 				player->powers[pw_underwater] = underwatertics + 1;
 				P_RestoreMusic(player);
 			}
 
-			if (player->powers[pw_underwater] < underwatertics + 1)
-				player->powers[pw_underwater] = underwatertics + 1;
-
 			if (!player->climbing)
 			{
-				if (player->bot && player->bot != BOT_MPAI && toucher->state-states != S_PLAY_GASP)
-					S_StartSound(toucher, special->info->deathsound); // Force it to play a sound for bots
 				P_SetMobjState(toucher, S_PLAY_GASP);
 				P_ResetPlayer(player);
+				player->pflags |= PF_FULLSTASIS;
 			}
-
-			toucher->momx = toucher->momy = toucher->momz = 0;
 
 			if (player->bot && player->bot != BOT_MPAI)
 				return;
