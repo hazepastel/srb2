@@ -5150,10 +5150,13 @@ static void P_DoTwinSpin(player_t *player)
 //
 static void P_DoShieldAbility(player_t *player)
 {
-	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
+	if (LUA_HookPlayer(player, HOOK(PeeloutSpecial)))
 		return;
 
 	if (!(player->powers[pw_shield] & SH_NOSTACK) || !(player->pflags & PF_JUMPED) || player->powers[pw_super] || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (player->charflags & SF_NOSHIELDABILITY))
+		return;
+
+	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
 		return;
 
 	mobj_t *lockonshield = NULL;
