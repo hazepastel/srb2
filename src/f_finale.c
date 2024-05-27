@@ -1088,7 +1088,7 @@ static const char *credits[] = {
 	"Tasos \"tatokis\" Sahanidis", // Corrected C FixedMul, making 64-bit builds netplay compatible
 	"Riku \"Ors\" Salminen", // Demo consistency improvements
 	"Jonas \"MascaraSnake\" Sauer",
-	"Fainche \"katsy\" Shear",
+	"Fainche \"pastel\" Shear",
 	"Wessel \"sphere\" Smit",
 	"\"SMS Alfredo\"",
 	"\"SSNTails\"",
