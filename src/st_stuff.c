@@ -70,9 +70,9 @@ patch_t *livesback; // Lives icon background
 patch_t *stlivex;
 static patch_t *nrec_timer; // Timer for NiGHTS records
 static patch_t *sborings;
-static patch_t *slidgame;
-static patch_t *slidtime;
-static patch_t *slidover;
+static patch_t *overgame;
+static patch_t *overtime;
+static patch_t *overover;
 static patch_t *sboredrings;
 static patch_t *sboredtime;
 static patch_t *getall; // Special Stage HUD
@@ -269,9 +269,9 @@ void ST_LoadGraphics(void)
 	sbocolon = W_CachePatchName("STTCOLON", PU_HUDGFX); // Colon for time
 	sboperiod = W_CachePatchName("STTPERIO", PU_HUDGFX); // Period for time centiseconds
 
-	slidgame = W_CachePatchName("SLIDGAME", PU_HUDGFX);
-	slidtime = W_CachePatchName("SLIDTIME", PU_HUDGFX);
-	slidover = W_CachePatchName("SLIDOVER", PU_HUDGFX);
+	overgame = W_CachePatchName("overGAME", PU_HUDGFX);
+	overtime = W_CachePatchName("overTIME", PU_HUDGFX);
+	overover = W_CachePatchName("overOVER", PU_HUDGFX);
 
 	stlivex = W_CachePatchName("STLIVEX", PU_HUDGFX);
 	livesback = W_CachePatchName("STLIVEBK", PU_HUDGFX);
@@ -590,7 +590,7 @@ static void ST_drawDebugInfo(void)
 		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
 		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
-		V_DrawDebugFlag(((stplyr->charflags & SF_NOSHIELDABILITY) ? V_GREENMAP : V_REDMAP), "NS");
+		V_DrawDebugFlag(((stplyr->pflags & PF_DRILLING) ? V_GREENMAP : V_REDMAP), "DR");
 		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
 		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GLIDING)        ? V_GREENMAP : V_REDMAP), "GL");
@@ -2759,8 +2759,8 @@ static void ST_overlayDrawer(void)
 			INT32 lvlttlx = min(6*deadtimer, BASEVIDWIDTH/2);
 			UINT32 flags = V_PERPLAYER|(stplyr->spectator ? V_HUDTRANSHALF : V_HUDTRANS);
 
-			V_DrawScaledPatch(lvlttlx - 8, BASEVIDHEIGHT/2, flags, (countdown == 1 ? slidtime : slidgame));
-			V_DrawScaledPatch(BASEVIDWIDTH + 8 - lvlttlx, BASEVIDHEIGHT/2, flags, slidover);
+			V_DrawScaledPatch(lvlttlx - 8, BASEVIDHEIGHT/2, flags, (countdown == 1 ? overtime : overgame));
+			V_DrawScaledPatch(BASEVIDWIDTH + 8 - lvlttlx, BASEVIDHEIGHT/2, flags, overover);
 		}
 	}
 
