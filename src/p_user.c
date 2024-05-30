@@ -1357,6 +1357,8 @@ void P_DoSuperTransformation(player_t *player, boolean giverings)
 	if (!(mapheaderinfo[gamemap-1]->levelflags & LF_NOSSMUSIC) && P_IsLocalPlayer(player))
 		P_PlayJingle(player, JT_SUPER);
 
+	P_ResetPlayer(player);
+
 	player->mo->momx = player->mo->momy = player->mo->momz = player->cmomx = player->cmomy = player->rmomx = player->rmomy = 0;
 
 	// Transformation animation
@@ -1373,15 +1375,7 @@ void P_DoSuperTransformation(player_t *player, boolean giverings)
 		player->powers[pw_sneakers] = 0;
 	}
 
-	if (G_CoopGametype())
-		S_StartSound(player->mo, sfx_supert); //only hear it near yourself in co-op
-	else
-	{
-		S_StartSound(NULL, sfx_supert); //let all players hear it -mattw_cfi
-		HU_SetCEchoFlags(0);
-		HU_SetCEchoDuration(5);
-		HU_DoCEcho(va("%s\\is now super.\\\\\\\\", player_names[player-players]));
-	}
+	S_StartSound(player->mo, sfx_supert);
 
 	P_PlayerFlagBurst(player, false);
 }
@@ -4431,29 +4425,21 @@ static void P_DoSuperStuff(player_t *player)
 //
 // P_SuperReady
 //
-// Returns true if player is ready to transform or detransform
+// Returns true if player is ready to transform
 //
 boolean P_SuperReady(player_t *player, boolean transform)
 {
-	if (!transform &&
-	(player->powers[pw_super] < TICRATE*3/2
-	|| !G_CoopGametype())) // No turning back in competitive!
-		return false;
-	else if (transform
-	&& (player->powers[pw_super]
-	|| !ALL7EMERALDS(emeralds)
-	|| !(player->rings >= 50)))
-		return false;
-
-	if (player->mo
-	&& (player->pflags & PF_JUMPED)
-	&& !player->powers[pw_tailsfly]
-	&& !player->powers[pw_carry]
+	if (transform
 	&& (player->charflags & SF_SUPER)
+	&& (player->rings >= 50)
+	&& (ALL7EMERALDS(emeralds))
+	&& (player->pflags & PF_JUMPED)
+	&& !player->powers[pw_super]
+	&& !(player->powers[pw_shield] & SH_NOSTACK)
+	&& !player->powers[pw_carry]
 	&& !P_PlayerInPain(player)
 	&& !player->climbing
-	&& !(player->powers[pw_shield] & SH_NOSTACK)
-	&& !(player->pflags & (PF_JUMPSTASIS|PF_THOKKED|PF_STARTDASH|PF_GLIDING|PF_SLIDING|PF_SHIELDABILITY))
+	&& !(player->pflags & (PF_STASIS|PF_THOKKED|PF_STARTDASH|PF_GLIDING|PF_SLIDING|PF_BOUNCING|PF_SHIELDABILITY))
 	&& !(maptol & TOL_NIGHTS))
 		return true;
 
@@ -5153,7 +5139,7 @@ static void P_DoShieldAbility(player_t *player)
 	if (LUA_HookPlayer(player, HOOK(PeeloutSpecial)))
 		return;
 
-	if (!(player->powers[pw_shield] & SH_NOSTACK) || !(player->pflags & PF_JUMPED) || player->powers[pw_super] || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (player->charflags & SF_NOSHIELDABILITY))
+	if (!(player->powers[pw_shield] & SH_NOSTACK) || !(player->pflags & PF_JUMPED) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (player->charflags & SF_NOSHIELDABILITY))
 		return;
 
 	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
@@ -5315,8 +5301,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 			;
 		else if (cmd->buttons & BT_SPIN)
 		{
-			if (spinshieldhack && !(player->pflags & PF_SPINDOWN) && P_SuperReady(player, true)
-			&& !player->powers[pw_invulnerability] && !(player->powers[pw_shield] & SH_NOSTACK)) // These two checks are no longer in P_SuperReady
+			if (spinshieldhack && !(player->pflags & PF_SPINDOWN) && P_SuperReady(player, true) && !(player->powers[pw_shield] & SH_NOSTACK)) // These two checks are no longer in P_SuperReady
 			{
 				// If you're using two-button play, can turn Super and aren't already,
 				// and you don't have a shield, then turn Super!
@@ -8693,9 +8678,6 @@ void P_MovePlayer(player_t *player)
 			// Transform into super if we can!
 			if (P_SuperReady(player, true))
 				P_DoSuperTransformation(player, false);
-			// Detransform from super if we can!
-			else if (P_SuperReady(player, false))
-				P_DoSuperDetransformation(player);
 			//Otherwise, try to use a shield ability
 			else
 				P_DoShieldAbility(player);

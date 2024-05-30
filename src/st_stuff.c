@@ -269,9 +269,9 @@ void ST_LoadGraphics(void)
 	sbocolon = W_CachePatchName("STTCOLON", PU_HUDGFX); // Colon for time
 	sboperiod = W_CachePatchName("STTPERIO", PU_HUDGFX); // Period for time centiseconds
 
-	overgame = W_CachePatchName("overGAME", PU_HUDGFX);
-	overtime = W_CachePatchName("overTIME", PU_HUDGFX);
-	overover = W_CachePatchName("overOVER", PU_HUDGFX);
+	overgame = W_CachePatchName("OVERGAME", PU_HUDGFX);
+	overtime = W_CachePatchName("OVERTIME", PU_HUDGFX);
+	overover = W_CachePatchName("OVEROVER", PU_HUDGFX);
 
 	stlivex = W_CachePatchName("STLIVEX", PU_HUDGFX);
 	livesback = W_CachePatchName("STLIVEBK", PU_HUDGFX);
