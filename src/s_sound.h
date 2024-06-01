@@ -36,6 +36,7 @@ extern consvar_t cv_resetmusic;
 extern consvar_t cv_resetmusicbyheader;
 
 extern consvar_t cv_1upsound;
+extern consvar_t cv_supersound;
 
 #define RESETMUSIC (!modeattacking && \
 	(cv_resetmusicbyheader.value ? \

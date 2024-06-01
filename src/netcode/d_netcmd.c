@@ -320,7 +320,7 @@ consvar_t cv_overtime = CVAR_INIT ("overtime", "Yes", CV_SAVE|CV_NETVAR|CV_ALLOW
 consvar_t cv_rollingdemos = CVAR_INIT ("rollingdemos", "On", CV_SAVE, CV_OnOff, NULL);
 
 static CV_PossibleValue_t timetic_cons_t[] = {{0, "Classic"}, {1, "Centiseconds"}, {2, "Mania"}, {3, "Tics"}, {0, NULL}};
-consvar_t cv_timetic = CVAR_INIT ("timerres", "Classic", CV_SAVE, timetic_cons_t, NULL);
+consvar_t cv_timetic = CVAR_INIT ("timerres", "Centiseconds", CV_SAVE, timetic_cons_t, NULL);
 
 static CV_PossibleValue_t powerupdisplay_cons_t[] = {{0, "Never"}, {1, "First-person only"}, {2, "Always"}, {0, NULL}};
 consvar_t cv_powerupdisplay = CVAR_INIT ("powerupdisplay", "First-person only", CV_SAVE, powerupdisplay_cons_t, NULL);
@@ -878,8 +878,6 @@ void D_RegisterClientCommands(void)
 	// deez New User eXperiences
 	CV_RegisterVar(&cv_directionchar[0]);
 	CV_RegisterVar(&cv_directionchar[1]);
-	CV_RegisterVar(&cv_autobrake);
-	CV_RegisterVar(&cv_autobrake2);
 
 	// hi here's some new controls
 	CV_RegisterVar(&cv_cam_shiftfacing[0]);

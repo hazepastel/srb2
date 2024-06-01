@@ -1047,7 +1047,6 @@ static menuitem_t OP_P1ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_CameraOptionsDef,	50},
 
-	{IT_STRING  | IT_CVAR, NULL, "Automatic braking", &cv_autobrake,  70},
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup1PPlaystyleMenu, 80},
 };
 
@@ -1059,7 +1058,6 @@ static menuitem_t OP_P2ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_Camera2OptionsDef,	50},
 
-	{IT_STRING  | IT_CVAR, NULL, "Automatic braking", &cv_autobrake2,  70},
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup2PPlaystyleMenu, 80},
 };
 
@@ -1073,7 +1071,7 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Move Right",       M_ChangeControl, GC_STRAFERIGHT },
 	{IT_CALL | IT_STRING2, NULL, "Jump",             M_ChangeControl, GC_JUMP        },
 	{IT_CALL | IT_STRING2, NULL, "Spin",             M_ChangeControl, GC_SPIN        },
-	{IT_CALL | IT_STRING2, NULL, "Shield Ability",   M_ChangeControl, GC_SHIELD      },
+	{IT_CALL | IT_STRING2, NULL, "Peelout / Shield",   M_ChangeControl, GC_SHIELD      },
 	{IT_HEADER, NULL, "Camera", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
 	{IT_CALL | IT_STRING2, NULL, "Look Up",        M_ChangeControl, GC_LOOKUP      },
@@ -1312,11 +1310,10 @@ static menuitem_t OP_VideoOptionsMenu[] =
 #else
 	{IT_TRANSTEXT | IT_PAIR, "Renderer", "Software",            &cv_renderer,        21},
 #endif
-
-	{IT_HEADER, NULL, "Color Profile", NULL, 30},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Brightness", &cv_globalgamma,36},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Saturation", &cv_globalsaturation, 41},
-	{IT_SUBMENU|IT_STRING, NULL, "Advanced Settings...",     &OP_ColorOptionsDef,  46},
+	{IT_STRING | IT_CVAR, NULL, "FPS Cap", &cv_fpscap, 30},
+	{IT_STRING | IT_CVAR, NULL, "Field of view", &cv_fov, 36},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Brightness", &cv_globalgamma,41},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Saturation", &cv_globalsaturation, 46},
 
 	{IT_HEADER, NULL, "Heads-Up Display", NULL, 55},
 	{IT_STRING | IT_CVAR, NULL, "Show HUD",                  &cv_showhud,          61},
@@ -1353,7 +1350,6 @@ static menuitem_t OP_VideoOptionsMenu[] =
 #ifdef HWRENDER
 	{IT_HEADER, NULL, "Renderer", NULL, 208},
 	{IT_CALL | IT_STRING, NULL, "OpenGL Options...",         M_OpenGLOptionsMenu, 214},
-	{IT_STRING | IT_CVAR, NULL, "FPS Cap",                   &cv_fpscap,          219},
 #endif
 };
 
@@ -1415,7 +1411,6 @@ static menuitem_t OP_OpenGLOptionsMenu[] =
 	{IT_STRING|IT_CVAR,         NULL, "Shaders",             &cv_glshaders,            63},
 	{IT_STRING|IT_CVAR,         NULL, "Palette rendering",   &cv_glpaletterendering,   73},
 	{IT_STRING|IT_CVAR,         NULL, "Lack of perspective", &cv_glshearing,           83},
-	{IT_STRING|IT_CVAR,         NULL, "Field of view",       &cv_fov,                  93},
 
 	{IT_HEADER, NULL, "Miscellaneous", NULL, 112},
 	{IT_STRING|IT_CVAR,         NULL, "Bit depth",           &cv_scr_depth,           124},
@@ -1458,9 +1453,10 @@ static menuitem_t OP_SoundOptionsMenu[] =
 	{IT_HEADER, NULL, "Miscellaneous", NULL, 61},
 	{IT_STRING | IT_CVAR, NULL, "Closed Captioning", &cv_closedcaptioning, 67},
 	{IT_STRING | IT_CVAR, NULL, "Reset Music Upon Dying", &cv_resetmusic, 72},
-	{IT_STRING | IT_CVAR, NULL, "Default 1-Up sound", &cv_1upsound, 77},
+	{IT_STRING | IT_CVAR, NULL, "Extra Life SFX", &cv_1upsound, 77},
+	{IT_STRING | IT_CVAR, NULL, "Play Super Music", &cv_supersound, 82},
 
-	{IT_STRING | IT_SUBMENU, NULL, "Advanced Settings...", &OP_SoundAdvancedDef, 87},
+	{IT_STRING | IT_SUBMENU, NULL, "Advanced Settings...", &OP_SoundAdvancedDef, 92},
 };
 
 #ifdef HAVE_OPENMPT

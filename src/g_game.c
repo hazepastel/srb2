@@ -350,8 +350,6 @@ consvar_t cv_directionchar[2] = {
 	CVAR_INIT ("directionchar", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar_OnChange),
 	CVAR_INIT ("directionchar2", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar2_OnChange),
 };
-consvar_t cv_autobrake = CVAR_INIT ("autobrake", "Off", CV_SAVE|CV_CALL, CV_OnOff, NULL);
-consvar_t cv_autobrake2 = CVAR_INIT ("autobrake2", "Off", CV_SAVE|CV_CALL, CV_OnOff, NULL);
 
 // hi here's some new controls
 static CV_PossibleValue_t zerotoone_cons_t[] = {{0, "MIN"}, {FRACUNIT, "MAX"}, {0, NULL}};
@@ -378,8 +376,8 @@ consvar_t cv_cam_turnfacinginput[2] = {
 
 static CV_PossibleValue_t centertoggle_cons_t[] = {{0, "Hold"}, {1, "Toggle"}, {2, "Sticky Hold"}, {0, NULL}};
 consvar_t cv_cam_centertoggle[2] = {
-	CVAR_INIT ("cam_centertoggle", "Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
-	CVAR_INIT ("cam2_centertoggle", "Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
+	CVAR_INIT ("cam_centertoggle", "Sticky Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
+	CVAR_INIT ("cam2_centertoggle", "Sticky Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
 };
 
 static CV_PossibleValue_t lockedinput_cons_t[] = {{0, "Strafe"}, {1, "Turn"}, {0, NULL}};

@@ -100,7 +100,8 @@ static CV_PossibleValue_t cons_1upsound_t[] = {
 	{1, "Sound"},
 	{0, NULL}
 };
-consvar_t cv_1upsound = CVAR_INIT ("1upsound", "Jingle", CV_SAVE, cons_1upsound_t, NULL);
+consvar_t cv_1upsound = CVAR_INIT ("1upsound", "Sound", CV_SAVE, cons_1upsound_t, NULL);
+consvar_t cv_supersound = CVAR_INIT ("supersound", "Yes", CV_SAVE, CV_YesNo, NULL);
 
 // Sound system toggles, saved into the config
 consvar_t cv_gamedigimusic = CVAR_INIT ("digimusic", "On", CV_SAVE|CV_CALL|CV_NOINIT, CV_OnOff, GameDigiMusic_OnChange);
@@ -274,6 +275,7 @@ void S_RegisterSoundStuff(void)
 	CV_RegisterVar(&cv_resetmusic);
 	CV_RegisterVar(&cv_resetmusicbyheader);
 	CV_RegisterVar(&cv_1upsound);
+	CV_RegisterVar(&cv_supersound);
 	CV_RegisterVar(&cv_playsoundsifunfocused);
 	CV_RegisterVar(&cv_playmusicifunfocused);
 	CV_RegisterVar(&cv_gamesounds);

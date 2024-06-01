@@ -1176,8 +1176,7 @@ static void ST_drawInput(void)
 
 	drawbutt( 4,-3, BT_JUMP,   'J' );
 	drawbutt(15,-3, BT_SPIN,   'S' );
-	drawbutt(26,-3, BT_SHIELD, '\0'); // Instead of a wide 'J' or 'S', we'll draw a thin "SH" for Shield
-	V_DrawThinString(x+16+26, y+2+(-3)-offs, hudinfo[HUD_LIVES].f, "SH");
+	drawbutt(26,-3, BT_SHIELD, 'P' ); // Draw "P" for Peelout
 
 	V_DrawFill(x+16+4, y+8, 21, 10, hudinfo[HUD_INPUT].f|20); // sundial backing
 	if (stplyr->mo)
