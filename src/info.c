@@ -1415,7 +1415,7 @@ state_t states[NUMSTATES] =
 	{SPR_FANG,  8, 0, {A_Boss5Calm}, 0, 0, S_FANG_CHECKPATH2, 0}, // S_FANG_CHECKPATH1
 	{SPR_FANG,  8, 0, {A_Repeat}, 0, S_FANG_PATHINGCONT1, S_FANG_SKID1, 0}, // S_FANG_CHECKPATH2
 
-	{SPR_FANG,  9, 0, {A_Boss5PinchShot}, MT_FBOMB, -16, S_FANG_PATHINGCONT2, 0}, // S_FANG_PATHINGCONT1
+	{SPR_FANG,  9, 0, {A_Boss5PinchShot}, MT_POPSHOT, -16, S_FANG_PATHINGCONT2, 0}, // S_FANG_PATHINGCONT1
 	{SPR_FANG,  9, 0, {A_PlayActiveSound}, 0, 0, S_FANG_PATHINGCONT3, 0}, // S_FANG_PATHINGCONT2
 	{SPR_FANG,  9, 2, {A_Thrust}, 0, 1, S_FANG_PATHING, 0}, // S_FANG_PATHINGCONT3
 
@@ -20161,7 +20161,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		S_SONIC3KBOSSEXPLOSION1, // deathstate
 		S_NULL,         // xdeathstate
 		sfx_cybdth,     // deathsound
-		0,              // speed
+		24*FRACUNIT,              // speed
 		16*FRACUNIT,    // radius
 		32*FRACUNIT,    // height
 		0,              // display offset
