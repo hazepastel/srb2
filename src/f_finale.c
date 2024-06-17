@@ -1031,7 +1031,7 @@ boolean F_IntroResponder(event_t *event)
 	if (keypressed)
 		return false;
 
-	//keypressed = true;
+	keypressed = true;
 	return true;
 }
 
