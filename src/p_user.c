@@ -1618,7 +1618,7 @@ boolean P_EvaluateMusicStatus(UINT16 status, const char *musname)
 				break;
 
 			case JT_SHOES:  // Speed shoes
-				if (players[i].powers[pw_sneakers] > 1 && !players[i].powers[pw_super])
+				if (players[i].powers[pw_sneakers] > 1)
 				{
 					//strlcpy(S_sfx[sfx_None].caption, "Speed shoes", 12);
 					//S_StartCaption(sfx_None, -1, players[i].powers[pw_sneakers]);
@@ -1699,7 +1699,7 @@ void P_RestoreMusic(player_t *player)
 		P_PlayJingle(player, JT_SUPER);
 
 	// Invulnerability
-	else if (player->powers[pw_invulnerability] > 1 && !player->powers[pw_super])
+	else if (player->powers[pw_invulnerability] > 1 && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		strlcpy(S_sfx[sfx_None].caption, "Invincibility", 14);
 		S_StartCaption(sfx_None, -1, player->powers[pw_invulnerability]);
@@ -1708,7 +1708,7 @@ void P_RestoreMusic(player_t *player)
 	}
 
 	// Shoes
-	else if (player->powers[pw_sneakers] > 1 && !player->powers[pw_super])
+	else if (player->powers[pw_sneakers] > 1 && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		strlcpy(S_sfx[sfx_None].caption, "Speed shoes", 12);
 		S_StartCaption(sfx_None, -1, player->powers[pw_sneakers]);
@@ -4397,7 +4397,7 @@ static void P_DoSuperStuff(player_t *player)
 			return;
 
 		// Deplete one ring every second while super
-		if ((leveltime % TICRATE == 0) && !(player->exiting))
+		if ((leveltime % TICRATE == 0) && !(player->exiting) && !(player->powers[pw_invulnerability]))
 			player->rings--;
 
 		if ((cmd->forwardmove != 0 || cmd->sidemove != 0 || player->powers[pw_carry])
@@ -5865,29 +5865,42 @@ static void P_2dMovement(player_t *player)
 		acceleration = 800;
 	else if (onground)
 	{
-		acceleration = 600;
+		acceleration = 650;
 
 		if (player->mo->friction > ORIG_FRICTION) // friction scaled acceleration
 			acceleration += 50;
 	}
 	else
 	{
-		acceleration = 600;
+		acceleration = 650;
 	}
 
 	if (stricmp(player->mo->skin, "luigi") == 0)
-		acceleration -= (onground) ? 130 : 80;
+		acceleration -= (onground) ? 150 : 50;
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
 	{
 		normalspd >>= 1;
-		acceleration -= 110;
+		acceleration -= 160;
 	}
 
-	if (player->powers[pw_super] || player->powers[pw_sneakers])
+	if (player->powers[pw_super])
+	{
+		if (player->powers[pw_sneakers])
+		{
+			normalspd <<= 1;
+			acceleration += 320;
+		}
+		else
+		{
+			normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
+			acceleration += 240;
+		}
+	}
+	else if (player->powers[pw_sneakers])
 	{
 		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
-		acceleration += 190;
+		acceleration += 240;
 	}
 
 	if (player->powers[pw_justsprung] && P_GetPlayerControlDirection(player) == 2)
@@ -6022,7 +6035,20 @@ static void P_3dMovement(player_t *player)
 		acceleration -= 160;
 	}
 
-	if (player->powers[pw_super] || player->powers[pw_sneakers])
+	if (player->powers[pw_super])
+	{
+		if (player->powers[pw_sneakers])
+		{
+			normalspd <<= 1;
+			acceleration += 320;
+		}
+		else
+		{
+			normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
+			acceleration += 240;
+		}
+	}
+	else if (player->powers[pw_sneakers])
 	{
 		normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
 		acceleration += 240;
@@ -6139,6 +6165,8 @@ static void P_3dMovement(player_t *player)
 		}
 	}
 
+	UINT8 totalcontrol = FixedHypot(abs(cmd->forwardmove), abs(cmd->sidemove));
+
 	if (totalthrust.x || totalthrust.y) //turning (modified from clairebun code)
 	{
 		fixed_t ang1 = AngleFixed(R_PointToAngle2(0, 0, player->rmomx,  player->rmomy));
@@ -6153,10 +6181,19 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
+			if (totalcontrol <= 20)
+				turnspd -= FRACUNIT;
+			else if (totalcontrol <= 40)
+				turnspd -= FRACUNIT>>1;
+
 			if (player->powers[pw_justsprung])
 				turnspd -= 2*FRACUNIT/3;
 			if (!onground && !spin)
 				turnspd -= FRACUNIT>>2;
+			if (player->powers[pw_super] || player->powers[pw_sneakers])
+				turnspd += FRACUNIT/3;
+
+			turnspd = max(FRACUNIT>>3, turnspd);
 
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
@@ -6183,7 +6220,26 @@ static void P_3dMovement(player_t *player)
 				deceleration += FRACUNIT>>2;
 		}
 
-		deceleration = min(deceleration, player->speed);
+		if (totalcontrol)
+		{
+			if (P_GetPlayerControlDirection(player) != 2)
+			{
+				if (deceleration >= FixedDiv(player->speed, player->mo->scale))
+					deceleration = 0;
+				else if (totalcontrol <= 20)
+					deceleration >>= 2;
+				else if (totalcontrol <= 40)
+					deceleration >>= 1;
+			}
+		}
+		else
+		{
+			if (player->pflags & PF_CLASSIC)
+				deceleration /= 3;
+
+			deceleration = min(deceleration, FixedDiv(player->speed>>1, player->mo->scale));
+		}
+
 		//Get deceleration vector
 		dx = -P_ReturnThrustX(player->mo, moveangle, FixedMul(deceleration, player->mo->scale));
 		dy = -P_ReturnThrustY(player->mo, moveangle, FixedMul(deceleration, player->mo->scale));
@@ -8297,11 +8353,10 @@ void P_MovePlayer(player_t *player)
 		angle_t angle, moveangle = R_PointToAngle2(0, 0, momx, momy);
 		boolean in2d = mo->flags2 & MF2_TWOD || twodlevel;
 
-		if (player->powers[pw_super] || player->powers[pw_sneakers])
-			glidespeed = player->actionspd*12/5;
-
-		if (player->mo->eflags & MFE_UNDERWATER)
-			glidespeed >>= 1;
+		if (player->powers[pw_sneakers])
+			glidespeed = (player->powers[pw_super]) ? FixedMul(player->actionspd, 8*FRACUNIT/3) : FixedMul(player->actionspd, 20*FRACUNIT/9);
+		else if (player->powers[pw_super])
+			glidespeed = FixedMul(player->actionspd, 20*FRACUNIT/9);
 
 		if (player->mo->eflags & MFE_VERTICALFLIP)
 		{

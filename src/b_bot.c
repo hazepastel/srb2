@@ -579,7 +579,7 @@ void B_RespawnBot(INT32 playernum)
 	player->powers[pw_spacetime] = sonic->player->powers[pw_spacetime];
 	player->powers[pw_gravityboots] = sonic->player->powers[pw_gravityboots];
 	player->powers[pw_nocontrol] = sonic->player->powers[pw_nocontrol];
-	player->pflags |= PF_AUTOBRAKE|(sonic->player->pflags & PF_DIRECTIONCHAR);
+	player->pflags |= PF_CLASSIC|(sonic->player->pflags & PF_DIRECTIONCHAR);
 
 	P_SetOrigin(tails, x, y, z);
 	if (player->charability == CA_FLY)

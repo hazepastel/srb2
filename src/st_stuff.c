@@ -565,14 +565,14 @@ static void ST_drawDebugInfo(void)
 		INT32 width = 320;
 		const fixed_t d = AngleFixed(stplyr->drawangle);
 
+		V_DrawDebugLine(va("SCALE: %5d%%", (stplyr->mo->scale*100)>>FRACBITS));
 		V_DrawDebugLine(va("SHIELD: %5x", stplyr->powers[pw_shield]));
 		V_DrawDebugLine(va("STRONG: %5x", stplyr->powers[pw_strong]));
-		V_DrawDebugLine(va("SCALE: %5d%%", (stplyr->mo->scale*100)>>FRACBITS));
+		V_DrawDebugLine(va("PEEL: %5x", stplyr->dashmode));
 		V_DrawDebugLine(va("CARRY: %5x", stplyr->powers[pw_carry]));
+		V_DrawDebugLine(va("NOAIRDRAG: %3d", stplyr->powers[pw_noautobrake]));
+		V_DrawDebugLine(va("LOCKANGLE: %3d", stplyr->powers[pw_justsprung]));
 		V_DrawDebugLine(va("AIR: %4d, %3d", stplyr->powers[pw_underwater], stplyr->powers[pw_spacetime]));
-		V_DrawDebugLine(va("ABILITY: %3d, %3d", stplyr->charability, stplyr->charability2));
-		V_DrawDebugLine(va("ACTIONSPD: %5d", stplyr->actionspd>>FRACBITS));
-		V_DrawDebugLine(va("PEEL: %3d", stplyr->dashmode));
 		V_DrawDebugLine(va("SCOREADD: %3d", stplyr->scoreadd));
 
 		// Flags
@@ -590,6 +590,7 @@ static void ST_drawDebugInfo(void)
 		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
 		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
+		V_DrawDebugFlag(((stplyr->pflags & PF_CLASSIC)        ? V_GREENMAP : V_REDMAP), "CF");
 		V_DrawDebugFlag(((stplyr->pflags & PF_DRILLING) ? V_GREENMAP : V_REDMAP), "DR");
 		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
 		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");

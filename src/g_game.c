@@ -265,6 +265,8 @@ static void Analog_OnChange(void);
 static void Analog2_OnChange(void);
 static void DirectionChar_OnChange(void);
 static void DirectionChar2_OnChange(void);
+static void Classic_OnChange(void);
+static void Classic2_OnChange(void);
 void SendWeaponPref(void);
 void SendWeaponPref2(void);
 
@@ -350,6 +352,8 @@ consvar_t cv_directionchar[2] = {
 	CVAR_INIT ("directionchar", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar_OnChange),
 	CVAR_INIT ("directionchar2", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar2_OnChange),
 };
+consvar_t cv_classic = CVAR_INIT ("classicfriction", "No", CV_SAVE|CV_CALL, CV_YesNo, Classic_OnChange);
+consvar_t cv_classic2 = CVAR_INIT ("classicfriction2", "No", CV_SAVE|CV_CALL, CV_YesNo, Classic2_OnChange);
 
 // hi here's some new controls
 static CV_PossibleValue_t zerotoone_cons_t[] = {{0, "MIN"}, {FRACUNIT, "MAX"}, {0, NULL}};
@@ -1842,6 +1846,17 @@ static void DirectionChar2_OnChange(void)
 	SendWeaponPref2();
 }
 
+static void Classic_OnChange(void)
+{
+	SendWeaponPref();
+}
+
+static void Classic2_OnChange(void)
+{
+	SendWeaponPref2();
+}
+
+
 //
 // G_DoLoadLevel
 //
@@ -2633,7 +2648,7 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 	spectator = players[player].spectator;
 	outofcoop = players[player].outofcoop;
 	removing = players[player].removing;
-	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_AUTOBRAKE|PF_TAGIT|PF_GAMETYPEOVER));
+	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_CLASSIC|PF_TAGIT|PF_GAMETYPEOVER));
 	playerangleturn = players[player].angleturn;
 	oldrelangleturn = players[player].oldrelangleturn;
 

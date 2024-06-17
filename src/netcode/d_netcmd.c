@@ -878,6 +878,8 @@ void D_RegisterClientCommands(void)
 	// deez New User eXperiences
 	CV_RegisterVar(&cv_directionchar[0]);
 	CV_RegisterVar(&cv_directionchar[1]);
+	CV_RegisterVar(&cv_classic);
+	CV_RegisterVar(&cv_classic2);
 
 	// hi here's some new controls
 	CV_RegisterVar(&cv_cam_shiftfacing[0]);
@@ -1506,6 +1508,8 @@ void SendWeaponPref(void)
 		buf[0] |= 2;
 	if (cv_directionchar[0].value == 1)
 		buf[0] |= 4;
+	if (cv_classic.value)
+		buf[0] |= 8;
 	SendNetXCmd(XD_WEAPONPREF, buf, 1);
 }
 
@@ -1520,6 +1524,8 @@ void SendWeaponPref2(void)
 		buf[0] |= 2;
 	if (cv_directionchar[1].value == 1)
 		buf[0] |= 4;
+	if (cv_classic2.value)
+		buf[0] |= 8;
 	SendNetXCmd2(XD_WEAPONPREF, buf, 1);
 }
 
@@ -1527,13 +1533,15 @@ static void Got_WeaponPref(UINT8 **cp,INT32 playernum)
 {
 	UINT8 prefs = READUINT8(*cp);
 
-	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR);
+	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_CLASSIC);
 	if (prefs & 1)
 		players[playernum].pflags |= PF_FLIPCAM;
 	if (prefs & 2)
 		players[playernum].pflags |= PF_ANALOGMODE;
 	if (prefs & 4)
 		players[playernum].pflags |= PF_DIRECTIONCHAR;
+	if (prefs & 8)
+		players[playernum].pflags |= PF_CLASSIC;
 }
 
 void D_SendPlayerConfig(void)

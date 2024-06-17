@@ -2218,6 +2218,8 @@ void G_DoPlayDemo(char *defdemoname)
 			pflags |= PF_ANALOGMODE;
 		if (buf & 0x04)
 			pflags |= PF_DIRECTIONCHAR;
+		if (buf & 0x08)
+			pflags |= PF_CLASSIC;
 		CV_SetValue(&cv_showinputjoy, !!(buf & 0x10));
 	}
 

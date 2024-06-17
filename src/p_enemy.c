@@ -4492,7 +4492,7 @@ void A_Invincibility(mobj_t *actor)
 	player = actor->target->player;
 	player->powers[pw_invulnerability] = invulntics + 1;
 
-	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
+	if (P_IsLocalPlayer(player) && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		if (mariomode)
 			G_GhostAddColor(GHC_INVINCIBLE);
@@ -4526,7 +4526,7 @@ void A_SuperSneakers(mobj_t *actor)
 
 	actor->target->player->powers[pw_sneakers] = sneakertics + 1;
 
-	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
+	if (P_IsLocalPlayer(player) && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		if (S_SpeedMusic(0.0f) && (mapheaderinfo[gamemap-1]->levelflags & LF_SPEEDMUSIC))
 			S_SpeedMusic(1.4f);
