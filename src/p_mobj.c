@@ -1390,6 +1390,7 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 				case MT_WATERDROP:
 				case MT_CYBRAKDEMON:
 					gravityadd >>= 1;
+					break;
 				default:
 					break;
 			}
@@ -6643,7 +6644,6 @@ static boolean P_ShieldLook(mobj_t *thing, shieldtype_t shield)
 	if (scale < 1) {
 		P_SetScale(thing, thing->target->scale, true);
 		thing->old_scale = thing->target->old_scale;
-
 		thing->flags2 |= (MF2_DONTDRAW|MF2_JUSTATTACKED); //Hide and indicate we're hidden
 	} else {
 		P_SetScale(thing, scale, true);
