@@ -6181,10 +6181,8 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
-			if (totalcontrol <= 20)
-				turnspd -= FRACUNIT;
-			else if (totalcontrol <= 40)
-				turnspd -= FRACUNIT>>1;
+			if (totalcontrol)
+				turnspd = FixedMul(turnspd, (totalcontrol*FRACUNIT)/50);
 
 			if (player->powers[pw_justsprung])
 				turnspd -= 2*FRACUNIT/3;
@@ -6226,16 +6224,14 @@ static void P_3dMovement(player_t *player)
 			{
 				if (deceleration >= FixedDiv(player->speed, player->mo->scale))
 					deceleration = 0;
-				else if (totalcontrol <= 20)
-					deceleration >>= 2;
-				else if (totalcontrol <= 40)
-					deceleration >>= 1;
+				else
+					deceleration = FixedMul(deceleration, (totalcontrol*FRACUNIT)/50);
 			}
 		}
 		else
 		{
-			if (player->pflags & PF_CLASSIC)
-				deceleration /= 3;
+			if (player->speed >= FixedMul(player->normalspeed>>1, player->mo->scale) && player->mo->friction <= ORIG_FRICTION)
+				deceleration -= FRACUNIT>>1;
 
 			deceleration = min(deceleration, FixedDiv(player->speed>>1, player->mo->scale));
 		}
