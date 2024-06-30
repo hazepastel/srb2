@@ -1533,15 +1533,13 @@ static void Got_WeaponPref(UINT8 **cp,INT32 playernum)
 {
 	UINT8 prefs = READUINT8(*cp);
 
-	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_CLASSIC);
+	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR);
 	if (prefs & 1)
 		players[playernum].pflags |= PF_FLIPCAM;
 	if (prefs & 2)
 		players[playernum].pflags |= PF_ANALOGMODE;
 	if (prefs & 4)
 		players[playernum].pflags |= PF_DIRECTIONCHAR;
-	if (prefs & 8)
-		players[playernum].pflags |= PF_CLASSIC;
 }
 
 void D_SendPlayerConfig(void)

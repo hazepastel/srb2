@@ -2219,7 +2219,7 @@ void G_DoPlayDemo(char *defdemoname)
 		if (buf & 0x04)
 			pflags |= PF_DIRECTIONCHAR;
 		if (buf & 0x08)
-			pflags |= PF_CLASSIC;
+			pflags |= PF_AUTOBRAKE;
 		CV_SetValue(&cv_showinputjoy, !!(buf & 0x10));
 	}
 

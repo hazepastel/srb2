@@ -6181,8 +6181,6 @@ static void P_3dMovement(player_t *player)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
-			if (totalcontrol)
-				turnspd = FixedMul(turnspd, (totalcontrol*FRACUNIT)/50);
 
 			if (player->powers[pw_justsprung])
 				turnspd -= 2*FRACUNIT/3;
@@ -6190,6 +6188,9 @@ static void P_3dMovement(player_t *player)
 				turnspd -= FRACUNIT>>2;
 			if (player->powers[pw_super] || player->powers[pw_sneakers])
 				turnspd += FRACUNIT/3;
+
+			if (totalcontrol)
+				turnspd = FixedMul(turnspd, (totalcontrol*FRACUNIT)/50);
 
 			turnspd = max(FRACUNIT>>3, turnspd);
 

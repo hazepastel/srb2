@@ -2648,7 +2648,7 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 	spectator = players[player].spectator;
 	outofcoop = players[player].outofcoop;
 	removing = players[player].removing;
-	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_CLASSIC|PF_TAGIT|PF_GAMETYPEOVER));
+	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_TAGIT|PF_GAMETYPEOVER));
 	playerangleturn = players[player].angleturn;
 	oldrelangleturn = players[player].oldrelangleturn;
 

@@ -109,7 +109,7 @@ typedef enum
 	PF_FLIPCAM       = 1, // Flip camera angle with gravity flip prefrence.
 	PF_ANALOGMODE    = 1<<1, // Analog mode?
 	PF_DIRECTIONCHAR = 1<<2, // Directional character sprites?
-	PF_CLASSIC     = 1<<3, // Classic friction?
+	PF_AUTOBRAKE     = 1<<3, // deprecated but here for compat
 
 	// Cheats
 	PF_GODMODE = 1<<4,
@@ -129,7 +129,6 @@ typedef enum
 
 	// Applying autobrake?
 	PF_APPLYAUTOBRAKE = 1<<13,
-#define PF_AUTOBRAKE PF_APPLYAUTOBRAKE
 
 	// Character action status
 	PF_STARTJUMP     = 1<<14,

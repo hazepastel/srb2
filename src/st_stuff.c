@@ -590,7 +590,7 @@ static void ST_drawDebugInfo(void)
 		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
 		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
-		V_DrawDebugFlag(((stplyr->pflags & PF_CLASSIC)        ? V_GREENMAP : V_REDMAP), "CF");
+		V_DrawDebugFlag(((stplyr->charflags & SF_NOSHIELDABILITY)        ? V_GREENMAP : V_REDMAP), "NS");
 		V_DrawDebugFlag(((stplyr->pflags & PF_DRILLING) ? V_GREENMAP : V_REDMAP), "DR");
 		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
 		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");
