@@ -528,7 +528,7 @@ void R_RenderThickSideRange(drawseg_t *ds, INT32 x1, INT32 x2, ffloor_t *pfloor)
 	curline = ds->curline;
 	backsector = pfloor->target;
 	frontsector = curline->frontsector == pfloor->target ? curline->backsector : curline->frontsector;
-	sidedef = &sides[pfloor->master->sidenum[0]];
+	sidedef = R_GetFFloorSide(curline, pfloor);
 
 	if (pfloor->master->flags & ML_TFERLINE)
 	{

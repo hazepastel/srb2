@@ -1533,7 +1533,7 @@ static void HWR_ProcessSeg(void)
 				if ((high1 < lowcut && highslope1 < lowcutslope) || (low1 > highcut && lowslope1 > highcutslope))
 					continue;
 
-				side_t *side = &sides[rover->master->sidenum[0]];
+				side_t *side = R_GetFFloorSide(gl_curline, rover);
 
 				boolean do_texture_skew;
 				boolean dont_peg_bottom;
