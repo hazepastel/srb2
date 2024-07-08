@@ -21,7 +21,7 @@ android {
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-16"
-                abiFilters 'armeabi-v7a', 'arm64-v8a'// temp buildtime speedup, 'x86', 'x86_64'
+                abiFilters 'arm64-v8a'// temp buildtime speedup, 'armeabi-v7a', 'x86', 'x86_64'
             }
         }
         flavorDimensions "assets"
