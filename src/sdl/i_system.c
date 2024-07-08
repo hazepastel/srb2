@@ -396,7 +396,7 @@ static void I_ReportSignal(int num, int coredumped)
 //		sigttl = "SIGBREAK" // Ctrl-Break sequence
 //		break;
 	case SIGABRT:
-		sigmsg = "SRB2 was terminated by an abort signal.";
+		sigmsg = "SRB2 was terminated by an abort signal. :3";
 		signame = "SIGABRT"; // abnormal termination triggered by abort call
 		break;
 	default:
@@ -469,7 +469,7 @@ FUNCNORETURN static ATTRNORETURN void signal_handler(INT32 num)
 	write_backtrace(num);
 #endif
 #if defined(__ANDROID__)
-	NDKCrashHandler_ReportSignal("SRB2 was terminated by an abort signal.");
+	NDKCrashHandler_ReportSignal("SRB2 was terminated by an abort signal");
 #endif
 	I_ReportSignal(num, 0);
 	I_ShutdownSystem();
