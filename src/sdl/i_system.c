@@ -421,9 +421,7 @@ static void I_ReportSignal(int num, int coredumped)
 
 	sprintf(ttl, "Process killed by signal: %s", sigttl);
 
-#if defined(__ANDROID__)
-	NDKCrashHandler_ReportSignal(sigmsg);
-#endif
+
 
 /*
 
@@ -469,6 +467,9 @@ FUNCNORETURN static ATTRNORETURN void signal_handler(INT32 num)
 	CL_AbortDownloadResume();
 #ifdef UNIXBACKTRACE
 	write_backtrace(num);
+#endif
+#if defined(__ANDROID__)
+	NDKCrashHandler_ReportSignal("SRB2 was terminated by an abort signal.");
 #endif
 	I_ReportSignal(num, 0);
 	I_ShutdownSystem();
