@@ -6207,10 +6207,7 @@ static void P_3dMovement(player_t *player)
 			if (player->powers[pw_super] || player->powers[pw_sneakers])
 				turnspd += FRACUNIT/3;
 
-			if (totalcontrol)
-				turnspd = FixedMul(turnspd, (totalcontrol*FRACUNIT)/50);
-
-			turnspd = max(FRACUNIT>>3, turnspd);
+			turnspd = max(FRACUNIT>>2, turnspd);
 
 			if (angdiff > 0)
 				newang += min(angdiff/2, turnspd);
