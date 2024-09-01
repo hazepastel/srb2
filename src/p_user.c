@@ -776,7 +776,7 @@ static void P_DeNightserizePlayer(player_t *player)
 // NiGHTS Time!
 void P_NightserizePlayer(player_t *player, INT32 nighttime)
 {
-	UINT8 oldmare, oldmarelap, oldmarebonuslap;
+	UINT8 oldmare, oldmarelap, oldmarebonuslap, newmare;
 
 	// Bots can't be NiGHTSerized, silly!1 :P
 	if (player->bot)
@@ -796,6 +796,11 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 			G_GhostAddColor(GHC_NIGHTSSKIN);
 		}
 	}
+
+	// Use mare-specific time limit if specified
+	newmare = P_FindLowestMare();
+	if (mapheaderinfo[gamemap-1]->nightstimer[newmare] > 0)
+		nighttime = mapheaderinfo[gamemap-1]->nightstimer[newmare];
 
 	player->pflags &= ~(PF_SPINDOWN|PF_JUMPDOWN|PF_ATTACKDOWN|PF_SHIELDDOWN|PF_STARTDASH|PF_GLIDING|PF_JUMPED|PF_NOJUMPDAMAGE|PF_THOKKED|PF_SHIELDABILITY|PF_SPINNING|PF_DRILLING);
 	player->homing = 0;
@@ -867,7 +872,7 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 				continue;
 
 			players[i].texttimer = (3 * TICRATE) - 10;
-			players[i].textvar = 4; // Score and grades
+			players[i].textvar = NTV_BONUSTIMEEND; // Score and grades
 			players[i].lastmare = players[i].mare;
 			players[i].lastmarelap = players[i].marelap;
 			players[i].lastmarebonuslap = players[i].marebonuslap;
@@ -885,7 +890,8 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 			}
 
 			// Add score to leaderboards now
-			G_AddTempNightsRecords(player, players[i].marescore, leveltime - player->marebegunat, players[i].mare + 1);
+			player->lastmaretime = leveltime - player->marebegunat;
+			G_AddTempNightsRecords(player, players[i].marescore, player->lastmaretime, players[i].mare + 1);
 
 			// transfer scores anyway
 			players[i].totalmarescore += players[i].marescore;
@@ -906,12 +912,13 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 		player->lastmarelap = oldmarelap;
 		player->lastmarebonuslap = oldmarebonuslap;
 		player->texttimer = 4*TICRATE;
-		player->textvar = 4; // Score and grades
+		player->textvar = NTV_BONUSTIMEEND; // Score and grades
 		player->finishedspheres = (INT16)(player->spheres);
 		player->finishedrings = (INT16)(player->rings);
 
 		// Add score to temp leaderboards
-		G_AddTempNightsRecords(player, player->marescore, leveltime - player->marebegunat, (UINT8)(oldmare + 1));
+		player->lastmaretime = leveltime - player->marebegunat;
+		G_AddTempNightsRecords(player, player->marescore, player->lastmaretime, (UINT8)(oldmare + 1));
 
 		// Starting a new mare, transfer scores
 		player->totalmarescore += player->marescore;
@@ -924,7 +931,7 @@ void P_NightserizePlayer(player_t *player, INT32 nighttime)
 	}
 	else
 	{
-		player->textvar = 5; // Nothing, just tells it to go to the GET n RINGS/SPHERES text in a bit
+		player->textvar = NTV_NONE; // Nothing, just tells it to go to the GET n RINGS/SPHERES text in a bit
 		player->texttimer = 40;
 
 		// Don't show before title card
@@ -969,6 +976,9 @@ pflags_t P_GetJumpFlags(player_t *player)
 //
 boolean P_PlayerInPain(player_t *player)
 {
+	if (P_MobjWasRemoved(player->mo))
+		return false;
+		
 	// no silly, sliding isn't pain
 	if (!(player->pflags & PF_SLIDING) && player->mo->state == &states[player->mo->info->painstate] && player->powers[pw_flashing])
 		return true;
@@ -1082,6 +1092,13 @@ void P_ResetPlayer(player_t *player)
 		if (player->mo->tracer && !P_MobjWasRemoved(player->mo->tracer))
 		{
 			player->mo->tracer->flags |= MF_PUSHABLE;
+
+			// goose the mom a little bit to trigger gravity to process for a tic
+			if (player->mo->tracer->eflags & MFE_VERTICALFLIP)
+				player->mo->tracer->momz -= 1;
+			else
+				player->mo->tracer->momz += 1;
+
 			P_SetTarget(&player->mo->tracer->tracer, NULL);
 		}
 		P_SetTarget(&player->mo->tracer, NULL);
@@ -2064,6 +2081,7 @@ mobj_t *P_SpawnGhostMobj(mobj_t *mobj)
 
 	ghost->renderflags = mobj->renderflags;
 	ghost->blendmode = mobj->blendmode;
+	ghost->alpha = mobj->alpha;
 
 	ghost->spritexscale = mobj->spritexscale;
 	ghost->spriteyscale = mobj->spriteyscale;
@@ -2365,7 +2383,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 		if (dorollstuff)
 		{
 			if ((player->charability2 == CA2_SPINDASH) && !((player->pflags & (PF_SPINNING|PF_THOKKED)) == PF_THOKKED) && !(player->charability == CA_THOK && player->secondjump)
-			&& (player->cmd.buttons & BT_SPIN) && (FixedHypot(player->mo->momx, player->mo->momy) > (5*player->mo->scale)))
+			&& (player->cmd.buttons & BT_SPIN) && (FixedHypot(player->mo->momx, player->mo->momy) >= (5*player->mo->scale)))
 				player->pflags = (player->pflags|PF_SPINNING) & ~PF_THOKKED;
 			else if (!(player->pflags & PF_STARTDASH))
 				player->pflags &= ~PF_SPINNING;
@@ -4539,6 +4557,13 @@ void P_DoJump(player_t *player, boolean soundandstate, boolean allowflip)
 					player->mo->momz += player->mo->tracer->momz;
 				if (!P_IsObjectOnGround(player->mo->tracer))
 					P_SetObjectMomZ(player->mo->tracer, -9*FRACUNIT, true);
+
+				// goose the mom a little bit to trigger gravity to process for a tic
+				if (player->mo->tracer->eflags & MFE_VERTICALFLIP)
+					player->mo->tracer->momz -= 1;
+				else
+					player->mo->tracer->momz += 1;
+
 				player->mo->tracer->flags |= MF_PUSHABLE;
 				P_SetTarget(&player->mo->tracer->tracer, NULL);
 			}
@@ -4714,7 +4739,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				 // Revving
 				else if ((cmd->buttons & BT_SPIN) && (player->pflags & PF_STARTDASH))
 				{
-					if (player->speed > 5*player->mo->scale)
+					if (player->speed >= 5*player->mo->scale)
 					{
 						player->pflags &= ~PF_STARTDASH;
 						P_SetMobjState(player->mo, S_PLAY_ROLL);
@@ -4754,9 +4779,8 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 					if (!player->spectator)
 						S_StartSound(player->mo, sfx_spin);
 				}
-				else
 				// Catapult the player from a spindash rev!
-				if (onground && !(player->pflags & PF_SPINDOWN) && (player->pflags & PF_STARTDASH) && (player->pflags & PF_SPINNING))
+				else if (onground && !(player->pflags & PF_SPINDOWN) && (player->pflags & PF_STARTDASH) && (player->pflags & PF_SPINNING))
 				{
 					player->pflags &= ~PF_STARTDASH;
 					if (player->powers[pw_carry] == CR_BRAKGOOP)
@@ -7005,7 +7029,7 @@ static void P_DoNiGHTSCapsule(player_t *player)
 					{
 						players[i].bonustime = true;
 						players[i].texttimer = 4*TICRATE;
-						players[i].textvar = 1; // Time Bonus
+						players[i].textvar = NTV_BONUSTIMESTART; // Time Bonus
 						players[i].finishedtime = players[i].nightstime;
 						if (!G_IsSpecialStage(gamemap))
 							P_AddPlayerScore(&players[i], (players[i].finishedtime/TICRATE) * 100);
@@ -7089,12 +7113,12 @@ static void P_DoNiGHTSCapsule(player_t *player)
 			{
 				S_StartScreamSound(player->mo, sfx_lose);
 				player->texttimer = 4*TICRATE;
-				player->textvar = 3; // Get more rings!
+				player->textvar = NTV_GETMORESPHERES; // Get more spheres/chips!
 				player->capsule->reactiontime = 0;
 				player->capsule->extravalue1 = player->capsule->cvmem =\
 				 player->capsule->cusval = player->capsule->movecount =\
 				 player->capsule->lastlook = player->capsule->extravalue2 = -1;
-				P_RunNightsCapsuleTouchExecutors(player->mo, false, false); // run capsule exit executors, and we lacked rings
+				P_RunNightsCapsuleTouchExecutors(player->mo, false, false); // run capsule exit executors, and we lacked spheres/chips
 			}
 		}
 	}
@@ -8759,7 +8783,7 @@ void P_MovePlayer(player_t *player)
 	if (!(player->mo->momz || player->mo->momx || player->mo->momy) && !(player->mo->eflags & MFE_GOOWATER)
 	&& player->panim == PA_IDLE && !(player->powers[pw_carry]))
 		P_DoTeeter(player);
-	
+
 	// Toss a flag
 	if (G_GametypeHasTeams() && (cmd->buttons & BT_TOSSFLAG) && !(player->powers[pw_super]) && !(player->tossdelay))
 	{
@@ -8805,6 +8829,8 @@ void P_MovePlayer(player_t *player)
 			player->mo->height = P_GetPlayerSpinHeight(player);
 			atspinheight = true;
 		}
+		else if (player->powers[pw_carry] == CR_PLAYER || player->powers[pw_carry] == CR_PTERABYTE) // You're slightly shorter while being carried
+			player->mo->height = FixedDiv(P_GetPlayerHeight(player), FixedDiv(14*FRACUNIT,10*FRACUNIT));
 		else
 			player->mo->height = P_GetPlayerHeight(player);
 
@@ -12122,6 +12148,10 @@ void P_PlayerThink(player_t *player)
 				case CR_DUSTDEVIL:
 					player->drawangle += ANG20;
 					break;
+				case CR_FAN:
+					if (player->pflags & PF_ANALOGMODE) // Don't impact drawangle in any special way when on a fan
+						player->drawangle = player->mo->angle;
+					break;
 				/* -- in case we wanted to have the camera freely movable during zoom tubes
 				case CR_ZOOMTUBE:*/
 				case CR_ROPEHANG:
@@ -12448,13 +12478,13 @@ void P_PlayerThink(player_t *player)
 	if (player->texttimer)
 	{
 		--player->texttimer;
-		if (!player->texttimer && !player->exiting && player->textvar >= 4)
+		if (!player->texttimer && !player->exiting && (player->textvar == NTV_NONE || player->textvar == NTV_BONUSTIMEEND))
 		{
 			player->texttimer = 4*TICRATE;
-			player->textvar = 2; // GET n RINGS!
+			player->textvar = NTV_GETSPHERES; // GET n SPHERES/CHIPS!
 
-			if (!P_MobjWasRemoved(player->capsule) && player->capsule->health != player->capsule->spawnpoint->angle)
-				player->textvar++; // GET n MORE RINGS!
+			if (!P_MobjWasRemoved(player->capsule) && player->capsule->health != player->capsule->spawnpoint->args[1])
+				player->textvar = NTV_GETMORESPHERES; // GET n MORE SPHERES/CHIPS!
 		}
 	}
 
@@ -12822,9 +12852,9 @@ void P_PlayerAfterThink(player_t *player)
 				else
 				{
 					if (tails->player)
-						P_TryMove(player->mo, tails->x + P_ReturnThrustX(tails, tails->player->drawangle, 4*FRACUNIT), tails->y + P_ReturnThrustY(tails, tails->player->drawangle, 4*FRACUNIT), true);
+						P_TryMove(player->mo, tails->x + P_ReturnThrustX(tails, tails->player->drawangle, 4*tails->scale), tails->y + P_ReturnThrustY(tails, tails->player->drawangle, 4*tails->scale), true);
 					else
-						P_TryMove(player->mo, tails->x + P_ReturnThrustX(tails, tails->angle, 4*FRACUNIT), tails->y + P_ReturnThrustY(tails, tails->angle, 4*FRACUNIT), true);
+						P_TryMove(player->mo, tails->x + P_ReturnThrustX(tails, tails->angle, 4*tails->scale), tails->y + P_ReturnThrustY(tails, tails->angle, 4*tails->scale), true);
 					player->mo->momx = tails->momx;
 					player->mo->momy = tails->momy;
 					player->mo->momz = tails->momz;
@@ -12838,7 +12868,7 @@ void P_PlayerAfterThink(player_t *player)
 						P_SetPlayerAngle(player, player->mo->angle);
 				}
 
-				if (P_AproxDistance(player->mo->x - tails->x, player->mo->y - tails->y) > player->mo->radius)
+				if (P_AproxDistance(player->mo->x - tails->x, player->mo->y - tails->y) > tails->radius)
 					player->powers[pw_carry] = CR_NONE;
 
 				if (player->powers[pw_carry] == CR_PLAYER)
@@ -13059,7 +13089,7 @@ void P_PlayerAfterThink(player_t *player)
 				player->mo->momy = ptera->momy;
 				player->mo->momz = ptera->momz;
 
-				if (P_AproxDistance(player->mo->x - ptera->x - ptera->watertop, player->mo->y - ptera->y - ptera->waterbottom) > player->mo->radius)
+				if (P_AproxDistance(player->mo->x - ptera->x - ptera->watertop, player->mo->y - ptera->y - ptera->waterbottom) > ptera->radius)
 					goto dropoff;
 
 				ptera->watertop >>= 1;

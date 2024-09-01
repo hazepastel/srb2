@@ -60,6 +60,8 @@ typedef UINT8 lighttable_t;
 #define CMF_FADEFULLBRIGHTSPRITES  1
 #define CMF_FOG 4
 
+#define TEXTURE_255_IS_TRANSPARENT
+
 // ExtraColormap type. Use for extra_colormaps from now on.
 typedef struct extracolormap_s
 {
@@ -358,7 +360,7 @@ typedef struct pslope_s
 
 	double dzdelta;
 
-	boolean moved : 1;
+	boolean moved;
 
 	UINT8 flags; // Slope options
 } pslope_t;
@@ -405,6 +407,8 @@ typedef enum
 	SSF_ROPEHANG = 1<<18,
 	SSF_JUMPFLIP = 1<<19,
 	SSF_GRAVITYOVERRIDE = 1<<20, // combine with MSF_GRAVITYFLIP
+	SSF_NOPHYSICSFLOOR = 1<<21,
+	SSF_NOPHYSICSCEILING = 1<<22,
 } sectorspecialflags_t;
 
 typedef enum
@@ -610,6 +614,8 @@ typedef struct line_s
 	INT16 callcount; // no. of calls left before triggering, for the "X calls" linedef specials, defaults to 0
 
 	UINT32 secportal; // transferred sector portal
+
+	struct pslope_s *midtexslope;
 } line_t;
 
 typedef struct
@@ -626,6 +632,11 @@ typedef struct
 
 	fixed_t scalex_top, scalex_mid, scalex_bottom;
 	fixed_t scaley_top, scaley_mid, scaley_bottom;
+
+	// per-wall lighting for UDMF
+	// TODO: implement per-texture lighting
+	INT16 light, light_top, light_mid, light_bottom;
+	boolean lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom;
 
 	// Texture indices.
 	// We do not maintain names here.
@@ -973,6 +984,8 @@ typedef struct
 	rotsprite_t *rotated[16]; // Rotated patches
 #endif
 } spriteframe_t;
+
+#define MAXFRAMENUM 256
 
 //
 // A sprite definition:  a number of animation frames.

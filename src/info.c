@@ -26,9 +26,10 @@
 #include "hardware/hw_light.h"
 #endif
 
+
 // Hey, moron! If you change this table, don't forget about the sprite enum in info.h and the sprite lights in hw_light.c!
 // For the sake of constant merge conflicts, let's spread this out
-char sprnames[NUMSPRITES + 1][5] =
+char sprnames[NUMSPRITES + 1][MAXSPRITENAME + 1] =
 {
 	"NULL", // invisible object
 	"UNKN",
@@ -525,7 +526,7 @@ char sprnames[NUMSPRITES + 1][5] =
 	"GWLR",
 };
 
-char spr2names[NUMPLAYERSPRITES][5] =
+char spr2names[NUMPLAYERSPRITES][MAXSPRITENAME + 1] =
 {
 	"STND",
 	"WAIT",
@@ -760,12 +761,12 @@ state_t states[NUMSTATES] =
 	{SPR_PLAY, SPR2_MLEL,                35, {NULL},                   0, 0, S_PLAY_WALK, 0},  // S_PLAY_MELEE_LANDING
 
 	// SF_SUPER
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER|FF_ANIMATE,     7, {NULL},          0, 4, S_PLAY_SUPER_TRANS2, 0}, // S_PLAY_SUPER_TRANS1
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER,                3, {NULL},          0, 0, S_PLAY_SUPER_TRANS3, 0}, // S_PLAY_SUPER_TRANS2
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS4, 0}, // S_PLAY_SUPER_TRANS3
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS5, 0}, // S_PLAY_SUPER_TRANS4
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS6, 0}, // S_PLAY_SUPER_TRANS5
-	{SPR_PLAY, SPR2_TRNS|FF_SPR2SUPER|FF_FULLBRIGHT, 19, {A_FadeOverlay}, 0, 0, S_PLAY_FALL, 0},         // S_PLAY_SUPER_TRANS6
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER|FF_ANIMATE,     7, {NULL},          0, 4, S_PLAY_SUPER_TRANS2, 0}, // S_PLAY_SUPER_TRANS1
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER,                3, {NULL},          0, 0, S_PLAY_SUPER_TRANS3, 0}, // S_PLAY_SUPER_TRANS2
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS4, 0}, // S_PLAY_SUPER_TRANS3
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS5, 0}, // S_PLAY_SUPER_TRANS4
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER|FF_FULLBRIGHT,  2, {NULL},          0, 0, S_PLAY_SUPER_TRANS6, 0}, // S_PLAY_SUPER_TRANS5
+	{SPR_PLAY, SPR2_TRNS|SPR2F_SUPER|FF_FULLBRIGHT, 19, {A_FadeOverlay}, 0, 0, S_PLAY_FALL, 0},         // S_PLAY_SUPER_TRANS6
 
 	{SPR_NULL, 0, -1, {NULL}, 0, 0, S_OBJPLACE_DUMMY, 0}, //S_OBJPLACE_DUMMY
 
@@ -7493,12 +7494,12 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		sfx_steam1,     // deathsound
 		0,              // speed
 		32*FRACUNIT,    // radius
-		1*FRACUNIT,     // height
+		16*FRACUNIT,    // height
 		0,              // display offset
 		20*FRACUNIT,    // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SOLID,       // flags
+		MF_SPECIAL,     // flags
 		S_NULL          // raisestate
 	},
 

@@ -35,11 +35,11 @@
 #pragma interface
 #endif
 
-/// \brief Frame flags: only the frame number - 0 to 256 (Frames from 0 to 63, Sprite2 number uses 0 to 127 plus FF_SPR2SUPER)
+/// \brief Frame flags: only the frame number - 0 to 256 (Frames from 0 to 255, Sprite2 number uses 0 to 127 plus FF_SPR2SUPER)
 #define FF_FRAMEMASK 0xff
 
 /// \brief Frame flags - SPR2: Super sprite2
-#define FF_SPR2SUPER 0x80
+#define FF_SPR2SUPER SPR2F_SUPER //TODO: 2.3: remove this backwards compat hack
 /// \brief Frame flags - SPR2: A change of state at the end of Sprite2 animation
 #define FF_SPR2ENDSTATE 0x100
 /// \brief Frame flags - SPR2: 50% of starting in middle of Sprite2 animation
