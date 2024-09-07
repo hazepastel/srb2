@@ -285,7 +285,7 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(GetFloatv)
 	GETOPENGLFUNC(GetIntegerv)
 	GETOPENGLFUNC(GetString)
-	GETOPENGLFUNC(PolygonMode)
+	//GETOPENGLFUNC(PolygonMode)
 	GETOPENGLFUNC(GetError)
 
 	GETOPENGLFUNC(DepthFunc)

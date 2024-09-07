@@ -436,6 +436,17 @@ customshaderxlat_t shaderxlat[] =
 	{"PalettePostprocess", SHADER_PALETTE_POSTPROCESS},
 	{"UIColormapFade", SHADER_UI_COLORMAP_FADE},
 	{"UITintedWipe", SHADER_UI_TINTED_WIPE},
+#ifdef HAVE_GLES2
+    {"AlphaTest", SHADER_ALPHA_TEST},
+    {"FlatAlphaTest", SHADER_FLOOR_ALPHA_TEST},
+    {"WallTextureAlphaTest", SHADER_WALL_ALPHA_TEST},
+    {"SpriteAlphaTest", SHADER_SPRITE_ALPHA_TEST},
+    {"ModelAlphaTest", SHADER_MODEL_ALPHA_TEST},
+    {"ModelLightingAlphaTest", SHADER_MODEL_LIGHTING_ALPHA_TEST},
+    {"WaterRippleAlphaTest", SHADER_WATER_ALPHA_TEST},
+    {"FadeMask", SHADER_FADEMASK},
+    {"FadeMaskTinted", SHADER_FADEMASK_ADDITIVEANDSUBTRACTIVE},
+#endif
 	{NULL, 0},
 };
 

@@ -26,7 +26,7 @@
 #include "../hw_shaders.h"
 
 #include "../shaders/gl_shaders.h"
-
+// oh god... this function hasen't been edited at all.. i need to manually merge shit... -- bitten
 #if defined (HWRENDER) && !defined (NOROPENGL)
 
 <<<<<<< HEAD

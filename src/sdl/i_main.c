@@ -30,6 +30,7 @@
 
 #if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
 #include <errno.h>
+#include <time.h>
 #endif
 
 #ifdef HAVE_SDL
