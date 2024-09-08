@@ -173,10 +173,14 @@ extern PFNglReadPixels pglReadPixels;
 /* Texture mapping */
 typedef void (R_GL_APIENTRY * PFNglTexParameteri) (GLenum target, GLenum pname, GLint param);
 extern PFNglTexParameteri pglTexParameteri;
+typedef void (R_GL_APIENTRY * PFNglTexImage1D) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+extern PFNglTexImage1D pglTexImage1D;
 typedef void (R_GL_APIENTRY * PFNglTexImage2D) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
 extern PFNglTexImage2D pglTexImage2D;
 typedef void (R_GL_APIENTRY * PFNglTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
 extern PFNglTexSubImage2D pglTexSubImage2D;
+typedef void (R_GL_APIENTRY * PFNglGetTexImage) (GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels);
+extern PFNglGetTexImage pglGetTexImage;
 
 /* Drawing functions */
 typedef void (R_GL_APIENTRY * PFNglDrawArrays) (GLenum mode, GLint first, GLsizei count);
@@ -197,6 +201,8 @@ typedef void (R_GL_APIENTRY * PFNglCopyTexImage2D) (GLenum target, GLint level, 
 extern PFNglCopyTexImage2D pglCopyTexImage2D;
 typedef void (R_GL_APIENTRY * PFNglCopyTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 extern PFNglCopyTexSubImage2D pglCopyTexSubImage2D;
+typedef void (R_GL_APIENTRY * PFNglTexImage3D) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+extern PFNglTexImage3D pglTexImage3D;
 #endif
 
 //
@@ -490,6 +496,9 @@ extern float NEAR_CLIPPING_PLANE;
 #ifndef GL_TEXTURE1
 #define GL_TEXTURE1 0x84C1
 #endif
+#ifndef GL_TEXTURE2
+#define GL_TEXTURE2 0x84C2
+#endif
 
 /* 1.5 Parms */
 #ifndef GL_STATIC_DRAW
@@ -558,6 +567,14 @@ struct GLRGBAFloat
 };
 typedef struct GLRGBAFloat GLRGBAFloat;
 
+// lighttable list item
+struct LTListItem
+{
+	UINT32 id;
+	struct LTListItem *next;
+};
+typedef struct LTListItem LTListItem;
+
 struct FExtensionList
 {
 	const char *name;
@@ -601,6 +618,7 @@ extern GLuint    tex_downloaded;
 extern GLfloat   fov;
 extern FBITFIELD CurrentPolyFlags;
 
+extern GLuint screenTextures[NUMSCREENTEXTURES];
 extern GLuint screentexture;
 extern GLuint startScreenWipe;
 extern GLuint endScreenWipe;

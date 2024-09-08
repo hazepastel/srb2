@@ -19,6 +19,7 @@
 
 #ifdef GL_SHADERS
 #include "../shaders/gl_shaders.h"
+#include "../hw_shaders.h"
 #endif
 
 #include <stdarg.h>
@@ -41,7 +42,15 @@ float NEAR_CLIPPING_PLANE = NZCLIP_PLANE;
 RGBA_t *TextureBuffer = NULL;
 static size_t TextureBufferSize = 0;
 
-RGBA_t  myPaletteData[256];
+// Linked list of all lighttables.
+static LTListItem *LightTablesTail = NULL;
+static LTListItem *LightTablesHead = NULL;
+
+static RGBA_t screenPalette[256] = {0}; // the palette for the postprocessing step in palette rendering
+static GLuint screenPaletteTex = 0; // 1D texture containing the screen palette
+static GLuint paletteLookupTex = 0; // 3D texture containing RGB -> palette index lookup table
+RGBA_t  myPaletteData[256]; // the palette for converting textures to RGBA
+
 GLint   screen_width    = 0;
 GLint   screen_height   = 0;
 GLbyte  screen_depth    = 0;
@@ -62,6 +71,7 @@ FTextureInfo *TexCacheTail = NULL;
 FTextureInfo *TexCacheHead = NULL;
 
 GLuint      tex_downloaded  = 0;
+static GLuint lt_downloaded = 0; // currently bound lighttable texture
 GLfloat     fov             = 90.0f;
 FBITFIELD   CurrentPolyFlags;
 
@@ -69,6 +79,7 @@ FBITFIELD   CurrentPolyFlags;
 //			flush all of the stored textures, leaving them unavailable at times such as between levels
 //			These need to start at 0 and be set to their number, and be reset to 0 when deleted so that intel GPUs
 //			can know when the textures aren't there, as textures are always considered resident in their virtual memory
+GLuint screenTextures[NUMSCREENTEXTURES] = {0};
 GLuint screentexture = 0;
 GLuint startScreenWipe = 0;
 GLuint endScreenWipe = 0;
@@ -160,8 +171,10 @@ PFNglReadPixels pglReadPixels;
 
 /* Texture mapping */
 PFNglTexParameteri pglTexParameteri;
+PFNglTexImage1D pglTexImage1D;
 PFNglTexImage2D pglTexImage2D;
 PFNglTexSubImage2D pglTexSubImage2D;
+PFNglGetTexImage pglGetTexImage;
 
 /* Drawing functions */
 PFNglDrawArrays pglDrawArrays;
@@ -175,6 +188,7 @@ PFNglBindTexture pglBindTexture;
 /* Texture mapping */
 PFNglCopyTexImage2D pglCopyTexImage2D;
 PFNglCopyTexSubImage2D pglCopyTexSubImage2D;
+PFNglTexImage3D pglTexImage3D;
 #endif
 
 //
@@ -300,8 +314,10 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(ReadPixels)
 
 	GETOPENGLFUNC(TexParameteri)
+	GETOPENGLFUNC(TexImage1D)
 	GETOPENGLFUNC(TexImage2D)
 	GETOPENGLFUNC(TexSubImage2D)
+	GETOPENGLFUNC(GetTexImage)
 
 	GETOPENGLFUNC(GenTextures)
 	GETOPENGLFUNC(DeleteTextures)
@@ -1003,6 +1019,7 @@ void GLTexture_Flush(void)
 //			a new size
 void GLTexture_FlushScreen(void)
 {
+#if 0 // keeping this temperally - bitten
 	if (screentexture)
 		pglDeleteTextures(1, &screentexture);
 	if (startScreenWipe)
@@ -1011,11 +1028,11 @@ void GLTexture_FlushScreen(void)
 		pglDeleteTextures(1, &endScreenWipe);
 	if (finalScreenTexture)
 		pglDeleteTextures(1, &finalScreenTexture);
-
-	screentexture = 0;
-	startScreenWipe = 0;
-	endScreenWipe = 0;
-	finalScreenTexture = 0;
+#endif
+	int i;
+	pglDeleteTextures(NUMSCREENTEXTURES, screenTextures);
+	for (i = 0; i < NUMSCREENTEXTURES; i++)
+		screenTextures[i] = 0;
 }
 
 
@@ -1459,6 +1476,7 @@ boolean GLExtension_LoadFunctions(void)
 	{
 		const char *list[] =
 		{
+			"TexImage3D",
 			"ActiveTexture",
 #ifndef HAVE_GLES2
 			"ClientActiveTexture",
@@ -1468,6 +1486,7 @@ boolean GLExtension_LoadFunctions(void)
 
 		if (CheckFunctionList(list))
 		{
+			GETOPENGLFUNC(TexImage3D)
 			GETOPENGLFUNC(ActiveTexture)
 #ifndef HAVE_GLES2
 			GETOPENGLFUNC(ClientActiveTexture)

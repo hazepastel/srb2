@@ -29,13 +29,6 @@
 // oh god... this function hasen't been edited at all.. i need to manually merge shit... -- bitten
 #if defined (HWRENDER) && !defined (NOROPENGL)
 
-<<<<<<< HEAD
-static const GLubyte white[4] = { 255, 255, 255, 255 };
-
-// ==========================================================================
-//                                                                    GLOBALS
-// ==========================================================================
-=======
 struct GLRGBAFloat
 {
 	GLfloat red;
@@ -108,15 +101,13 @@ static boolean model_lighting = false;
 const GLubyte *gl_version = NULL;
 const GLubyte *gl_renderer = NULL;
 const GLubyte *gl_extensions = NULL;
->>>>>>> 3aad3713cb3d105c141712d239656c6454291525
 
 //Hurdler: 04/10/2000: added for the kick ass coronas as Boris wanted;-)
 static GLfloat modelMatrix[16];
 static GLfloat projMatrix[16];
 static GLint   viewport[4];
 
-<<<<<<< HEAD
-=======
+#if 0 // oh god i dont feel like fixing this shit rn, its not even in the palette rendering merge request
 // Sryder:	NextTexAvail is broken for these because palette changes or changes to the texture filter or antialiasing
 //			flush all of the stored textures, leaving them unavailable at times such as between levels
 //			These need to start at 0 and be set to their number, and be reset to 0 when deleted so that intel GPUs
@@ -428,7 +419,7 @@ static PFNglCopyTexImage2D pglCopyTexImage2D;
 typedef void (APIENTRY * PFNglCopyTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 static PFNglCopyTexSubImage2D pglCopyTexSubImage2D;
 #endif
->>>>>>> 3aad3713cb3d105c141712d239656c6454291525
+#endif
 /* GLU functions */
 typedef GLint (APIENTRY * PFNgluBuild2DMipmaps) (GLenum target, GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *data);
 static PFNgluBuild2DMipmaps pgluBuild2DMipmaps;
@@ -588,15 +579,14 @@ boolean SetupGLfunc(void)
 }
 
 <<<<<<< HEAD
+static boolean gl_shadersenabled = false;
+static INT32 gl_allowshaders = 0;
+
 boolean GLBackend_LoadExtraFunctions(void)
 {
 	GLExtension_LoadFunctions();
 
 	GETOPENGLFUNCTRY(BlendEquation)
-=======
-static boolean gl_shadersenabled = false;
-static INT32 gl_allowshaders = 0;
->>>>>>> 3aad3713cb3d105c141712d239656c6454291525
 
 #ifdef GL_SHADERS
 	if (GLExtension_shaders)
@@ -769,9 +759,9 @@ EXPORT void HWRAPI(SetShader) (int type)
 EXPORT boolean HWRAPI(InitShaders) (void)
 {
 #ifdef GL_SHADERS
-<<<<<<< HEAD
+#if 0 // this should work fine
 	return Shader_Compile();
-=======
+#else
 	if (!pglUseProgram)
 		return false;
 	
@@ -785,7 +775,7 @@ EXPORT boolean HWRAPI(InitShaders) (void)
 	}
 
 	return true;
->>>>>>> 3aad3713cb3d105c141712d239656c6454291525
+#endif
 #else
 	return false;
 #endif

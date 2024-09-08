@@ -62,7 +62,12 @@ typedef enum
 	gluniform_fade_start,
 	gluniform_fade_end,
 
-	// misc.
+	// palette rendering
+	gluniform_palette_tex, // 1d texture containing a palette
+	gluniform_palette_lookup_tex, // 3d texture containing the rgb->index lookup table
+	gluniform_lighttable_tex, // 2d texture containing a light table
+
+	// misc
 #ifdef HAVE_GLES2
 	gluniform_alphatest,
 	gluniform_alphathreshold,
@@ -108,8 +113,7 @@ typedef struct gl_shader_s
 } gl_shader_t;
 
 extern gl_shader_t gl_shaders[HWR_MAXSHADERS];
-extern gl_shader_t gl_usershaders[HWR_MAXSHADERS];
-extern shadersource_t gl_customshaders[HWR_MAXSHADERS];
+extern gl_shader_t gl_fallback_shader;
 
 // 09102020
 typedef struct gl_shaderstate_s

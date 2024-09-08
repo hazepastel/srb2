@@ -10,6 +10,7 @@
 /// \brief OpenGL shaders
 
 #include "gl_shaders.h"
+#include "../hw_shaders.h"
 #include "../r_glcommon/r_glcommon.h"
 #include "../../r_local.h" // For rendertimefrac, used for the leveltime shader uniform
 
@@ -319,49 +320,33 @@ void Shader_Set(int type)
 {
 	gl_shader_t *shader = gl_shaderstate.current;
 
+	if (type == SHADER_NONE)
+	{
+		Shader_UnSet();
+		return;
+	}
+
 #ifndef HAVE_GLES2
 	if (gl_allowshaders == 0)
 		return;
 #endif
 
-	if ((shader == NULL) || (GLuint)type != gl_shaderstate.type)
-	{
-		gl_shader_t *baseshader = &gl_shaders[type];
-		gl_shader_t *usershader = &gl_usershaders[type];
+		gl_shader_t *next_shader = &gl_shaders[type]; // the gl_shader_t we are going to switch to
 
-		if (!baseshader->program)
+		if (!next_shader->program)
+			next_shader = &gl_fallback_shader; // unusable shader, use fallback instead
+
+		// update gl_shaderstate if an actual shader switch is needed
+		if (gl_shaderstate.current != next_shader)
 		{
-#ifdef HAVE_GLES2
-			if (alpha_test)
-			{
-				baseshader = &gl_shaders[GLBackend_InvertAlphaTestShader(type)];
-
-				if (!baseshader->program)
-				{
-					baseshader = &gl_shaders[SHADER_FLOOR];
-					alpha_test = false;
-				}
-			}
-			else
-#endif
-				baseshader = &gl_shaders[SHADER_FLOOR];
+			gl_shaderstate.current = next_shader;
+			gl_shaderstate.program = next_shader->program;
+			gl_shaderstate.type = type;
+			gl_shaderstate.changed = true;
 		}
 
-		if (usershader->program)
-			shader = (gl_allowshaders == 2) ? baseshader : usershader;
-		else
-			shader = baseshader;
+		gl_shadersenabled = true;
 
-		gl_shaderstate.current = shader;
-		gl_shaderstate.type = type;
-		gl_shaderstate.changed = true;
-	}
-
-	if (gl_shaderstate.program != shader->program)
-	{
-		gl_shaderstate.program = shader->program;
-		gl_shaderstate.changed = true;
-	}
 
 #ifdef HAVE_GLES2
 	Shader_SetTransform();
@@ -369,12 +354,13 @@ void Shader_Set(int type)
 #else
 	gl_shadersenabled = (shader->program != 0);
 #endif
+	return;
 }
 
 void Shader_UnSet(void)
 {
 #ifdef HAVE_GLES2
-	Shader_Set(SHADER_FLOOR);
+	Shader_Set(SHADER_NONE);
 	Shader_SetUniforms(NULL, NULL, NULL, NULL);
 #else
 	gl_shaderstate.current = NULL;
@@ -450,74 +436,96 @@ static void Shader_CompileError(const char *message, GLuint program, INT32 shade
 		free(infoLog);
 }
 
-static boolean Shader_CompileProgram(gl_shader_t *shader, GLint i, const GLchar *vert_shader, const GLchar *frag_shader)
+static boolean Shader_CompileProgram(gl_shader_t *shader, GLint i)
 {
-	GLuint gl_vertShader, gl_fragShader;
+	GLuint gl_vertShader = 0;
+	GLuint gl_fragShader = 0;
 	GLint result;
+	const GLchar *vert_shader = shader->vertex_shader;
+	const GLchar *frag_shader = shader->fragment_shader;
 
-	//
-	// Load and compile vertex shader
-	//
-	gl_vertShader = pglCreateShader(GL_VERTEX_SHADER);
-	if (!gl_vertShader)
+	if (shader->program)
+		pglDeleteProgram(shader->program);
+
+	if (!vert_shader && !frag_shader)
 	{
-		Shader_ErrorMessage("Shader_CompileProgram: Error creating vertex shader %s\n", HWR_GetShaderName(i));
+		GL_MSG_Error("Shader_CompileProgram: Missing shaders for shader program %s\n", HWR_GetShaderName(i));
 		return false;
 	}
 
-	pglShaderSource(gl_vertShader, 1, &vert_shader, NULL);
-	pglCompileShader(gl_vertShader);
-
-	// check for compile errors
-	pglGetShaderiv(gl_vertShader, GL_COMPILE_STATUS, &result);
-	if (result == GL_FALSE)
+	if (vert_shader)
 	{
-		Shader_CompileError("Error compiling vertex shader", gl_vertShader, i);
-		pglDeleteShader(gl_vertShader);
-		return false;
+		//
+		// Load and compile vertex shader
+		//
+		gl_vertShader = pglCreateShader(GL_VERTEX_SHADER);
+		if (!gl_vertShader)
+		{
+			GL_MSG_Error("Shader_CompileProgram: Error creating vertex shader %s\n", HWR_GetShaderName(i));
+			return false;
+		}
+
+		pglShaderSource(gl_vertShader, 1, &vert_shader, NULL);
+		pglCompileShader(gl_vertShader);
+
+		// check for compile errors
+		pglGetShaderiv(gl_vertShader, GL_COMPILE_STATUS, &result);
+		if (result == GL_FALSE)
+		{
+			Shader_CompileError("Error compiling vertex shader", gl_vertShader, i);
+			pglDeleteShader(gl_vertShader);
+			return false;
+		}
 	}
 
-	//
-	// Load and compile fragment shader
-	//
-	gl_fragShader = pglCreateShader(GL_FRAGMENT_SHADER);
-	if (!gl_fragShader)
+	if (frag_shader)
 	{
-		Shader_ErrorMessage("Shader_CompileProgram: Error creating fragment shader %s\n", HWR_GetShaderName(i));
-		pglDeleteShader(gl_vertShader);
-		pglDeleteShader(gl_fragShader);
-		return false;
-	}
+		//
+		// Load and compile fragment shader
+		//
+		gl_fragShader = pglCreateShader(GL_FRAGMENT_SHADER);
+		if (!gl_fragShader)
+		{
+			GL_MSG_Error("Shader_CompileProgram: Error creating fragment shader %s\n", HWR_GetShaderName(i));
+			pglDeleteShader(gl_vertShader);
+			pglDeleteShader(gl_fragShader);
+			return false;
+		}
 
-	pglShaderSource(gl_fragShader, 1, &frag_shader, NULL);
-	pglCompileShader(gl_fragShader);
+		pglShaderSource(gl_fragShader, 1, &frag_shader, NULL);
+		pglCompileShader(gl_fragShader);
 
-	// check for compile errors
-	pglGetShaderiv(gl_fragShader, GL_COMPILE_STATUS, &result);
-	if (result == GL_FALSE)
-	{
-		Shader_CompileError("Error compiling fragment shader", gl_fragShader, i);
-		pglDeleteShader(gl_vertShader);
-		pglDeleteShader(gl_fragShader);
-		return false;
+		// check for compile errors
+		pglGetShaderiv(gl_fragShader, GL_COMPILE_STATUS, &result);
+		if (result == GL_FALSE)
+		{
+			Shader_CompileError("Error compiling fragment shader", gl_fragShader, i);
+			pglDeleteShader(gl_vertShader);
+			pglDeleteShader(gl_fragShader);
+			return false;
+		}
 	}
 
 	shader->program = pglCreateProgram();
-	pglAttachShader(shader->program, gl_vertShader);
-	pglAttachShader(shader->program, gl_fragShader);
+	if (vert_shader)
+		pglAttachShader(shader->program, gl_vertShader);
+	if (frag_shader)
+		pglAttachShader(shader->program, gl_fragShader);
 	pglLinkProgram(shader->program);
 
 	// check link status
 	pglGetProgramiv(shader->program, GL_LINK_STATUS, &result);
 
 	// delete the shader objects
-	pglDeleteShader(gl_vertShader);
-	pglDeleteShader(gl_fragShader);
+	if (vert_shader)
+		pglDeleteShader(gl_vertShader);
+	if (frag_shader)
+		pglDeleteShader(gl_fragShader);
 
 	// couldn't link?
 	if (result != GL_TRUE)
 	{
-		Shader_ErrorMessage("Shader_CompileProgram: Error linking shader program %s\n", HWR_GetShaderName(i));
+		GL_MSG_Error("Shader_CompileProgram: Error linking shader program %s\n", HWR_GetShaderName(i));
 		pglDeleteProgram(shader->program);
 		return false;
 	}
@@ -554,10 +562,30 @@ static boolean Shader_CompileProgram(gl_shader_t *shader, GLint i, const GLchar 
 	shader->uniforms[gluniform_fade_start] = GETUNI("fade_start");
 	shader->uniforms[gluniform_fade_end]   = GETUNI("fade_end");
 
+	// palette rendering
+	shader->uniforms[gluniform_palette_tex] = GETUNI("palette_tex");
+	shader->uniforms[gluniform_palette_lookup_tex] = GETUNI("palette_lookup_tex");
+	shader->uniforms[gluniform_lighttable_tex] = GETUNI("lighttable_tex");
+
 	// misc. (custom shaders)
 	shader->uniforms[gluniform_leveltime] = GETUNI("leveltime");
 
 #undef GETUNI
+
+	// set permanent uniform values
+#define UNIFORM_1(uniform, a, function) \
+	if (uniform != -1) \
+		function (uniform, a);
+	pglUseProgram(shader->program);
+
+	// texture unit numbers for the samplers used for palette rendering
+	UNIFORM_1(shader->uniforms[gluniform_palette_tex], 2, pglUniform1i);
+	UNIFORM_1(shader->uniforms[gluniform_palette_lookup_tex], 1, pglUniform1i);
+	UNIFORM_1(shader->uniforms[gluniform_lighttable_tex], 2, pglUniform1i);
+
+	// restore gl shader state
+	pglUseProgram(gl_shaderstate.program);
+#undef UNIFORM_1
 
 #ifdef HAVE_GLES2
 
@@ -578,58 +606,16 @@ static boolean Shader_CompileProgram(gl_shader_t *shader, GLint i, const GLchar 
 
 boolean Shader_Compile(void)
 {
-	GLint i;
-
 	if (!GLExtension_shaders)
 		return false;
 
-	gl_customshaders[SHADER_FLOOR].vertex = NULL;
-	gl_customshaders[SHADER_FLOOR].fragment = NULL;
+	gl_fallback_shader.vertex_shader = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
+	gl_fallback_shader.fragment_shader = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
 
-	for (i = 0; gl_shadersources[i].vertex && gl_shadersources[i].fragment; i++)
+	if (!Shader_CompileProgram(&gl_fallback_shader, -1))
 	{
-		gl_shader_t *shader, *usershader;
-		const GLchar *vert_shader = gl_shadersources[i].vertex;
-		const GLchar *frag_shader = gl_shadersources[i].fragment;
-
-		if (i >= HWR_MAXSHADERS)
-			break;
-
-		shader = &gl_shaders[i];
-		usershader = &gl_usershaders[i];
-
-		if (shader->program)
-			pglDeleteProgram(shader->program);
-		if (usershader->program)
-			pglDeleteProgram(usershader->program);
-
-		shader->program = 0;
-		usershader->program = 0;
-
-		if (!Shader_CompileProgram(shader, i, vert_shader, frag_shader))
-		{
-			shader->program = 0;
-#ifdef HAVE_GLES2
-			if (i == SHADER_FLOOR)
-				return false;
-#endif
-		}
-
-		// Compile custom shader
-		if ((i == SHADER_FLOOR) || !(gl_customshaders[i].vertex || gl_customshaders[i].fragment))
-			continue;
-
-		// 18032019
-		if (gl_customshaders[i].vertex)
-			vert_shader = gl_customshaders[i].vertex;
-		if (gl_customshaders[i].fragment)
-			frag_shader = gl_customshaders[i].fragment;
-
-		if (!Shader_CompileProgram(usershader, i, vert_shader, frag_shader))
-		{
-			GL_MSG_Warning("Shader_Compile: Could not compile custom shader program for %s\n", HWR_GetShaderName(i));
-			usershader->program = 0;
-		}
+		GL_MSG_Error("Failed to compile the fallback shader program!\n");
+		return false;
 	}
 
 #ifdef HAVE_GLES2
