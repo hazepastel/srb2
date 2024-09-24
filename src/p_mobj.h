@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2023 by Sonic Team Junior.
+// Copyright (C) 1999-2024 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -539,6 +539,8 @@ boolean P_SceneryZMovement(mobj_t *mo);
 void P_PlayerZMovement(mobj_t *mo);
 boolean P_XYFriction(mobj_t *mo, fixed_t oldz);
 void P_EmeraldManager(void);
+
+mobj_t *P_FindNewPosition(UINT32 oldposition);
 
 extern INT32 modulothing;
 
