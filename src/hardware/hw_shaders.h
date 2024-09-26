@@ -56,7 +56,7 @@
 //
 // Generic fragment shader
 //
-
+#if 0
 #define GLSL_DEFAULT_FRAGMENT_SHADER \
 	"uniform sampler2D tex;\n" \
 	"uniform vec4 poly_color;\n" \
@@ -109,7 +109,7 @@
 		"darkness = clamp((darkness - fs) * (1.0 / fd), 0.0, 1.0);\n" \
 	"}\n" \
 	"final_color = mix(final_color, fade_color, darkness);\n"
-
+#endif
 #define GLSL_PALETTE_RENDERING \
 	"float tex_pal_idx = texture3D(palette_lookup_tex, vec3((texel * 63.0 + 0.5) / 64.0))[0] * 255.0;\n" \
 	"float z = gl_FragCoord.z / gl_FragCoord.w;\n" \
@@ -151,7 +151,7 @@
 		"gl_FragColor = final_color;\n" \
 	"}\n" \
 	"#endif\0"
-
+#if 0
 // hand tuned adjustments for light level calculation
 #define GLSL_FLOOR_FUDGES \
 	"#define STARTMAP_FUDGE 1.06\n" \
@@ -300,7 +300,7 @@
 	"void main(void) {\n" \
 		"gl_FragColor = texture2D(tex, gl_TexCoord[0].st) * gl_Color * poly_color;\n" \
 	"}\0"
-
+#endif
 // Shader for the palette rendering postprocess step
 #define GLSL_PALETTE_POSTPROCESS_FRAGMENT_SHADER \
 	"uniform sampler2D tex;\n" \
@@ -352,7 +352,7 @@
 //
 // Generic vertex shader
 //
-
+#if 0
 #define GLSL_FALLBACK_VERTEX_SHADER \
 	"void main()\n" \
 	"{\n" \
@@ -372,7 +372,7 @@
 	"void main(void) {\n" \
 		"gl_FragColor = texture2D(tex, gl_TexCoord[0].st) * poly_color;\n" \
 	"}\0"
-
+#endif
 //
 // Software fragment shader
 //
@@ -414,6 +414,7 @@
 // Sky fragment shader
 // Modulates poly_color with gl_Color
 //
+#if 0
 #define GLSL_SKY_FRAGMENT_SHADER \
 	"uniform sampler2D tex;\n" \
 	"uniform vec4 poly_color;\n" \
@@ -421,4 +422,5 @@
 		"gl_FragColor = texture2D(tex, gl_TexCoord[0].st) * gl_Color * poly_color;\n" \
 	"}\0"
 
+#endif
 #endif
