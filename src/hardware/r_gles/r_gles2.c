@@ -104,11 +104,6 @@ EXPORT boolean HWRAPI(InitShaders) (void)
 #endif
 }
 
-EXPORT boolean HWRAPI(InitShaders) (void)
-{
-	return Shader_Compile();
-}
-
 EXPORT boolean HWRAPI(CompileShader) (int slot)
 {
 #ifdef GL_SHADERS
@@ -743,12 +738,12 @@ static void PreparePolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FBITFIELD
 			c_tint = &tint;
 			c_fade = &fade;
 
-			if (pSurf->LightTableId && pSurf->LightTableId != lt_downloaded)
+			if (pSurf->LightTableId && pSurf->LightTableId != tex_downloaded)
 			{
 				pglActiveTexture(GL_TEXTURE2);
 				pglBindTexture(GL_TEXTURE_2D, pSurf->LightTableId);
 				pglActiveTexture(GL_TEXTURE0);
-				lt_downloaded = pSurf->LightTableId;
+				tex_downloaded = pSurf->LightTableId;
 			}
 		}
 	}
@@ -1014,12 +1009,12 @@ static void DrawModelEx(model_t *model, INT32 frameIndex, float duration, float 
 	else if (Surface->PolyColor.s.alpha == 0xFF)
 		flags |= (PF_Occlude | PF_Masked);
 
-	if (Surface->LightTableId && Surface->LightTableId != lt_downloaded)
+	if (Surface->LightTableId && Surface->LightTableId != tex_downloaded)
 	{
 		pglActiveTexture(GL_TEXTURE2);
 		pglBindTexture(GL_TEXTURE_2D, Surface->LightTableId);
 		pglActiveTexture(GL_TEXTURE0);
-		lt_downloaded = Surface->LightTableId;
+		tex_downloaded = Surface->LightTableId;
 	}
 
 	SetBlend(flags);
@@ -1506,6 +1501,7 @@ EXPORT void HWRAPI(EndScreenWipe)(void)
 // Draw the last scene under the intermission
 EXPORT void HWRAPI(DrawIntermissionBG)(void)
 {
+#if 0 // bitten fix
 	INT32 texsize = 512;
 	float xfix, yfix;
 
@@ -1553,6 +1549,7 @@ EXPORT void HWRAPI(DrawIntermissionBG)(void)
 	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	tex_downloaded = screenTextures[tex];
+#endif
 }
 
 // Do screen fades!
@@ -1684,6 +1681,7 @@ EXPORT void HWRAPI(DrawScreenTexture)(int tex, FSurfaceInfo *surf, FBITFIELD pol
 	pglClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	pglBindTexture(GL_TEXTURE_2D, screenTextures[tex]);
+#if 0 // bitten fix
 	PreparePolygon(surf, NULL, surf ? polyflags : (PF_NoDepthTest));
 	if (!surf)
 		pglColor4ubv(white);
@@ -1693,6 +1691,7 @@ EXPORT void HWRAPI(DrawScreenTexture)(int tex, FSurfaceInfo *surf, FBITFIELD pol
 	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	tex_downloaded = screenTextures[tex];
+#endif
 }
 
 
@@ -1841,6 +1840,7 @@ EXPORT void HWRAPI(DrawFinalScreenTexture)(int width, int height)
 
 EXPORT void HWRAPI(SetPaletteLookup)(UINT8 *lut)
 {
+#if 0 // bitten fix
 	GLenum internalFormat;
 	if (gl_version[0] == '1' || gl_version[0] == '2')
 	{
@@ -1863,11 +1863,13 @@ EXPORT void HWRAPI(SetPaletteLookup)(UINT8 *lut)
 	pglTexImage3D(GL_TEXTURE_3D, 0, internalFormat, HWR_PALETTE_LUT_SIZE, HWR_PALETTE_LUT_SIZE, HWR_PALETTE_LUT_SIZE,
 		0, GL_RED, GL_UNSIGNED_BYTE, lut);
 	pglActiveTexture(GL_TEXTURE0);
+#endif
 }
 
 EXPORT UINT32 HWRAPI(CreateLightTable)(RGBA_t *hw_lighttable)
 {
 	LTListItem *item = malloc(sizeof(LTListItem));
+#if 0 // bitten fix
 	if (!LightTablesTail)
 	{
 		LightTablesHead = LightTablesTail = item;
@@ -1877,6 +1879,7 @@ EXPORT UINT32 HWRAPI(CreateLightTable)(RGBA_t *hw_lighttable)
 		LightTablesTail->next = item;
 		LightTablesTail = item;
 	}
+#endif
 	item->next = NULL;
 	pglGenTextures(1, &item->id);
 	pglBindTexture(GL_TEXTURE_2D, item->id);
@@ -1893,6 +1896,7 @@ EXPORT UINT32 HWRAPI(CreateLightTable)(RGBA_t *hw_lighttable)
 // Delete light table textures, ids given before become invalid and must not be used.
 EXPORT void HWRAPI(ClearLightTables)(void)
 {
+#if 0 // bitten fix
 	while (LightTablesHead)
 	{
 		LTListItem *item = LightTablesHead;
@@ -1902,14 +1906,15 @@ EXPORT void HWRAPI(ClearLightTables)(void)
 	}
 
 	LightTablesTail = NULL;
-
+#endif
 	// we no longer have a bound light table (if we had one), we just deleted it!
-	lt_downloaded = 0;
+	tex_downloaded = 0;
 }
 
 // This palette is used for the palette rendering postprocessing step.
 EXPORT void HWRAPI(SetScreenPalette)(RGBA_t *palette)
 {
+#if 0 // bitten fix
 	if (memcmp(screenPalette, palette, sizeof(screenPalette)))
 	{
 		memcpy(screenPalette, palette, sizeof(screenPalette));
@@ -1922,6 +1927,7 @@ EXPORT void HWRAPI(SetScreenPalette)(RGBA_t *palette)
 		pglTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, palette);
 		pglActiveTexture(GL_TEXTURE0);
 	}
+#endif
 }
 
 #endif //HWRENDER
