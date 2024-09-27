@@ -75,6 +75,7 @@ static PFNglDisableVertexAttribArray pglDisableVertexAttribArray;
 gl_shader_t gl_shaders[HWR_MAXSHADERS];
 gl_shader_t gl_usershaders[HWR_MAXSHADERS];
 shadersource_t gl_customshaders[HWR_MAXSHADERS];
+gl_shader_t gl_fallback_shader;
 
 gl_shaderstate_t gl_shaderstate;
 
@@ -609,16 +610,16 @@ boolean Shader_Compile(void)
 	if (!GLExtension_shaders)
 		return false;
 
-#if 0 // wtf is this, where the fuck did it come from??? - bitten
+//#if 0 // wtf is this, where the fuck did it come from??? - bitten
 	gl_fallback_shader.vertex = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
 	gl_fallback_shader.fragment = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
-#endif
+
 	if (!Shader_CompileProgram(&gl_fallback_shader, -1))
 	{
 		GL_MSG_Error("Failed to compile the fallback shader program!\n");
 		return false;
 	}
-
+//#endif
 #ifdef HAVE_GLES2
 	Shader_Set(SHADER_FLOOR);
 	pglUseProgram(gl_shaderstate.program);

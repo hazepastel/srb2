@@ -112,7 +112,7 @@ typedef struct gl_shader_s
 } gl_shader_t;
 
 extern gl_shader_t gl_shaders[HWR_MAXSHADERS];
-extern gl_shader_t gl_fallback_shader;
+//extern gl_shader_t gl_fallback_shader; // where did this come from????? -bitten
 
 // 09102020
 typedef struct gl_shaderstate_s
