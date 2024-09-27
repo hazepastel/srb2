@@ -314,7 +314,7 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(ReadPixels)
 
 	GETOPENGLFUNC(TexParameteri)
-	GETOPENGLFUNC(TexImage1D)
+	//GETOPENGLFUNC(TexImage1D) // dammit gles
 	GETOPENGLFUNC(TexImage2D)
 	GETOPENGLFUNC(TexSubImage2D)
 	GETOPENGLFUNC(GetTexImage)
