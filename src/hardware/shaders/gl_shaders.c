@@ -609,9 +609,10 @@ boolean Shader_Compile(void)
 	if (!GLExtension_shaders)
 		return false;
 
+#if 0 // wtf is this, where the fuck did it come from??? - bitten
 	gl_fallback_shader.vertex = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
 	gl_fallback_shader.fragment = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
-
+#endif
 	if (!Shader_CompileProgram(&gl_fallback_shader, -1))
 	{
 		GL_MSG_Error("Failed to compile the fallback shader program!\n");
