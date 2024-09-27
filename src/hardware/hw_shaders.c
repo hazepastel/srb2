@@ -14,6 +14,9 @@
 #include "hw_glob.h"
 #include "hw_drv.h"
 #include "hw_shaders.h"
+#ifdef HAVE_GLES2
+#include "shaders/shaders_gles2.h"
+#endif
 #include "../z_zone.h"
 
 // ================
@@ -73,7 +76,7 @@ typedef struct
 // the array has NUMSHADERTARGETS entries for base shaders and for custom shaders
 // the array could be expanded in the future to fit "dynamic" custom shaders that
 // aren't fixed to shader targets
-static shader_t gl_shaders[NUMSHADERTARGETS*2];
+//static shader_t gl_shaders[NUMSHADERTARGETS*2];
 
 static shadertarget_t gl_shadertargets[NUMSHADERTARGETS];
 

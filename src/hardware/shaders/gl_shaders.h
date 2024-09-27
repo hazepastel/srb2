@@ -95,12 +95,11 @@ typedef enum
 
 typedef struct gl_shader_s
 {
-	char *vertex_shader;
-	char *fragment_shader;
-	GLuint program;
-	boolean custom;
-
-	GLint uniforms[gluniform_max+1];
+    char *vertex;
+    char *fragment;
+    GLuint program;
+    GLint uniforms[gluniform_max+1];
+    boolean compiled;
 #ifdef HAVE_GLES2
 	GLint attributes[glattribute_max+1];
 #endif

@@ -21,7 +21,7 @@
 //
 // Generic vertex shader
 //
-
+#if 0
 #define GLSL_DEFAULT_VERTEX_SHADER \
 	"void main()\n" \
 	"{\n" \
@@ -30,7 +30,7 @@
 		"gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;\n" \
 		"gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;\n" \
 	"}\0"
-
+#endif
 // replicates the way fixed function lighting is used by the model lighting option,
 // stores the lighting result to gl_Color
 // (ambient lighting of 0.75 and diffuse lighting from above)
@@ -117,8 +117,8 @@
 	"vec2 lighttable_coord = vec2((tex_pal_idx + 0.5) / 256.0, (light_y + 0.5) / 32.0);\n" \
 	"vec4 final_color = texture2D(lighttable_tex, lighttable_coord);\n" \
 	"final_color.a = texel.a * poly_color.a;\n" \
-	"gl_FragColor = final_color;\n" \
-
+	"gl_FragColor = final_color;\n"
+#if 0
 #define GLSL_SOFTWARE_FRAGMENT_SHADER \
 	"#ifdef SRB2_PALETTE_RENDERING\n" \
 	"uniform sampler2D tex;\n" \
@@ -151,7 +151,8 @@
 		"gl_FragColor = final_color;\n" \
 	"}\n" \
 	"#endif\0"
-#if 0
+#endif
+
 // hand tuned adjustments for light level calculation
 #define GLSL_FLOOR_FUDGES \
 	"#define STARTMAP_FUDGE 1.06\n" \
@@ -224,7 +225,7 @@
 	"float sdistort = sin(a) * amp;\n" \
 	"float cdistort = cos(a) * amp;\n" \
 	"vec4 texel = texture2D(tex, vec2(gl_TexCoord[0].s - sdistort, gl_TexCoord[0].t - cdistort));\n"
-
+#if 0
 #define GLSL_WATER_FRAGMENT_SHADER \
 	GLSL_FLOOR_FUDGES \
 	"const float freq = 0.025;\n" \
@@ -352,7 +353,7 @@
 //
 // Generic vertex shader
 //
-#if 0
+
 #define GLSL_FALLBACK_VERTEX_SHADER \
 	"void main()\n" \
 	"{\n" \
@@ -372,11 +373,11 @@
 	"void main(void) {\n" \
 		"gl_FragColor = texture2D(tex, gl_TexCoord[0].st) * poly_color;\n" \
 	"}\0"
-#endif
+
 //
 // Software fragment shader
 //
-
+#if 0
 #define GLSL_SOFTWARE_FADE_EQUATION \
 	"float darkness = R_DoomLightingEquation(lighting);\n" \
 	"if (fade_start != 0.0 || fade_end != 31.0) {\n" \
@@ -386,7 +387,7 @@
 		"darkness = clamp((darkness - fs) * (1.0 / fd), 0.0, 1.0);\n" \
 	"}\n" \
 	"final_color = mix(final_color, fade_color, darkness);\n"
-
+#endif
 // same as above but multiplies results with the lighting value from the
 // accompanying vertex shader (stored in gl_Color)
 #define GLSL_SOFTWARE_MODEL_LIGHTING_FRAGMENT_SHADER \

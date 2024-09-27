@@ -441,8 +441,8 @@ static boolean Shader_CompileProgram(gl_shader_t *shader, GLint i)
 	GLuint gl_vertShader = 0;
 	GLuint gl_fragShader = 0;
 	GLint result;
-	const GLchar *vert_shader = shader->vertex_shader;
-	const GLchar *frag_shader = shader->fragment_shader;
+	const GLchar *vert_shader = shader->vertex;
+	const GLchar *frag_shader = shader->fragment;
 
 	if (shader->program)
 		pglDeleteProgram(shader->program);
@@ -609,8 +609,8 @@ boolean Shader_Compile(void)
 	if (!GLExtension_shaders)
 		return false;
 
-	gl_fallback_shader.vertex_shader = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
-	gl_fallback_shader.fragment_shader = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
+	gl_fallback_shader.vertex = Z_StrDup(GLSL_FALLBACK_VERTEX_SHADER);
+	gl_fallback_shader.fragment = Z_StrDup(GLSL_FALLBACK_FRAGMENT_SHADER);
 
 	if (!Shader_CompileProgram(&gl_fallback_shader, -1))
 	{

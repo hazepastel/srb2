@@ -631,7 +631,7 @@ INT32 GLBackend_GetShaderType(INT32 type)
 		case SHADER_WATER:
 		{
 			INT32 newshader = GLBackend_GetAlphaTestShader(type);
-			if (!(gl_shaders[type].custom && !gl_shaders[newshader].custom))
+			if (!(gl_shaders[type].compiled && !gl_shaders[newshader].compiled))
 				return newshader;
 		}
 		default:
