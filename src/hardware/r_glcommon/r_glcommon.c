@@ -299,7 +299,7 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(GetFloatv)
 	GETOPENGLFUNC(GetIntegerv)
 	GETOPENGLFUNC(GetString)
-	//GETOPENGLFUNC(PolygonMode)
+	GETOPENGLFUNCTRY(PolygonMode)
 	GETOPENGLFUNC(GetError)
 
 	GETOPENGLFUNC(DepthFunc)
@@ -314,10 +314,10 @@ boolean GLBackend_LoadCommonFunctions(void)
 	GETOPENGLFUNC(ReadPixels)
 
 	GETOPENGLFUNC(TexParameteri)
-	//GETOPENGLFUNC(TexImage1D) // dammit gles
+	GETOPENGLFUNCTRY(TexImage1D) // dammit gles
 	GETOPENGLFUNC(TexImage2D)
 	GETOPENGLFUNC(TexSubImage2D)
-	GETOPENGLFUNC(GetTexImage)
+	GETOPENGLFUNCTRY(GetTexImage)
 
 	GETOPENGLFUNC(GenTextures)
 	GETOPENGLFUNC(DeleteTextures)
