@@ -2021,7 +2021,7 @@ static boolean PIT_CheckLine(line_t *ld)
 boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 {
 	INT32 xl, xh, yl, yh, bx, by;
-	subsector_t *newsubsec;
+	subsector_t *newsubsec = thing->subsector;
 	boolean blockval = true;
 
 	ps_checkposition_calls.value.i++;
@@ -2043,7 +2043,8 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 	tmbbox[BOXRIGHT] = x + tmthing->radius;
 	tmbbox[BOXLEFT] = x - tmthing->radius;
 
-	newsubsec = R_PointInSubsector(x, y);
+	if (thing->x != x || thing->y != y)
+		newsubsec = R_PointInSubsector(x, y);
 	ceilingline = blockingline = NULL;
 
 	// The base floor / ceiling is from the subsector
