@@ -1199,6 +1199,13 @@ void TS_BuildPreset(touchconfig_t *controls, touchconfigstatus_t *status,
 		controls[GC_SPIN].h = SCALECOORD(h);
 		controls[GC_SPIN].x = (controls[GC_JUMP].x - controls[GC_SPIN].w - (12 * FRACUNIT));
 		controls[GC_SPIN].y = controls[GC_JUMP].y + (8 * FRACUNIT);
+        // Shield
+        w = 32 * FRACUNIT;
+        h = 24 * FRACUNIT;
+        controls[GC_SHIELD].h = SCALECOORD(h);
+        controls[GC_SHIELD].w = SCALECOORD(w);
+        controls[GC_SHIELD].x = (controls[GC_SPIN].x - controls[GC_SHIELD].w - (12 * FRACUNIT));
+        controls[GC_SHIELD].y = controls[GC_JUMP].y + (8 * FRACUNIT);
 	}
 	else
 	{
@@ -1217,6 +1224,12 @@ void TS_BuildPreset(touchconfig_t *controls, touchconfigstatus_t *status,
 		controls[GC_SPIN].h = SCALECOORD(h);
 		controls[GC_SPIN].x = (controls[GC_JUMP].x - controls[GC_SPIN].w - (12 * FRACUNIT));
 		controls[GC_SPIN].y = controls[GC_JUMP].y + (12 * FRACUNIT);
+
+        // Shield
+        controls[GC_SHIELD].w = SCALECOORD(w);
+        controls[GC_SHIELD].h = SCALECOORD(h);
+        controls[GC_SHIELD].x = (controls[GC_SPIN].x - controls[GC_SHIELD].w - (12 * FRACUNIT));
+        controls[GC_SHIELD].y = controls[GC_JUMP].y + (12 * FRACUNIT);
 	}
 
 	// Fire, fire normal, and toss flag
@@ -1231,6 +1244,11 @@ void TS_BuildPreset(touchconfig_t *controls, touchconfigstatus_t *status,
 		controls[GC_FIRE].h = h;
 		controls[GC_FIRE].x = controls[GC_SPIN].x;
 		controls[GC_FIRE].y = controls[GC_JUMP].y - offs;
+
+        controls[GC_SHIELD].w = controls[GC_SPIN].w;
+        controls[GC_SHIELD].h = h;
+        controls[GC_SHIELD].x = controls[GC_SPIN].x - offs;
+        controls[GC_SHIELD].y = controls[GC_JUMP].y - offs;
 
 		if (status->ctfgametype)
 		{
