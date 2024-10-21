@@ -74,8 +74,8 @@ extern lighttable_t *zlight[LIGHTLEVELS][MAXLIGHTZ];
 // Utility functions.
 static inline INT32 R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 {
-	// heavily optimized version of R_PointOnSide, stolen from GZDoom.
-	return (INT64)(y - node->y) * node->dx + (INT64)(node->x - x) * node->dy > 0;
+	// use cross product to determine side quickly
+	return (INT64)(y - node->y) * node->dx - (INT64)(x - node->x) * node->dy > 0;
 }
 
 static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
@@ -85,8 +85,8 @@ static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 	fixed_t ldx = line->v2->x - lx;
 	fixed_t ldy = line->v2->y - ly;
 
-	// heavily optimized version of R_PointOnSide, stolen from GZDoom.
-	return (INT64)(y - ly) * ldx + (INT64)(lx - x) * ldy > 0;
+	// use cross product to determine side quickly
+	return (INT64)(y - ly) * ldx - (INT64)(x - lx) * ldy > 0;
 }
 
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
