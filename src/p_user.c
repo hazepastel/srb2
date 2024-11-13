@@ -6195,7 +6195,7 @@ static void P_3dMovement(player_t *player)
 		else if (angdiff <= -180 * FRACUNIT)
 			angdiff += 360 * FRACUNIT;
 
-		if (abs(angdiff) > FRACUNIT && abs(angdiff) < FRACUNIT * 135)
+		if (abs(angdiff) > FRACUNIT/2 && abs(angdiff) < FRACUNIT*135)
 		{
 			fixed_t newang = ang1;
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
