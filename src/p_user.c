@@ -5149,7 +5149,7 @@ static void P_DoShieldAbility(player_t *player)
 	if (LUA_HookPlayer(player, HOOK(PeeloutSpecial)))
 		return;
 
-	if (!(player->powers[pw_shield] & SH_NOSTACK) || !(player->pflags & PF_JUMPED) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (player->charflags & SF_NOSHIELDABILITY))
+	if (!(player->powers[pw_shield] & SH_NOSTACK) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (!(player->pflags & PF_JUMPED) && (((player->powers[pw_shield] & SH_NOSTACK) != SH_WHIRLWIND) || P_IsObjectOnGround(player->mo))) || (player->charflags & SF_NOSHIELDABILITY))
 		return;
 
 	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
@@ -5235,7 +5235,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 
 	mobj_t *lockonshield = NULL;
 
-	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ATTRACT && !(player->charflags & SF_NOSHIELDABILITY))
+	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ATTRACT && !(player->charflags & SF_NOSHIELDABILITY) && !(player->pflags & PF_THOKKED))
 	{
 		if ((lockonshield = P_LookForEnemies(player, true, false)))
 		{
@@ -5592,7 +5592,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 					break;
 			}
 		}
-		else if ((!(player->charflags & SF_NOSHIELDABILITY)) && ((player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND && !player->powers[pw_super] && !player->jerboatime && !LUA_HookPlayer(player, HOOK(ShieldSpecial))))
+		else if ((!(player->charflags & SF_NOSHIELDABILITY)) && ((player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND && !player->jerboatime && !LUA_HookPlayer(player, HOOK(ShieldSpecial))))
 			P_DoJumpShield(player);
 	}
 
