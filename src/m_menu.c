@@ -3927,30 +3927,30 @@ void M_Init(void)
 	CV_RegisterVar(&cv_dummyloadless);
 	CV_RegisterVar(&cv_dummycutscenes);
 
-	quitmsg[QUITMSG] = M_GetText("Eggman's tied explosives\nto your girlfriend, and\nwill activate them if\nyou press the 'Y' key!\nPress 'N' to save her!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG1] = M_GetText("What would Tails say if\nhe saw you quitting the game?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG2] = M_GetText("Hey!\nWhere do ya think you're goin'?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG3] = M_GetText("Forget your studies!\nPlay some more!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG4] = M_GetText("You're trying to say you\nlike Sonic 2K6 better than\nthis, right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG5] = M_GetText("Don't leave yet -- there's a\nsuper emerald around that corner!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG6] = M_GetText("You'd rather work than play?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG7] = M_GetText("Go ahead and leave. See if I care...\n*sniffle*\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG] = M_GetText("Reveries Tip:\n\nBopping a badnik resets certain abilities, such as the Comet Dash and Lovely Ascent.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG1] = M_GetText("Reveries Tip:\n\nSuper Peelout is an advanced, situational move. Spindashing is usually faster!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG2] = M_GetText("Reveries Tip:\n\nTails' flight timer is ticking when Tails' tails twirl at a tremendous tempo.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG3] = M_GetText("Reveries Tip:\n\nHold spin while skidding to use the Quick Spindash technique! Well, you also need the ability to spindash in the first place.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG4] = M_GetText("Reveries Tip:\n\nWhile traveling at a rate above your normal top speed, your momentum will degrade the longer you remain in the air. Rolling and certain character abilities bypass this air drag!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG5] = M_GetText("Reveries Tip:\n\nEnemy wielding a shield in you way?\nBreak through with powerful moves!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG6] = M_GetText("Reveries Tip:\n\nKeeping momentum as Knuckles can be tricky. Release jump the moment you glide into the ground to retain the most speed.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG7] = M_GetText("Reveries Tip:\n\nSpeeding through close quarters? You can turn slightly sharper with Speed Shoes or the Super form.\n\n(Press 'Y' to quit)");
 
-	quitmsg[QUIT2MSG] = M_GetText("If you leave now,\nEggman will take over the world!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG1] = M_GetText("Don't quit!\nThere are animals\nto save!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG2] = M_GetText("Aw c'mon, just bop\na few more robots!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG3] = M_GetText("Did you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG4] = M_GetText("If you leave, I'll use\nmy spin attack on you!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG5] = M_GetText("Don't go!\nYou might find the hidden\nlevels!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG6] = M_GetText("Hit the 'N' key, Sonic!\nThe 'N' key!\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG] = M_GetText("Reveries Tip:\n\nAmy's Hammer Spin is difficult to control, but ignores air drag. When activated, there is a short grace period before you begin falling faster. Tapping instead of holding the button will automatically cancel the move at the end of this period.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG1] = M_GetText("Reveries Tip:\n\nFang's bounce ignores air drag, and gains speed each time you consecutively land without canceling it.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG2] = M_GetText("Reveries Tip:\n\nSome abilities, such as shield abilities, restrict your ability to use more abilities. Other abilities, such as Fang's bounce, do not have the ability to disable abilities.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG3] = M_GetText("Reveries Tip:\n\nDash mode can't be lost while in the air, but can only be obtained while on the ground.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG4] = M_GetText("Reveries Tip:\n\nThe will of a Spring is difficult to resist.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG5] = M_GetText("Reveries Tip:\n\nSpin characters have the shared unique move Anti Flying Turtle Roll, accessible by pressing spin in the upwards launch state.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG6] = M_GetText("Reveries Tip:\n\nNonspin characters have the shared unique passive Spring Spark, allowing them to use their jump abilities after taking a spring.\n\n(Press 'Y' to quit)");
 
-	quitmsg[QUIT3MSG] = M_GetText("Are you really going to give up?\nWe certainly would never give you up.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG1] = M_GetText("Come on, just ONE more netgame!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG2] = M_GetText("Press 'N' to unlock\nthe Ultimate Cheat!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG3] = M_GetText("Why don't you go back and try\njumping on that house to\nsee what happens?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG4] = M_GetText("Every time you press 'Y', an\nSRB2 Developer cries...\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG5] = M_GetText("You'll be back to play soon, though...\n......right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG6] = M_GetText("Aww, is Egg Rock Zone too\ndifficult for you?\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG] = M_GetText("Reveries Tip:\n\nDid you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG1] = M_GetText("Eggeries Tip:\n\nOBEY EGGMAN\n\n(Press 'OBEY' to quit)");
+	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment, and also some spikes.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nComet Dash has a particular meaning.\nI won't tell you what it is.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG4] = M_GetText("Reveries Tip:\n\nReveries is an anagram.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG5] = M_GetText("Reveries Tip:\n\nThe SRB2 Source Code is a bottomless tome of forbidden knowledge.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG6] = M_GetText("Reveries Tip:\n\nAvoid getting oilers in your boilers. Failure to comply may result in a quicksilver pinball.\n\n(Press 'Y' to quit)");
 
 	/*
 	Well the menu sucks for forcing us to have an item set
