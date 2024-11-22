@@ -3946,8 +3946,8 @@ void M_Init(void)
 
 	quitmsg[QUIT3MSG] = M_GetText("Reveries Tip:\n\nDid you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
 	quitmsg[QUIT3MSG1] = M_GetText("Eggeries Tip:\n\nOBEY EGGMAN\n\n(Press 'OBEY' to quit)");
-	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment, and also some spikes.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nComet Dash has a particular meaning.\nI won't tell you what it is.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment and some spikes.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nBreak the rain so in silence reigns the horse of flames.\n\n(Press 'Y' to quit)");
 	quitmsg[QUIT3MSG4] = M_GetText("Reveries Tip:\n\nReveries is an anagram.\n\n(Press 'Y' to quit)");
 	quitmsg[QUIT3MSG5] = M_GetText("Reveries Tip:\n\nThe SRB2 Source Code is a bottomless tome of forbidden knowledge.\n\n(Press 'Y' to quit)");
 	quitmsg[QUIT3MSG6] = M_GetText("Reveries Tip:\n\nAvoid getting oilers in your boilers. Failure to comply may result in a quicksilver pinball.\n\n(Press 'Y' to quit)");

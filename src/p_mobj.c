@@ -4955,11 +4955,7 @@ static void P_Boss5Thinker(mobj_t *mobj)
 	}
 }
 
-//
 // AI for Black Eggman
-// Note: You CANNOT have more than ONE Black Eggman
-// in a level! Just don't try it!
-//
 static void P_Boss7Thinker(mobj_t *mobj)
 {
 	if (!mobj->target || !(mobj->target->flags & MF_SHOOTABLE))
@@ -5307,8 +5303,6 @@ static void P_Boss7Thinker(mobj_t *mobj)
 				mobj->flags2 &= ~MF2_INVERTAIMABLE;\
 
 // Metal Sonic battle boss
-// You CAN put multiple Metal Sonics in a single map
-// because I am a totally competent programmer who can do shit right.
 static void P_Boss9Thinker(mobj_t *mobj)
 {
 	if ((statenum_t)(mobj->state-states) == mobj->info->spawnstate)
@@ -5691,12 +5685,10 @@ static void P_Boss9Thinker(mobj_t *mobj)
 			{
 				if ((statenum_t)(mobj->state-states) != mobj->info->seestate)
 					P_SetMobjState(mobj, mobj->info->seestate);
-				if (mobj->movedir == 0) // mobj health == 1
-					P_InstaThrust(mobj, mobj->angle, 38*FRACUNIT);
-				else if (mobj->health == 3)
-					P_InstaThrust(mobj, mobj->angle, 22*FRACUNIT);
-				else // mobj health == 2
-					P_InstaThrust(mobj, mobj->angle, 30*FRACUNIT);
+				if (mobj->movedir == 0)
+					P_InstaThrust(mobj, mobj->angle, 36*FRACUNIT);
+				else
+					P_InstaThrust(mobj, mobj->angle, 24*FRACUNIT);
 				if (!P_TryMove(mobj, mobj->x+mobj->momx, mobj->y+mobj->momy, true))
 				{ // Hit a wall? Find a direction to bounce
 					if (P_MobjWasRemoved(mobj))
@@ -5713,7 +5705,7 @@ static void P_Boss9Thinker(mobj_t *mobj)
 						P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_CYBRAKDEMON_VILE_EXPLOSION);
 						P_SetMobjState(mobj, mobj->info->meleestate);
 					}
-					else if (!(mobj->threshold%4))
+					else if ((mobj->threshold == 1) || (mobj->threshold > 5))
 					{ // We've decided to lock onto the player this bounce.
 						P_SetMobjState(mobj, mobj->state->nextstate);
 						S_StartSound(mobj, sfx_s3k5a);
@@ -5876,7 +5868,7 @@ static void P_Boss9Thinker(mobj_t *mobj)
 					P_SetMobjState(mobj, S_METALSONIC_BOUNCE);
 					//P_LinedefExecute(LE_PINCHPHASE, mobj, NULL); -- why does this happen twice? see case 2...
 				}
-				mobj->fuse = 3*TICRATE;
+				mobj->fuse = 5+TICRATE;
 				mobj->flags |= MF_PAIN;
 				if (mobj->info->attacksound)
 					S_StartSound(mobj, mobj->info->attacksound);
@@ -5904,9 +5896,9 @@ static void P_Boss9Thinker(mobj_t *mobj)
 						S_StartSound(mobj, mobj->info->seesound);
 					P_SetMobjState(mobj, mobj->info->seestate);
 					if (mobj->movedir == 2)
-						mobj->threshold = 12; // bounce 12 times
+						mobj->threshold = 5; // bounce 4 times
 					else
-						mobj->threshold = 24; // bounce 24 times
+						mobj->threshold = 9; // bounce 8 times
 					if (mobj->floorz >= mobj->target->floorz)
 						mobj->watertop = mobj->floorz + 16*FRACUNIT;
 					else
@@ -5950,7 +5942,7 @@ static void P_Boss9Thinker(mobj_t *mobj)
 					mobj->watertop = mobj->target->floorz + 32*FRACUNIT;
 				P_SetMobjState(mobj, mobj->info->spawnstate);
 				mobj->flags &= ~MF_PAIN;
-				mobj->fuse = 8*TICRATE;
+				mobj->fuse = 5*TICRATE;
 				break;
 			}
 			mobj->movecount++;
