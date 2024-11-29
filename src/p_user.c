@@ -6201,11 +6201,17 @@ static void P_3dMovement(player_t *player)
 			fixed_t turnspd = FixedMul(2<<FRACBITS, player->mo->movefactor);
 
 			if (player->powers[pw_justsprung])
-				turnspd -= 2*FRACUNIT/3;
-			if (!onground && !spin)
-				turnspd -= FRACUNIT>>2;
-			if (player->powers[pw_super] || player->powers[pw_sneakers])
+			{
+				turnspd >>= 1;
+			}
+			else if (!spin && onground && player->mo->friction <= ORIG_FRICTION)
+			{
 				turnspd += FRACUNIT/3;
+				if (totalcontrol < 50)
+				{
+					turnspd += (50-totalcontrol)*(FRACUNIT/22);
+				}
+			}
 
 			turnspd = max(FRACUNIT>>2, turnspd);
 
