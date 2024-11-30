@@ -13841,11 +13841,11 @@ static void M_DrawVideoMode(void)
 				cv_scr_width_w.value, cv_scr_height_w.value));
 
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 138,
-			V_GREENMAP, "Green modes are recommended.");
-		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 146,
-			V_YELLOWMAP, "Other modes may have visual errors.");
+			V_GREENMAP, "Green modes fit most monitors best");
+		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 150,
+			V_YELLOWMAP, "If you are having performance issues");
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 158,
-			V_YELLOWMAP, "Larger modes may have performance issues.");
+			V_YELLOWMAP, "try picking a smaller resolution");
 	}
 
 	// Draw the cursor for the VidMode menu
