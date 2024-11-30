@@ -9561,7 +9561,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		1,              // spawnhealth
 		S_NULL,         // seestate
 		sfx_chchng,     // seesound
-		1000,           // reactiontime
+		3333,           // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
 		0,              // painchance
@@ -9588,7 +9588,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		1,              // spawnhealth
 		S_NULL,         // seestate
 		sfx_chchng,     // seesound
-		10000,          // reactiontime
+		9999,          // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
 		0,              // painchance

@@ -1301,13 +1301,15 @@ void P_GivePlayerLives(player_t *player, INT32 numlives)
 	{
 		if (player->lives == INFLIVES || !(gametyperules & GTR_LIVES))
 		{
-			P_GivePlayerRings(player, 100*numlives);
+			P_GivePlayerRings(player, 25*numlives);
+			P_AddPlayerScore(player, 25000*numlives);
 			return;
 		}
 
 		if ((netgame || multiplayer) && G_GametypeUsesCoopLives() && cv_cooplives.value == 0)
 		{
-			P_GivePlayerRings(player, 100*numlives);
+			P_GivePlayerRings(player, 25*numlives);
+			P_AddPlayerScore(player, 25000*numlives);
 			if (player->lives - prevlives >= numlives)
 				goto docooprespawn;
 
