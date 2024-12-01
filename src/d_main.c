@@ -1304,7 +1304,7 @@ static void IdentifyVersion(void)
 #endif
 
 	// Add reveries resource file
-	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "reveries.pk3"));
+	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "reveries.pk3"), NULL);
 
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 	{
