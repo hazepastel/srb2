@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ android-port, bitten-master ]
+    branches: [ reveries-mini ]
   pull_request:
-    branches: [ android-port ]
+    branches: [ reveries-mini ]
 
 jobs:
   build:
