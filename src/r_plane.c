@@ -1079,9 +1079,6 @@ void R_DrawSinglePlane(visplane_t *pl)
 			case SPANDRAWFUNC_SPLAT:
 				spanfunctype = SPANDRAWFUNC_TILTEDSPLAT;
 				break;
-			case SPANDRAWFUNC_TRANSSPLAT:
-				spanfunctype = SPANDRAWFUNC_TILTEDTRANSSPLAT;
-				break;
 			case SPANDRAWFUNC_SOLID:
 				spanfunctype = SPANDRAWFUNC_TILTEDSOLID;
 				break;
