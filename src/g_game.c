@@ -4604,7 +4604,7 @@ void G_LoadGameData(gamedata_t *data)
 	if (!savebuffer.size)
 	{
 #ifdef USE_GAMEDATA_PATHS
-		if (FIL_ReadFile(va(pandf, srb2path, gamedatafilename), &savebuffer))
+		if (FIL_ReadFile(va(pandf, srb2path, gamedatafilename), &savebuffer.buf))
 			gamedatainpath = true;
 		else
 #endif
