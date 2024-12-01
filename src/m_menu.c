@@ -1047,7 +1047,6 @@ static menuitem_t OP_P1ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_CameraOptionsDef,	50},
 
-	{IT_STRING  | IT_CVAR, NULL, "Classic Friction", &cv_classic,  70},
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup1PPlaystyleMenu, 80},
 };
 
@@ -1059,7 +1058,6 @@ static menuitem_t OP_P2ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_Camera2OptionsDef,	50},
 
-	{IT_STRING  | IT_CVAR, NULL, "Classic Friction", &cv_classic2,  70},
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup2PPlaystyleMenu, 80},
 };
 
