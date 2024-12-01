@@ -261,8 +261,8 @@ static void Analog_OnChange(void);
 static void Analog2_OnChange(void);
 static void DirectionChar_OnChange(void);
 static void DirectionChar2_OnChange(void);
-static void AutoBrake_OnChange(void);
-static void AutoBrake2_OnChange(void);
+static void Classic_OnChange(void);
+static void Classic2_OnChange(void);
 void SendWeaponPref(void);
 void SendWeaponPref2(void);
 
@@ -348,8 +348,8 @@ consvar_t cv_directionchar[2] = {
 	CVAR_INIT ("directionchar", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar_OnChange),
 	CVAR_INIT ("directionchar2", "Movement", CV_SAVE|CV_CALL, directionchar_cons_t, DirectionChar2_OnChange),
 };
-consvar_t cv_autobrake = CVAR_INIT ("autobrake", "On", CV_SAVE|CV_CALL, CV_OnOff, AutoBrake_OnChange);
-consvar_t cv_autobrake2 = CVAR_INIT ("autobrake2", "On", CV_SAVE|CV_CALL, CV_OnOff, AutoBrake2_OnChange);
+consvar_t cv_classic = CVAR_INIT ("classicfriction", "No", CV_SAVE|CV_CALL, CV_YesNo, Classic_OnChange);
+consvar_t cv_classic2 = CVAR_INIT ("classicfriction2", "No", CV_SAVE|CV_CALL, CV_YesNo, Classic2_OnChange);
 
 // hi here's some new controls
 CV_PossibleValue_t zerotoone_cons_t[] = {{0, "MIN"}, {FRACUNIT, "MAX"}, {0, NULL}};
@@ -369,8 +369,8 @@ consvar_t cv_cam_turnfacingability[2] = {
 	CVAR_INIT ("cam2_turnfacingability", "0.125", CAMCVARFLAGS, zerotoone_cons_t, NULL),
 };
 consvar_t cv_cam_turnfacingspindash[2] = {
-	CVAR_INIT ("cam_turnfacingspindash", "0.25", CAMCVARFLAGS, zerotoone_cons_t, NULL),
-	CVAR_INIT ("cam2_turnfacingspindash", "0.25", CAMCVARFLAGS, zerotoone_cons_t, NULL),
+	CVAR_INIT ("cam_turnfacingspindash", "0.44", CAMCVARFLAGS, zerotoone_cons_t, NULL),
+	CVAR_INIT ("cam2_turnfacingspindash", "0.44", CAMCVARFLAGS, zerotoone_cons_t, NULL),
 };
 consvar_t cv_cam_turnfacinginput[2] = {
 	CVAR_INIT ("cam_turnfacinginput", "0.375", CAMCVARFLAGS, zerotoone_cons_t, NULL),
@@ -381,8 +381,8 @@ consvar_t cv_cam_turnfacinginput[2] = {
 
 static CV_PossibleValue_t centertoggle_cons_t[] = {{0, "Hold"}, {1, "Toggle"}, {2, "Sticky Hold"}, {0, NULL}};
 consvar_t cv_cam_centertoggle[2] = {
-	CVAR_INIT ("cam_centertoggle", "Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
-	CVAR_INIT ("cam2_centertoggle", "Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
+	CVAR_INIT ("cam_centertoggle", "Sticky Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
+	CVAR_INIT ("cam2_centertoggle", "Sticky Hold", CV_SAVE|CV_ALLOWLUA, centertoggle_cons_t, NULL),
 };
 
 static CV_PossibleValue_t lockedinput_cons_t[] = {{0, "Strafe"}, {1, "Turn"}, {0, NULL}};
@@ -400,8 +400,8 @@ static CV_PossibleValue_t lockedassist_cons_t[] = {
 	{0, NULL}
 };
 consvar_t cv_cam_lockonboss[2] = {
-	CVAR_INIT ("cam_lockaimassist", "Full", CV_SAVE|CV_ALLOWLUA, lockedassist_cons_t, NULL),
-	CVAR_INIT ("cam2_lockaimassist", "Full", CV_SAVE|CV_ALLOWLUA, lockedassist_cons_t, NULL),
+	CVAR_INIT ("cam_lockaimassist", "Bosses", CV_SAVE|CV_ALLOWLUA, lockedassist_cons_t, NULL),
+	CVAR_INIT ("cam2_lockaimassist", "Bosses", CV_SAVE|CV_ALLOWLUA, lockedassist_cons_t, NULL),
 };
 
 consvar_t cv_moveaxis   = CVAR_INIT ("joyaxis_move",       "Y-Axis",    CV_SAVE, joyaxis_cons_t, NULL);
@@ -1428,6 +1428,12 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 	if (strafelkey)
 		side -= sidemove[speed];
 
+	if ((player->pflags & PF_STARTDASH) && forward < 0)  //cancel out input when trying to aim a spindash backwards
+	{
+		forward = 0;
+		side = 0;
+	}
+
 	if (PLAYERINPUTDOWN(ssplayer, GC_WEAPONNEXT))
 		cmd->buttons |= BT_WEAPONNEXT; // Next Weapon
 	if (PLAYERINPUTDOWN(ssplayer, GC_WEAPONPREV))
@@ -1930,15 +1936,16 @@ static void DirectionChar2_OnChange(void)
 	SendWeaponPref2();
 }
 
-static void AutoBrake_OnChange(void)
+static void Classic_OnChange(void)
 {
 	SendWeaponPref();
 }
 
-static void AutoBrake2_OnChange(void)
+static void Classic2_OnChange(void)
 {
 	SendWeaponPref2();
 }
+
 
 //
 // G_DoLoadLevel
@@ -2813,7 +2820,7 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 	outofcoop = players[player].outofcoop;
 	removing = players[player].removing;
 	muted = players[player].muted;
-	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_AUTOBRAKE|PF_TAGIT|PF_GAMETYPEOVER));
+	pflags = (players[player].pflags & (PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_TAGIT|PF_GAMETYPEOVER));
 	playerangleturn = players[player].angleturn;
 	oldrelangleturn = players[player].oldrelangleturn;
 
@@ -2960,13 +2967,8 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 
 	if (p-players == consoleplayer)
 	{
-		if (mapmusflags & MUSIC_RELOADRESET)
-		{
-			strncpy(mapmusname, mapheaderinfo[gamemap-1]->musname, 7);
-			mapmusname[6] = 0;
-			mapmusflags = (mapheaderinfo[gamemap-1]->mustrack & MUSIC_TRACKMASK);
-			mapmusposition = mapheaderinfo[gamemap-1]->muspos;
-		}
+		if ((mapmusflags & MUSIC_RELOADRESET) && !(mapheaderinfo[gamemap-1]->levelflags & LF_NORELOAD || netgame))
+			S_ReloadReset();
 
 		// This is in S_Start, but this was not here previously.
 		// if (RESETMUSIC)

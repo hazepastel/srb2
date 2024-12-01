@@ -804,6 +804,7 @@ static void W_LoadDehackedLumps(UINT16 wadnum, boolean mainfile)
   * \param resblock resulting MD5 checksum
   * \return 0 if MD5 checksum was made, and is at resblock, 1 if error was found
   */
+
 static INT32 W_MakeFileMD5(const char *filename, fhandletype_t handletype, void *resblock)
 {
 #ifdef NOMD5
@@ -831,9 +832,9 @@ static INT32 W_MakeFileMD5(const char *filename, fhandletype_t handletype, void 
 		File_Close(fhandle);
 		return 0;
 	}
-#endif
 	return 1;
 }
+#endif
 
 // Invalidates the cache of lump numbers. Call this whenever a wad is added.
 static void W_InvalidateLumpnumCache(void)

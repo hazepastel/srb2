@@ -4831,7 +4831,9 @@ const char *const POWERS_LIST[] = {
 
 	"IGNORELATCH",
 
-	"STRONG"
+	"STRONG",
+
+	"SPRINGLOCK"
 };
 
 const char *const HUDITEMS_LIST[] = {
@@ -5248,6 +5250,9 @@ struct int_const_s const INT_CONST[] = {
 	// Dashmode constants
 	{"DASHMODE_THRESHOLD",DASHMODE_THRESHOLD},
 	{"DASHMODE_MAX",DASHMODE_MAX},
+
+	// rphys global
+	{"rphys", rphys},
 
 	// Character abilities!
 	// Primary
@@ -5810,6 +5815,11 @@ struct int_const_s const INT_CONST[] = {
 	// screen.h constants
 	{"BASEVIDWIDTH",BASEVIDWIDTH},
 	{"BASEVIDHEIGHT",BASEVIDHEIGHT},
+
+	// Music flags & stuff
+	{"MUSIC_TRACKMASK", MUSIC_TRACKMASK},
+	{"MUSIC_FORCERESET", MUSIC_FORCERESET},
+	{"MUSIC_RELOADRESET", MUSIC_RELOADRESET},
 
 	{NULL,0}
 };

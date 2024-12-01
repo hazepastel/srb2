@@ -1590,11 +1590,6 @@ void G_BeginRecording(void)
 			buf |= 0x04;
 			pflags |= PF_DIRECTIONCHAR;
 		}
-		if (cv_autobrake.value)
-		{
-			buf |= 0x08;
-			pflags |= PF_AUTOBRAKE;
-		}
 		if (cv_usejoystick.value)
 			buf |= 0x10;
 		CV_SetValue(&cv_showinputjoy, !!(cv_usejoystick.value));

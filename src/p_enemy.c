@@ -949,6 +949,7 @@ static void P_FaceStabFlume(mobj_t *actor)
 		-P_ReturnThrustY(actor, actor->angle, actor->radius),
 		actor->height/3,
 		MT_PARTICLE);
+
 	if (P_MobjWasRemoved(flume))
 		return;
 
@@ -3784,7 +3785,7 @@ static void P_DoBossVictory(mobj_t *mo)
 		}
 
 		if (mapheaderinfo[gamemap-1]->muspostbossname[0] &&
-			S_MusicExists(mapheaderinfo[gamemap-1]->muspostbossname, !midi_disabled, !digital_disabled))
+			S_MusicPrefExists(mapheaderinfo[gamemap-1]->muspostbossname))
 		{
 			// Touching the egg trap button calls P_DoPlayerExit, which calls P_RestoreMusic.
 			// So just park ourselves in the mapmus variables.
@@ -3922,7 +3923,7 @@ static void P_DoBoss5Death(mobj_t *mo)
 				pole->angle = mo->tracer->angle;
 				pole->momx = P_ReturnThrustX(pole, pole->angle, speed);
 				pole->momy = P_ReturnThrustY(pole, pole->angle, speed);
-				
+
 				P_SetTarget(&pole->tracer, P_SpawnMobj(
 					pole->x, pole->y,
 					pole->z - 256*FRACUNIT,
@@ -4221,7 +4222,7 @@ void A_Invincibility(mobj_t *actor)
 	player = actor->target->player;
 	player->powers[pw_invulnerability] = invulntics + 1;
 
-	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
+	if (P_IsLocalPlayer(player) && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		if (mariomode)
 			G_GhostAddColor(GHC_INVINCIBLE);
@@ -4255,7 +4256,7 @@ void A_SuperSneakers(mobj_t *actor)
 
 	actor->target->player->powers[pw_sneakers] = sneakertics + 1;
 
-	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
+	if (P_IsLocalPlayer(player) && (!cv_supersound.value || !player->powers[pw_super]))
 	{
 		if (S_SpeedMusic(0.0f) && (mapheaderinfo[gamemap-1]->levelflags & LF_SPEEDMUSIC))
 			S_SpeedMusic(1.4f);
@@ -8332,7 +8333,7 @@ void A_Shockwave(mobj_t *actor)
 		ang += interval;
 		sprev = shock;
 	}
-	
+
 	S_StartSound(actor, shock->info->seesound);
 }
 
@@ -13595,7 +13596,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 
 	if (thing->z + thing->height >= dustdevil->z && dustdevil->z + dustdevil->height >= thing->z) {
 		fixed_t pos = thing->z - dustdevil->z;
-		fixed_t thrust = max(FixedDiv(pos, dustdevil->height) * 20, 8 * FRACUNIT);
+		fixed_t thrust = max(FixedDiv(pos, dustdevil->height) * 20, 11*FRACUNIT);
 		angle_t fa = R_PointToAngle2(thing->x, thing->y, dustdevil->x, dustdevil->y) >> ANGLETOFINESHIFT;
 		fixed_t c = FINECOSINE(fa);
 		fixed_t s = FINESINE(fa);
@@ -13604,19 +13605,23 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 		//Player in the swirl part.
 		if (dustdevil->height - pos > thresh)
 		{
-			fixed_t dist = FixedHypot(thing->x - dustdevil->x, thing->y - dustdevil->y);
+			fixed_t dist = R_PointToDist2(thing->x, thing->y, dustdevil->x, dustdevil->y);
 			fixed_t dragamount = player->speed;
 			fixed_t x, y;
 
-			if (player->powers[pw_nocontrol] == 0)
+			if (player->powers[pw_carry] != CR_DUSTDEVIL)
 			{
 				P_ResetPlayer(player);
 				A_PlayActiveSound(dustdevil);
+				P_SetMobjState(thing, S_PLAY_PAIN);
+				thing->standingslope = NULL;
+				thing->flags |= MF_NOCLIP;
 			}
 			player->powers[pw_carry] = CR_DUSTDEVIL;
 			player->powers[pw_nocontrol] = 2;
+			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
 			P_SetTarget(&thing->tracer, dustdevil);
-			P_SetMobjState(thing, S_PLAY_PAIN);
+			player->rsprung = 3;
 
 			if (dist > dragamount)
 			{
@@ -13636,15 +13641,17 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 		{ //Player on the top of the tornado.
 			P_ResetPlayer(player);
 			thing->z = dustdevil->z + dustdevil->height;
-			thrust = 20 * FRACUNIT;
+			thrust = 22<<FRACBITS;
 			player->powers[pw_carry] = CR_NONE;
 			player->powers[pw_nocontrol] = 0;
+			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
+			player->rsprung = 3;
 			P_SetTarget(&thing->tracer, NULL);
 			S_StartSound(thing, sfx_wdjump);
 			P_SetMobjState(thing, S_PLAY_FALL);
 		}
 
-		thing->momz = thrust;
+		thing->momz = thrust*19/16;
 	}
 
 	return true;
@@ -13703,8 +13710,10 @@ void A_DustDevilThink(mobj_t *actor)
 			fixed_t pz = actor->z;
 
 			layer = P_SpawnMobj(px, py, pz, MT_DUSTLAYER);
+
 			if (P_MobjWasRemoved(layer))
 				continue;
+
 			P_SetScale(layer, scale, true);
 			layer->momz = 5 * scale;
 			layer->angle = ANGLE_90 + ANGLE_90*i;
@@ -14395,7 +14404,7 @@ void A_LavafallLava(mobj_t *actor)
 	if (LUA_CallAction(A_LAVAFALLLAVA, actor))
 		return;
 
-	if ((40 - actor->fuse) % (2*(actor->scale >> FRACBITS)))
+	if ((40 - actor->fuse) % max(2*(actor->scale >> FRACBITS), 1)) // avoid crashes if actor->scale < FRACUNIT
 		return;
 
 	// Don't spawn lava unless a player is nearby.

@@ -976,8 +976,6 @@ UINT8 *R_GetTranslationForThing(mobj_t *mobj, skincolornum_t color, UINT16 trans
 		{
 			if (mobj->player->charflags & SF_MACHINE)
 				skinnum = TC_DASHMODE;
-			else
-				skinnum = TC_RAINBOW;
 		}
 	}
 

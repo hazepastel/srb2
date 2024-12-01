@@ -136,9 +136,8 @@ INT32 postimgparam2;
 // These variables are in effect
 // whether the respective sound system is disabled
 // or they're init'ed, but the player just toggled them
-boolean midi_disabled = false;
 boolean sound_disabled = false;
-boolean digital_disabled = false;
+boolean music_disabled = false;
 
 //
 // DEMO LOOP
@@ -1304,6 +1303,9 @@ static void IdentifyVersion(void)
 	D_AddFile(&startupwadfiles, ANDROID_PK3_FILENAME, ASSET_HASH_ANDROID_PK3);
 #endif
 
+	// Add reveries resource file
+	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "reveries.pk3"));
+
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 	{
 #define MUSICTEST(str) \
@@ -1503,7 +1505,8 @@ void D_SRB2Main(void)
 	// Make backups of some SOCcable tables.
 	P_BackupTables();
 
-	mainwads = 3; // doesn't include music.dta
+	mainwads = 4; // doesn't include music.dta
+
 #ifdef USE_PATCH_DTA
 	mainwads++;
 #endif
@@ -1644,36 +1647,21 @@ void D_SRB2Main(void)
 	if (dedicated)
 	{
 		sound_disabled = true;
-		midi_disabled = digital_disabled = true;
+		music_disabled = true;
 	}
 	if (M_CheckParm("-noaudio")) // combines -nosound and -nomusic
 	{
 		sound_disabled = true;
-		digital_disabled = true;
-		midi_disabled = true;
+		music_disabled = true;
 	}
 	else
 	{
 		if (M_CheckParm("-nosound"))
 			sound_disabled = true;
-		if (M_CheckParm("-nomusic")) // combines -nomidimusic and -nodigmusic
-		{
-			digital_disabled = true;
-			midi_disabled = true;
-		}
-		else
-		{
-			if (M_CheckParm("-nomidimusic"))
-				midi_disabled = true; // WARNING: DOS version initmusic in I_StartupSound
-			if (M_CheckParm("-nodigmusic"))
-				digital_disabled = true; // WARNING: DOS version initmusic in I_StartupSound
-		}
+		if (M_CheckParm("-nomusic"))
+			music_disabled = true;
 	}
-	if (!( sound_disabled && digital_disabled
-#ifndef NO_MIDI
-				&& midi_disabled
-#endif
-	 ))
+	if (!(sound_disabled && music_disabled))
 	{
 		CONS_Printf("S_InitSfxChannels(): Setting up sound channels.\n");
 		I_StartupSound();
@@ -2135,4 +2123,3 @@ boolean D_CheckPathAllowed(const char *path, const char *why)
 
 	return true;
 }
-

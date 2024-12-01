@@ -1076,6 +1076,7 @@ boolean F_IntroResponder(event_t *event)
 // =========
 static const char *credits[] = {
 	"\1Sonic Robo Blast 2",
+	"\1Reveries Edition",
 	"\1Credits",
 	"",
 	"\1Game Design",
@@ -1088,11 +1089,13 @@ static const char *credits[] = {
 	"Alam \"GBC\" Arias",
 	"Logan \"GBA\" Arias",
 	"Zolton \"Zippy_Zolton\" Auburn",
+	"\"bitten2up\"",
 	"Colette \"fickleheart\" Bordelon",
 	"Andrew \"orospakr\" Clunis",
 	"Sally \"TehRealSalt\" Cochenour",
 	"Gregor \"Oogaland\" Dick",
 	"Callum Dickinson",
+	"Claire \"clairebun\" Ellis",
 	"Scott \"Graue\" Feeney",
 	"Victor \"SteelT\" Fuentes",
 	"Nathan \"Jazz\" Giroux",
@@ -1107,7 +1110,7 @@ static const char *credits[] = {
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"\"Kaito Sinclaire\"",
 	"\"Kalaron\"", // Coded some of Sryder13's collection of OpenGL fixes, especially fog
-	"Ronald \"Furyhunter\" Kinard", // The SDL2 port
+	"Ronald \"Eidolon\" Kinard", // The SDL2 port, uncapped
 	"\"Lat'\"", // SRB2-CHAT, the chat window from Kart
 	"\"LZA\"",
 	"Matthew \"Shuffle\" Marsalko",
@@ -1123,6 +1126,7 @@ static const char *credits[] = {
 	"Riku \"Ors\" Salminen", // Demo consistency improvements
 	"Jonas \"MascaraSnake\" Sauer",
 	"Wessel \"sphere\" Smit",
+	"\"SMS Alfredo\"",
 	"\"SSNTails\"",
 	"\"VelocitOni\"", // Wrote the original dashmode script
 	"Ikaro \"Tatsuru\" Vinhas",
@@ -1146,20 +1150,25 @@ static const char *credits[] = {
 	"Jesse \"Jeck Jims\" Emerick",
 	"\"Fighter_Builder\"", // for the CEZ3 button debris
 	"Buddy \"KinkaJoy\" Fischer",
+	"\"Golden Shine\"",
 	"Vivian \"toaster\" Grannell",
 	"James \"SwitchKaze\" Hale",
 	"James \"SeventhSentinel\" Hall",
 	"Kepa \"Nev3r\" Iceta",
 	"Iestyn \"Monster Iestyn\" Jealous",
 	"William \"GuyWithThePie\" Kloppenberg",
+	"\"Krabs\"",
 	"Alice \"Alacroix\" de Lemos",
 	"Logan \"Hyperchaotix\" McCloud",
 	"Alexander \"DrTapeworm\" Moench-Ford",
 	"Andrew \"Senku Niola\" Moran",
 	"\"MotorRoach\"",
+	"\"Princess Plushima\"", // flowbubble
+	"\"Revolution\"", // HUD tweaks
 	"Phillip \"TelosTurntable\" Robinson",
 	"\"Scizor300\"",
 	"Wessel \"sphere\" Smit",
+	"\"SonicX8000\"", // title card and fonts
 	"David \"Instant Sonic\" Spencer Jr.",
 	"\"SSNTails\"",
 	"Daniel \"Inazuma\" Trinh",
@@ -1221,15 +1230,7 @@ static const char *credits[] = {
 	"Johnny \"Sonikku\" Wallbank",
 	"",
 	"\1Testing",
-	"Discord Community Testers",
-	"Hank \"FuriousFox\" Brannock",
-	"Cody \"Playah\" Koester",
-	"Skye \"OmegaVelocity\" Meredith",
-	"Stephen \"HEDGESMFG\" Moellering",
-	"Rosalie \"ST218\" Molina",
-	"Samuel \"Prime 2.0\" Peters",
-	"Colin \"Sonict\" Pfaff",
-	"Bill \"Tets\" Reed",
+	"the girl reading this",
 	"",
 	"\1Special Thanks",
 	"id Software",
@@ -1458,9 +1459,6 @@ boolean F_CreditResponder(event_t *event)
 			key = KEY_RIGHTARROW;
 			break;
 	}
-
-	if (!(serverGamedata->timesBeaten) && !(netgame || multiplayer) && !cv_debug)
-		return false;
 
 	// remap virtual keys (mouse & joystick buttons)
 	if (event->type == ev_keydown)

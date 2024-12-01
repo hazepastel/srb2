@@ -333,7 +333,7 @@ consvar_t cv_overtime = CVAR_INIT ("overtime", "Yes", CV_SAVE|CV_NETVAR|CV_ALLOW
 consvar_t cv_rollingdemos = CVAR_INIT ("rollingdemos", "On", CV_SAVE, CV_OnOff, NULL);
 
 static CV_PossibleValue_t timetic_cons_t[] = {{0, "Classic"}, {1, "Centiseconds"}, {2, "Mania"}, {3, "Tics"}, {0, NULL}};
-consvar_t cv_timetic = CVAR_INIT ("timerres", "Classic", CV_SAVE, timetic_cons_t, NULL);
+consvar_t cv_timetic = CVAR_INIT ("timerres", "Centiseconds", CV_SAVE, timetic_cons_t, NULL);
 
 static CV_PossibleValue_t powerupdisplay_cons_t[] = {{0, "Never"}, {1, "First-person only"}, {2, "Always"}, {0, NULL}};
 consvar_t cv_powerupdisplay = CVAR_INIT ("powerupdisplay", "First-person only", CV_SAVE, powerupdisplay_cons_t, NULL);
@@ -917,8 +917,8 @@ void D_RegisterClientCommands(void)
 	// deez New User eXperiences
 	CV_RegisterVar(&cv_directionchar[0]);
 	CV_RegisterVar(&cv_directionchar[1]);
-	CV_RegisterVar(&cv_autobrake);
-	CV_RegisterVar(&cv_autobrake2);
+	CV_RegisterVar(&cv_classic);
+	CV_RegisterVar(&cv_classic2);
 
 	// hi here's some new controls
 	CV_RegisterVar(&cv_cam_shiftfacing[0]);
@@ -940,9 +940,9 @@ void D_RegisterClientCommands(void)
 
 	// s_sound.c
 	CV_RegisterVar(&cv_soundvolume);
-	CV_RegisterVar(&cv_closedcaptioning);
 	CV_RegisterVar(&cv_digmusicvolume);
 	CV_RegisterVar(&cv_midimusicvolume);
+	CV_RegisterVar(&cv_closedcaptioning);
 	CV_RegisterVar(&cv_numChannels);
 
 	// screen.c
@@ -1558,7 +1558,7 @@ void SendWeaponPref(void)
 		buf[0] |= 2;
 	if (cv_directionchar[0].value == 1)
 		buf[0] |= 4;
-	if (cv_autobrake.value)
+	if (cv_classic.value)
 		buf[0] |= 8;
 	SendNetXCmd(XD_WEAPONPREF, buf, 1);
 }
@@ -1574,7 +1574,7 @@ void SendWeaponPref2(void)
 		buf[0] |= 2;
 	if (cv_directionchar[1].value == 1)
 		buf[0] |= 4;
-	if (cv_autobrake2.value)
+	if (cv_classic2.value)
 		buf[0] |= 8;
 	SendNetXCmd2(XD_WEAPONPREF, buf, 1);
 }
@@ -1583,15 +1583,13 @@ static void Got_WeaponPref(UINT8 **cp,INT32 playernum)
 {
 	UINT8 prefs = READUINT8(*cp);
 
-	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR|PF_AUTOBRAKE);
+	players[playernum].pflags &= ~(PF_FLIPCAM|PF_ANALOGMODE|PF_DIRECTIONCHAR);
 	if (prefs & 1)
 		players[playernum].pflags |= PF_FLIPCAM;
 	if (prefs & 2)
 		players[playernum].pflags |= PF_ANALOGMODE;
 	if (prefs & 4)
 		players[playernum].pflags |= PF_DIRECTIONCHAR;
-	if (prefs & 8)
-		players[playernum].pflags |= PF_AUTOBRAKE;
 }
 
 void D_SendPlayerConfig(void)
@@ -2141,7 +2139,6 @@ static void Got_Mapcmd(UINT8 **cp, INT32 playernum)
 	{
 		DEBFILE(va("Warping to %s [resetplayer=%d lastgametype=%d gametype=%d cpnd=%d]\n",
 			mapname, resetplayer, lastgametype, gametype, chmappending));
-		CONS_Printf(M_GetText("Speeding off to level...\n"));
 	}
 
 	if (demoplayback && !timingdemo)
@@ -4964,10 +4961,12 @@ static void Name2_OnChange(void)
 
 static boolean Skin_CanChange(const char *valstr)
 {
-	(void)valstr;
-
 	if (!Playing())
 		return true; // do whatever you want
+
+	// You already are that skin.
+	if (stricmp(skins[players[consoleplayer].skin]->name, valstr) == 0)
+		return false;
 
 	if (!(multiplayer || netgame)) // In single player.
 		return true;
@@ -4983,10 +4982,12 @@ static boolean Skin_CanChange(const char *valstr)
 
 static boolean Skin2_CanChange(const char *valstr)
 {
-	(void)valstr;
-
 	if (!Playing() || !splitscreen)
 		return true; // do whatever you want
+
+	// You already are that skin.
+	if (stricmp(skins[players[secondarydisplayplayer].skin]->name, valstr) == 0)
+		return false;
 
 	if (CanChangeSkin(secondarydisplayplayer) && !P_PlayerMoving(secondarydisplayplayer))
 		return true;

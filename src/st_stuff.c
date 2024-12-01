@@ -77,9 +77,9 @@ patch_t *livesback; // Lives icon background
 patch_t *stlivex;
 static patch_t *nrec_timer; // Timer for NiGHTS records
 static patch_t *sborings;
-static patch_t *slidgame;
-static patch_t *slidtime;
-static patch_t *slidover;
+static patch_t *overgame;
+static patch_t *overtime;
+static patch_t *overover;
 static patch_t *sboredrings;
 static patch_t *sboredtime;
 static patch_t *getall; // Special Stage HUD
@@ -304,9 +304,9 @@ void ST_LoadGraphics(void)
 	sbocolon = W_CachePatchName("STTCOLON", PU_HUDGFX); // Colon for time
 	sboperiod = W_CachePatchName("STTPERIO", PU_HUDGFX); // Period for time centiseconds
 
-	slidgame = W_CachePatchName("SLIDGAME", PU_HUDGFX);
-	slidtime = W_CachePatchName("SLIDTIME", PU_HUDGFX);
-	slidover = W_CachePatchName("SLIDOVER", PU_HUDGFX);
+	overgame = W_CachePatchName("OVERGAME", PU_HUDGFX);
+	overtime = W_CachePatchName("OVERTIME", PU_HUDGFX);
+	overover = W_CachePatchName("OVEROVER", PU_HUDGFX);
 
 	stlivex = W_CachePatchName("STLIVEX", PU_HUDGFX);
 	livesback = W_CachePatchName("STLIVEBK", PU_HUDGFX);
@@ -600,13 +600,14 @@ static void ST_drawDebugInfo(void)
 		INT32 width = 320;
 		const fixed_t d = AngleFixed(stplyr->drawangle);
 
-		V_DrawDebugLine(va("SHIELD: %5x", stplyr->powers[pw_shield]));
 		V_DrawDebugLine(va("SCALE: %5d%%", (stplyr->mo->scale*100)>>FRACBITS));
+		V_DrawDebugLine(va("SHIELD: %5x", stplyr->powers[pw_shield]));
+		V_DrawDebugLine(va("STRONG: %5x", stplyr->powers[pw_strong]));
+		V_DrawDebugLine(va("PEEL: %5x", stplyr->dashmode));
 		V_DrawDebugLine(va("CARRY: %5x", stplyr->powers[pw_carry]));
+		V_DrawDebugLine(va("NOAIRDRAG: %3d", stplyr->powers[pw_noautobrake]));
+		V_DrawDebugLine(va("LOCKANGLE: %3d", stplyr->powers[pw_justsprung]));
 		V_DrawDebugLine(va("AIR: %4d, %3d", stplyr->powers[pw_underwater], stplyr->powers[pw_spacetime]));
-		V_DrawDebugLine(va("ABILITY: %3d, %3d", stplyr->charability, stplyr->charability2));
-		V_DrawDebugLine(va("ACTIONSPD: %5d", stplyr->actionspd>>FRACBITS));
-		V_DrawDebugLine(va("PEEL: %3d", stplyr->dashmode));
 		V_DrawDebugLine(va("SCOREADD: %3d", stplyr->scoreadd));
 
 		// Flags
@@ -624,7 +625,8 @@ static void ST_drawDebugInfo(void)
 		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
 		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
-		V_DrawDebugFlag(((stplyr->pflags & PF_APPLYAUTOBRAKE) ? V_GREENMAP : V_REDMAP), "AA");
+		V_DrawDebugFlag(((stplyr->charflags & SF_NOSHIELDABILITY)        ? V_GREENMAP : V_REDMAP), "NS");
+		V_DrawDebugFlag(((stplyr->pflags & PF_DRILLING) ? V_GREENMAP : V_REDMAP), "DR");
 		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
 		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");
 		V_DrawDebugFlag(((stplyr->pflags & PF_GLIDING)        ? V_GREENMAP : V_REDMAP), "GL");
@@ -1249,8 +1251,7 @@ static void ST_drawInput(void)
 
 	drawbutt( 4,-3, BT_JUMP,   'J' );
 	drawbutt(15,-3, BT_SPIN,   'S' );
-	drawbutt(26,-3, BT_SHIELD, '\0'); // Instead of a wide 'J' or 'S', we'll draw a thin "SH" for Shield
-	V_DrawThinString(x+16+26, y+2+(-3)-offs, hudinfo[HUD_LIVES].f, "SH");
+	drawbutt(26,-3, BT_SHIELD, 'P' ); // Draw "P" for Peelout
 
 	V_DrawFill(x+16+4, y+8, 21, 10, f|20); // sundial backing
 	if (stplyr->mo)
@@ -1286,19 +1287,6 @@ static void ST_drawInput(void)
 	y -= 13;
 	if (stplyr->powers[pw_carry] != CR_NIGHTSMODE)
 	{
-		if (stplyr->pflags & PF_AUTOBRAKE)
-		{
-			V_DrawThinString(x, y,
-				f|
-				((!stplyr->powers[pw_carry]
-				&& (stplyr->pflags & PF_APPLYAUTOBRAKE)
-				&& !(stplyr->cmd.sidemove || stplyr->cmd.forwardmove)
-				&& (stplyr->rmomx || stplyr->rmomy)
-				&& (!stplyr->capsule || (stplyr->capsule->reactiontime != (stplyr-players)+1)))
-				? 0 : V_GRAYMAP),
-				"AUTOBRAKE");
-			y -= 8;
-		}
 		switch (P_ControlStyle(stplyr))
 		{
 		case CS_LMAOGALOG:
@@ -2829,7 +2817,7 @@ static void ST_overlayDrawer(void)
 			UINT32 flags = V_PERPLAYER|(stplyr->spectator ? V_HUDTRANSHALF : V_HUDTRANS);
 
 			V_DrawScaledPatch(lvlttlx - 8, BASEVIDHEIGHT/2, flags, (countdown == 1 ? slidtime : slidgame));
-			V_DrawScaledPatch(BASEVIDWIDTH + 8 - lvlttlx, BASEVIDHEIGHT/2, flags, slidover);
+			V_DrawScaledPatch(BASEVIDWIDTH + 8 - lvlttlx, BASEVIDHEIGHT/2, flags, overover);
 
 #ifdef TOUCHINPUTS
 			drawtouchcontrols = false;
@@ -2902,7 +2890,7 @@ static void ST_overlayDrawer(void)
 		}
 		else if (cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 			ST_drawPowerupHUD();  // same as it ever was...
-		
+
 	}
 	else if (!(netgame || multiplayer) && cv_powerupdisplay.value == 2 && LUA_HudEnabled(hud_powerups))
 		ST_drawPowerupHUD(); // same as it ever was...

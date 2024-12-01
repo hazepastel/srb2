@@ -4953,6 +4953,7 @@ static void P_EvaluateSpecialFlags(player_t *player, sector_t *sector, sector_t 
 			P_SetMobjState(player->mo, S_PLAY_FALL);
 			P_SetTarget(&player->mo->tracer, player->mo);
 			player->powers[pw_carry] = CR_FAN;
+			player->rsprung = 2;
 		}
 	}
 	if (sector->specialflags & SSF_SUPERTRANSFORM)
@@ -6236,7 +6237,7 @@ static void P_DoPortalCopyFromLine(sector_t *dest_sector, int plane_type, int ta
 	}
 }
 
-static sectorportal_t *P_SectorGetPortalOrCreate(sector_t *sector, UINT32 *num, UINT32 *result)
+static sectorportal_t *P_SectorGetPortalOrCreate(sector_t *sector, UINT32 *num, UINT32 *result, boolean ceiling)
 {
 	sectorportal_t *secportal = NULL;
 
@@ -6244,8 +6245,8 @@ static sectorportal_t *P_SectorGetPortalOrCreate(sector_t *sector, UINT32 *num, 
 	{
 		*num = P_NewSectorPortal();
 		secportal = &secportals[*num];
-		secportal->origin.x = sector->soundorg.x;
-		secportal->origin.y = sector->soundorg.y;
+		secportal->target = sector;
+		secportal->ceiling = ceiling;
 		*result = *num;
 	}
 	else
@@ -6259,12 +6260,12 @@ static sectorportal_t *P_SectorGetPortalOrCreate(sector_t *sector, UINT32 *num, 
 
 static sectorportal_t *P_SectorGetFloorPortalOrCreate(sector_t *sector, UINT32 *result)
 {
-	return P_SectorGetPortalOrCreate(sector, &sector->portal_floor, result);
+	return P_SectorGetPortalOrCreate(sector, &sector->portal_floor, result, false);
 }
 
 static sectorportal_t *P_SectorGetCeilingPortalOrCreate(sector_t *sector, UINT32 *result)
 {
-	return P_SectorGetPortalOrCreate(sector, &sector->portal_ceiling, result);
+	return P_SectorGetPortalOrCreate(sector, &sector->portal_ceiling, result, true);
 }
 
 static void P_CopySectorPortalToLines(UINT32 portal_num, int sector_tag)

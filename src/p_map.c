@@ -161,6 +161,9 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 	boolean final = false;
 	UINT8 strong = 0;
 
+	vertispeed = vertispeed*19/16; //gravity adjustment
+	horizspeed = horizspeed*19/16;
+
 	// Object was already sprung this tic
 	if (object->eflags & MFE_SPRUNG)
 		return false;
@@ -312,27 +315,17 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		if (object->player)
 		{
 			object->player->pflags &= ~PF_APPLYAUTOBRAKE;
-#ifndef SPRINGSPIN
-			object->player->powers[pw_justsprung] = 5;
-			if (horizspeed)
-				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
-			else if (P_MobjFlip(object) == P_MobjFlip(spring))
-				object->player->powers[pw_justsprung] |= (1<<15);
-#else
-			object->player->powers[pw_justsprung] = 15;
-			if (horizspeed)
-				object->player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
-			else
+			object->player->powers[pw_justsprung] = vertispeed ? (abs(vertispeed)/FRACUNIT) : ((abs(horizspeed)/3)/FRACUNIT);
+			object->player->powers[pw_noautobrake] = 3*(object->player->powers[pw_justsprung]);
+			if (!horizspeed)
 			{
+				object->player->powers[pw_justsprung] = 5;
 				if (abs(object->player->rmomx) > object->scale || abs(object->player->rmomy) > object->scale)
 					object->player->drawangle = R_PointToAngle2(0, 0, object->player->rmomx, object->player->rmomy);
-				if (P_MobjFlip(object) == P_MobjFlip(spring))
-					object->player->powers[pw_justsprung] |= (1<<15);
 			}
-#endif
 		}
 
-		if ((horizspeed && vertispeed) || (object->player && object->player->homing)) // Mimic SA
+		if (horizspeed && vertispeed) // Mimic SA
 		{
 			object->momx = object->momy = 0;
 			P_TryMove(object, spring->x, spring->y, true);
@@ -388,7 +381,6 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 	if (object->player)
 	{
 		INT32 pflags;
-		UINT8 secondjump;
 
 		if (spring->flags & MF_ENEMY) // Spring shells
 			P_SetTarget(&spring->target, object);
@@ -420,7 +412,7 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 		{
 			boolean wasSpindashing = object->player->dashspeed > 0 && (object->player->charability2 == CA2_SPINDASH);
 
-			pflags = object->player->pflags & (PF_STARTJUMP | PF_JUMPED | PF_NOJUMPDAMAGE | PF_SPINNING | PF_BOUNCING); // I still need these.
+			pflags = object->player->pflags & (PF_JUMPED | PF_NOJUMPDAMAGE | PF_SPINNING | PF_BOUNCING); // I still need these.
 
 			if (wasSpindashing) // Ensure we're in the rolling state, and not spindash.
 				P_SetMobjState(object, S_PLAY_ROLL);
@@ -431,32 +423,41 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 				pflags &= ~PF_JUMPED;
 			}
 		}
-		secondjump = object->player->secondjump;
+
 		P_ResetPlayer(object->player);
+
+		if (vertispeed)
+		{
+			object->player->powers[pw_springlock] = 5;
+			object->player->rsprung = 1;
+		}
+
+		if ((object->player->charflags & SF_NOJUMPSPIN) && spring->info->painchance != 3)
+		{
+			P_TwinSpinRejuvenate(object->player, MT_SUPERSPARK);
+			if (!P_IsObjectOnGround(object))
+				object->player->pflags |= P_GetJumpFlags(object->player);
+		}
 
 		if (spring->info->painchance == 1) // For all those ancient, SOC'd abilities.
 		{
 			object->player->pflags |= P_GetJumpFlags(object->player);
 			P_SetMobjState(object, S_PLAY_JUMP);
 		}
-		else if ((spring->info->painchance == 2) || ((spring->info->painchance != 3) && (pflags & PF_BOUNCING))) // Adding momentum only.
+		else if (spring->info->painchance == 2) // Adding momentum only.
 		{
-			object->player->pflags |= (pflags &~ PF_STARTJUMP);
-			object->player->secondjump = secondjump;
+			object->player->pflags |= pflags;
 		}
 		else if (!vertispeed)
 		{
 			if (pflags & (PF_JUMPED|PF_SPINNING))
 			{
 				object->player->pflags |= pflags;
-				object->player->secondjump = secondjump;
 			}
-			else if (object->player->dashmode >= DASHMODE_THRESHOLD)
-				P_SetMobjState(object, S_PLAY_DASH);
 			else if (P_IsObjectOnGround(object))
 				P_SetMobjState(object, (horizspeed >= FixedMul(object->player->runspeed, object->scale)) ? S_PLAY_RUN : S_PLAY_WALK);
 			else
-				P_SetMobjState(object, (object->momz > 0) ? S_PLAY_SPRING : S_PLAY_FALL);
+				P_SetMobjState(object, (object->momz*P_MobjFlip(object) >= 5*object->scale) ? S_PLAY_SPRING : S_PLAY_FALL);
 		}
 		else if (P_MobjFlip(object)*vertispeed > 0)
 			P_SetMobjState(object, S_PLAY_SPRING);
@@ -505,6 +506,8 @@ static void P_DoFan(mobj_t *fan, mobj_t *object)
 	fixed_t speed = fan->info->mass; // fans use this for the vertical thrust
 	SINT8 flipval = P_MobjFlip(fan); // virtually everything here centers around the thruster's gravity, not the object's!
 
+	speed = speed*19/16; //gravity adjustment
+
 	if (p && object->state == &states[object->info->painstate]) // can't use fans when player is in pain!
 		return;
 
@@ -546,6 +549,7 @@ static void P_DoFan(mobj_t *fan, mobj_t *object)
 				P_SetMobjState(object, S_PLAY_FALL);
 				P_SetTarget(&object->tracer, fan);
 				p->powers[pw_carry] = CR_FAN;
+				p->rsprung = 2;
 			}
 			break;
 		default:
@@ -2043,7 +2047,10 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 	tmbbox[BOXRIGHT] = x + tmthing->radius;
 	tmbbox[BOXLEFT] = x - tmthing->radius;
 
-	newsubsec = R_PointInSubsector(x, y);
+	if (thing->x != x || thing->y != y)
+		newsubsec = R_PointInSubsector(x, y);
+	else
+		newsubsec = thing->subsector;
 	ceilingline = blockingline = NULL;
 
 	// The base floor / ceiling is from the subsector

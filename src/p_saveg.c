@@ -433,9 +433,11 @@ static void P_NetArchivePlayers(save_t *save_p)
 		P_WriteUINT8(save_p, players[i].climbing);
 		P_WriteINT32(save_p, players[i].deadtimer);
 		P_WriteUINT32(save_p, players[i].exiting);
+		P_WriteUINT32(save_p, players[i].rsprung);
 		P_WriteUINT8(save_p, players[i].homing);
 		P_WriteUINT32(save_p, players[i].dashmode);
 		P_WriteUINT32(save_p, players[i].skidtime);
+		P_WriteUINT32(save_p, players[i].jerboatime);
 
 		//////////
 		// Bots //
@@ -664,9 +666,11 @@ static void P_NetUnArchivePlayers(save_t *save_p)
 		players[i].climbing = P_ReadUINT8(save_p); // Climbing on the wall
 		players[i].deadtimer = P_ReadINT32(save_p); // End game if game over lasts too long
 		players[i].exiting = P_ReadUINT32(save_p); // Exitlevel timer
+		players[i].rsprung = P_ReadUINT32(save_p); // reveries spring gravity
 		players[i].homing = P_ReadUINT8(save_p); // Are you homing?
 		players[i].dashmode = P_ReadUINT32(save_p); // counter for dashmode ability
 		players[i].skidtime = P_ReadUINT32(save_p); // Skid timer
+		players[i].jerboatime = P_ReadUINT32(save_p); // coyote timer
 
 		//////////
 		// Bots //
@@ -2276,6 +2280,7 @@ static void SaveMobjThinker(save_t *save_p, const thinker_t *th, const UINT8 typ
 		|| (slope->normal.z != FRACUNIT))
 			diff2 |= MD2_FLOORSPRITESLOPE;
 	}
+
 	if (mobj->drawonlyforplayer)
 		diff2 |= MD2_DRAWONLYFORPLAYER;
 	if (mobj->dontdrawforviewmobj)
@@ -3525,6 +3530,7 @@ static thinker_t* LoadMobjThinker(save_t *save_p, actionf_p1 thinker)
 
 		slope->moved = true;
 	}
+
 	if (diff2 & MD2_DRAWONLYFORPLAYER)
 		mobj->drawonlyforplayer = &players[P_ReadUINT8(save_p)];
 	if (diff2 & MD2_DONTDRAWFORVIEWMOBJ)
@@ -5239,8 +5245,8 @@ static void P_NetArchiveSectorPortals(save_t *save_p)
 		UINT8 type = secportals[i].type;
 
 		P_WriteUINT8(save_p, type);
-		P_WriteFixed(save_p, secportals[i].origin.x);
-		P_WriteFixed(save_p, secportals[i].origin.y);
+		P_WriteUINT8(save_p, secportals[i].ceiling ? 1 : 0);
+		P_WriteUINT32(save_p, SaveSector(secportals[i].target));
 
 		switch (type)
 		{
@@ -5283,8 +5289,8 @@ static void P_NetUnArchiveSectorPortals(save_t *save_p)
 		sectorportal_t *secportal = &secportals[id];
 
 		secportal->type = P_ReadUINT8(save_p);
-		secportal->origin.x = P_ReadFixed(save_p);
-		secportal->origin.y = P_ReadFixed(save_p);
+		secportal->ceiling = (P_ReadUINT8(save_p) != 0) ? true : false;
+		secportal->target = LoadSector(P_ReadUINT32(save_p));
 
 		switch (secportal->type)
 		{

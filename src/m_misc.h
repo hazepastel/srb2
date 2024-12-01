@@ -47,7 +47,7 @@ void M_StopMovie(void);
 #endif
 
 // the file where game vars and settings are saved
-#define CONFIGFILENAME "config.cfg"
+#define CONFIGFILENAME "reveries.cfg"
 
 INT32 M_MapNumber(char first, char second);
 

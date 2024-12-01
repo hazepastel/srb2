@@ -148,7 +148,7 @@ extern char logfilename[1024];
 #endif
 
 /* A mod name to further distinguish versions. */
-#define SRB2APPLICATION "SRB2"
+#define SRB2APPLICATION "SRB2R"
 
 // Defines that the game is being compiled for a mobile OS
 #if defined(__ANDROID__) || defined(__IPHONEOS__) || defined(__TVOS__)

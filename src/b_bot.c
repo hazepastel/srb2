@@ -580,7 +580,7 @@ void B_RespawnBot(INT32 playernum)
 	player->powers[pw_spacetime] = sonic->player->powers[pw_spacetime];
 	player->powers[pw_gravityboots] = sonic->player->powers[pw_gravityboots];
 	player->powers[pw_nocontrol] = sonic->player->powers[pw_nocontrol];
-	player->pflags |= PF_AUTOBRAKE|(sonic->player->pflags & PF_DIRECTIONCHAR);
+	player->pflags |= (sonic->player->pflags & PF_DIRECTIONCHAR);
 
 	P_SetOrigin(tails, x, y, z);
 	if (player->charability == CA_FLY)
@@ -589,7 +589,10 @@ void B_RespawnBot(INT32 playernum)
 		tails->player->powers[pw_tailsfly] = (UINT16)-1;
 	}
 	else
+	{
 		P_SetMobjState(tails, S_PLAY_FALL);
+	}
+
 	P_SetScale(tails, sonic->scale, false);
 	tails->destscale = sonic->destscale;
 	tails->old_scale = sonic->old_scale;

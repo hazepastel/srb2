@@ -1380,6 +1380,7 @@ void PT_FileFragment(SINT8 node, INT32 netconsole)
 		&& strcmp(filename, "zones.pk3")
 		&& strcmp(filename, "player.dta")
 		&& strcmp(filename, "patch.pk3")
+		&& strcmp(filename, "reveries.pk3")
 		&& strcmp(filename, "music.dta")
 #ifdef USE_ANDROID_PK3
 		&& strcmp(filename, ANDROID_PK3_FILENAME)

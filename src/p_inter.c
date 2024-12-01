@@ -421,6 +421,8 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			if (special->state != &states[S_STEAM1]) // Only when it bursts
 				return;
 
+			speed = speed*19/16; //gravity adjustment
+
 			toucher->eflags |= MFE_SPRUNG;
 			toucher->momz = flipval * FixedMul(speed, FixedSqrt(FixedMul(special->scale, toucher->scale))); // scale the speed with both objects' scales, just like with springs!
 
@@ -429,6 +431,10 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				P_ResetPlayer(player);
 				if (player->panim != PA_FALL)
 					P_SetMobjState(toucher, S_PLAY_FALL);
+				player->powers[pw_justsprung] = 5;
+				player->powers[pw_noautobrake] = 3*(abs(speed)/FRACUNIT);
+				player->powers[pw_springlock] = 5;
+				player->rsprung = 1;
 			}
 
 			return; // Don't collect it!
@@ -538,14 +544,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			if ((P_MobjFlip(toucher)*toucher->momz < 0) && (elementalpierce != 1) && (!(player->powers[pw_strong] & STR_HEAVY)))
 			{
 				fixed_t setmomz = -toucher->momz; // Store this, momz get changed by P_DoJump within P_DoBubbleBounce
-				
+
 				if (elementalpierce == 2) // Reset bubblewrap, part 1
 					P_DoBubbleBounce(player);
 				toucher->momz = setmomz;
 				if (elementalpierce == 2) // Reset bubblewrap, part 2
 				{
 					boolean underwater = toucher->eflags & MFE_UNDERWATER;
-							
+
 					if (underwater)
 						toucher->momz /= 2;
 					toucher->momz -= (toucher->momz/(underwater ? 8 : 4)); // Cap the height!
@@ -1274,6 +1280,8 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 					xspeed = FixedMul(FINECOSINE(fa),speed);
 					yspeed = FixedMul(FINESINE(fa),speed);
 
+					yspeed = yspeed*19/16; //gravity adjustment
+
 					P_InstaThrust(toucher, special->angle, xspeed/10);
 					toucher->momz = yspeed/11;
 
@@ -1633,12 +1641,12 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 		case MT_EGGSHIELD:
 			{
 				angle_t angle = R_PointToAngle2(special->x, special->y, toucher->x, toucher->y) - special->angle;
-				fixed_t touchspeed = P_AproxDistance(toucher->momx, toucher->momy);
+				fixed_t touchspeed = FixedHypot(toucher->momx, toucher->momy);
 				if (touchspeed < special->scale)
 					touchspeed = special->scale;
 
 				// Blocked by the shield?
-				if (!(angle > ANGLE_90 && angle < ANGLE_270))
+				if (!(angle > ANGLE_90 && angle < ANGLE_270) && (!(((player->charflags & SF_CANBUSTWALLS) || (player->powers[pw_strong] & STR_BUST)) && P_PlayerCanDamage(player, player->mo))))
 				{
 					toucher->momx = P_ReturnThrustX(special, special->angle, touchspeed);
 					toucher->momy = P_ReturnThrustY(special, special->angle, touchspeed);
@@ -1663,9 +1671,8 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				else
 				{
 					// Shatter the shield!
-					toucher->momx = -toucher->momx/2;
-					toucher->momy = -toucher->momy/2;
-					toucher->momz = -toucher->momz;
+					if (special->target)
+						special->target->flags |= MF_SHOOTABLE;
 					break;
 				}
 			}
@@ -1698,11 +1705,6 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				quake.time = TICRATE/2;
 				quake.epicenter = NULL;
 			}
-
-#if 0 // camera redirection - deemed unnecessary
-			toucher->angle = special->angle;
-			P_SetPlayerAngle(player, toucher->angle);
-#endif
 
 			S_StartSound(toucher, special->info->attacksound); // home run
 
@@ -1790,12 +1792,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			return;
 
 		case MT_EXTRALARGEBUBBLE:
-			if (player->powers[pw_shield] & SH_PROTECTWATER)
+			if (!player->powers[pw_underwater]) // water shields, nights mode, and mariomode set the air timer to zero
 				return;
-			if (maptol & TOL_NIGHTS)
-				return;
-			if (mariomode)
-				return;
+
 			if (special->state-states != S_EXTRALARGEBUBBLE)
 				return; // Don't grab the bubble during its spawn animation
 			else if (toucher->eflags & MFE_VERTICALFLIP)
@@ -1808,25 +1807,18 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				|| special->z > toucher->z + (toucher->height*2/3))
 				return; // Only go in the mouth
 
-			// Eaten by player!
-			if ((!player->bot || player->bot == BOT_MPAI) && (player->powers[pw_underwater] && player->powers[pw_underwater] <= 12*TICRATE + 1))
+			if (player->powers[pw_underwater] < underwatertics + 1)
 			{
 				player->powers[pw_underwater] = underwatertics + 1;
 				P_RestoreMusic(player);
 			}
 
-			if (player->powers[pw_underwater] < underwatertics + 1)
-				player->powers[pw_underwater] = underwatertics + 1;
-
 			if (!player->climbing)
 			{
-				if (player->bot && player->bot != BOT_MPAI && toucher->state-states != S_PLAY_GASP)
-					S_StartSound(toucher, special->info->deathsound); // Force it to play a sound for bots
 				P_SetMobjState(toucher, S_PLAY_GASP);
 				P_ResetPlayer(player);
+				player->pflags |= PF_FULLSTASIS;
 			}
-
-			toucher->momx = toucher->momy = toucher->momz = 0;
 
 			if (player->bot && player->bot != BOT_MPAI)
 				return;
@@ -2572,7 +2564,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 			if (!(target->flags2 & MF2_DONTRESPAWN))
 			{
 				if (!(netgame || multiplayer))
-					target->fuse = atoi(cv_itemrespawntime.defaultvalue)*TICRATE + 2; 
+					target->fuse = atoi(cv_itemrespawntime.defaultvalue)*TICRATE + 2;
 				else if (cv_itemrespawn.value)
 					target->fuse = cv_itemrespawntime.value*TICRATE + 2;
 			}
@@ -2807,8 +2799,10 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 				mo = P_SpawnMobj(inflictor->x + inflictor->momx, inflictor->y + inflictor->momy, inflictor->z + (inflictor->height / 2) + inflictor->momz, MT_EXTRALARGEBUBBLE);
 			else
 				mo = P_SpawnMobj(target->x, target->y, target->z, MT_EXTRALARGEBUBBLE);
+
 			if (P_MobjWasRemoved(mo))
 				break;
+
 			P_SetScale(mo, target->scale, true);
 			P_SetMobjState(mo, mo->info->raisestate);
 			break;
@@ -3523,21 +3517,32 @@ void P_RemoveShield(player_t *player)
 
 static void P_ShieldDamage(player_t *player, mobj_t *inflictor, mobj_t *source, INT32 damage, UINT8 damagetype)
 {
+	boolean forcedeflect = false;
+
 	// Must do pain first to set flashing -- P_RemoveShield can cause damage
-	P_DoPlayerPain(player, source, inflictor);
+	if ((player->powers[pw_shield] & SH_FORCE) && (player->powers[pw_shield] & SH_FORCEHP))
+	{
+		forcedeflect = true;
+		player->powers[pw_flashing] = flashingtics-1;
+	}
+	else
+		P_DoPlayerPain(player, source, inflictor);
 
 	P_RemoveShield(player);
 
 	P_ForceFeed(player, 40, 10, TICRATE, 40 + min(damage, 100)*2);
 
-	if (damagetype == DMG_SPIKE) // spikes
+	if (forcedeflect)
+		S_StartSound(player->mo, sfx_frcssg);
+	else if (damagetype == DMG_SPIKE) // spikes
 		S_StartSound(player->mo, sfx_spkdth);
 	else
 		S_StartSound (player->mo, sfx_shldls); // Ba-Dum! Shield loss.
 
 	if ((gametyperules & GTR_TEAMFLAGS) && (player->gotflag & (GF_REDFLAG|GF_BLUEFLAG)))
 	{
-		P_PlayerFlagBurst(player, false);
+		if (!forcedeflect) //Force shield with HP remaining protects your flag
+			P_PlayerFlagBurst(player, false);
 		if (source && source->player)
 		{
 			// Award no points when players shoot each other when cv_friendlyfire is on.
@@ -3862,6 +3867,8 @@ boolean P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, INT32 da
 			}
 			return false;
 		}
+		else if ((player->pflags & PF_BOUNCING) && !inflictor && P_IsObjectOnGround(player->mo))
+			return false;
 		else if (LUA_HookMobjDamage(target, inflictor, source, damage, damagetype))
 			return true;
 		else if (player->powers[pw_shield] || (player->bot && player->bot != BOT_MPAI && !ultimatemode))  //If One-Hit Shield

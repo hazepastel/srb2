@@ -72,11 +72,11 @@ UINT8 renderswitcherror = 0;
 static CV_PossibleValue_t scr_depth_cons_t[] = {{8, "8 bits"}, {16, "16 bits"}, {24, "24 bits"}, {32, "32 bits"}, {0, NULL}};
 
 //added : 03-02-98: default screen mode, as loaded/saved in config
-consvar_t cv_scr_width = CVAR_INIT ("scr_width", "1280", CV_SAVE, CV_Unsigned, NULL);
-consvar_t cv_scr_height = CVAR_INIT ("scr_height", "800", CV_SAVE, CV_Unsigned, NULL);
-consvar_t cv_scr_width_w = CVAR_INIT ("scr_width_w", "640", CV_SAVE, CV_Unsigned, NULL);
-consvar_t cv_scr_height_w = CVAR_INIT ("scr_height_w", "400", CV_SAVE, CV_Unsigned, NULL);
-consvar_t cv_scr_depth = CVAR_INIT ("scr_depth", "16 bits", CV_SAVE, scr_depth_cons_t, NULL);
+consvar_t cv_scr_width = CVAR_INIT ("scr_width", "1600", CV_SAVE, CV_Unsigned, NULL);
+consvar_t cv_scr_height = CVAR_INIT ("scr_height", "900", CV_SAVE, CV_Unsigned, NULL);
+consvar_t cv_scr_width_w = CVAR_INIT ("scr_width_w", "1600", CV_SAVE, CV_Unsigned, NULL);
+consvar_t cv_scr_height_w = CVAR_INIT ("scr_height_w", "900", CV_SAVE, CV_Unsigned, NULL);
+consvar_t cv_scr_depth = CVAR_INIT ("scr_depth", "32 bits", CV_SAVE, scr_depth_cons_t, NULL);
 
 
 #ifdef NATIVESCREENRES
@@ -421,11 +421,11 @@ void SCR_ChangeRenderer(void)
 
 boolean SCR_IsAspectCorrect(INT32 width, INT32 height)
 {
-	return
-	 (  width % BASEVIDWIDTH == 0
-	 && height % BASEVIDHEIGHT == 0
-	 && width / BASEVIDWIDTH == height / BASEVIDHEIGHT
-	 );
+	if (height == 1080 || (width == 1600 && height == 900) || height == 720)
+	{
+		return true;
+	}
+	return false;
 }
 
 #ifdef NATIVESCREENRES

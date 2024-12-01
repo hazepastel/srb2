@@ -151,7 +151,6 @@ static char *char_notes = NULL;
 
 boolean menuactive = false;
 boolean fromlevelselect = false;
-tic_t shieldprompt_timer = 0; // Show a prompt about the new Shield button for old configs // TODO: 2.3: Remove
 
 static INT32 lastinputmethod = INPUTMETHOD_NONE;
 
@@ -1340,9 +1339,6 @@ static menuitem_t OP_P1ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_CameraOptionsDef, 60},
 
-	{IT_STRING  | IT_CVAR,   NULL, "Automatic braking", &cv_autobrake, 80},
-	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup1PPlaystyleMenu, 90},
-
 	// Accelerometer settings
 #ifdef ACCELEROMETER
 	{IT_STRING | IT_CVAR, NULL,                "Use accelerometer", &cv_useaccelerometer, 110},
@@ -1350,6 +1346,8 @@ static menuitem_t OP_P1ControlsMenu[] =
 	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Accel. tilt",       &cv_acceltilt, 130},
 	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Accel. deadzone",   &cv_acceldeadzone, 140},
 #endif
+=======
+	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup1PPlaystyleMenu, 80},
 };
 
 static menuitem_t OP_P2ControlsMenu[] =
@@ -1360,7 +1358,6 @@ static menuitem_t OP_P2ControlsMenu[] =
 
 	{IT_SUBMENU | IT_STRING, NULL, "Camera Options...", &OP_Camera2OptionsDef, 50},
 
-	{IT_STRING  | IT_CVAR, NULL,   "Automatic braking", &cv_autobrake2, 70},
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup2PPlaystyleMenu, 80},
 };
 
@@ -1374,7 +1371,7 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Move Right",       M_ChangeControl, GC_STRAFERIGHT },
 	{IT_CALL | IT_STRING2, NULL, "Jump",             M_ChangeControl, GC_JUMP        },
 	{IT_CALL | IT_STRING2, NULL, "Spin",             M_ChangeControl, GC_SPIN        },
-	{IT_CALL | IT_STRING2, NULL, "Shield Ability",   M_ChangeControl, GC_SHIELD      },
+	{IT_CALL | IT_STRING2, NULL, "Peelout / Shield",   M_ChangeControl, GC_SHIELD      },
 	{IT_HEADER, NULL, "Camera", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
 	{IT_CALL | IT_STRING2, NULL, "Look Up",        M_ChangeControl, GC_LOOKUP      },
@@ -1677,11 +1674,10 @@ static menuitem_t OP_VideoOptionsMenu[] =
 #else
 	{IT_TRANSTEXT | IT_PAIR, "Renderer", "Software",            &cv_renderer,        21},
 #endif
-
-	{IT_HEADER, NULL, "Color Profile", NULL, 30},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Brightness", &cv_globalgamma,36},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Saturation", &cv_globalsaturation, 41},
-	{IT_SUBMENU|IT_STRING, NULL, "Advanced Settings...",     &OP_ColorOptionsDef,  46},
+	{IT_STRING | IT_CVAR, NULL, "FPS Cap", &cv_fpscap, 30},
+	{IT_STRING | IT_CVAR, NULL, "Field of view", &cv_fov, 36},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Brightness", &cv_globalgamma,41},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Saturation", &cv_globalsaturation, 46},
 
 	{IT_HEADER, NULL, "Heads-Up Display", NULL, 55},
 	{IT_STRING | IT_CVAR, NULL, "Show HUD",                  &cv_showhud,         61},
@@ -1718,8 +1714,7 @@ static menuitem_t OP_VideoOptionsMenu[] =
 
 #ifdef HWRENDER
 	{IT_HEADER, NULL, "Renderer", NULL, 215},
-	{IT_CALL | IT_STRING, NULL, "OpenGL Options...",         M_OpenGLOptionsMenu, 221},
-	{IT_STRING | IT_CVAR, NULL, "FPS Cap",                   &cv_fpscap,          226},
+	{IT_CALL | IT_STRING, NULL, "OpenGL Options...",         M_OpenGLOptionsMenu, 214},
 #endif
 };
 
@@ -1793,20 +1788,10 @@ static menuitem_t OP_OpenGLOptionsMenu[] =
 	{IT_STRING|IT_CVAR,         NULL, "Frame interpolation",  &cv_glmodelinterpolation, 11},
 	{IT_STRING|IT_CVAR,         NULL, "Ambient lighting",     &cv_glmodellighting,      16},
 
-	{IT_HEADER, NULL, "General", NULL, 25},
-	{IT_STRING|IT_CVAR,         NULL, "Shaders",              &cv_glshaders,            31},
-	{IT_STRING|IT_CVAR,         NULL, "Palette rendering",   &cv_glpaletterendering,   36},
-	{IT_STRING|IT_CVAR,         NULL, "Lack of perspective",  &cv_glshearing,           41},
-	{IT_STRING|IT_CVAR,         NULL, "Field of view",        &cv_fov,                  46},
-
-	{IT_HEADER, NULL, "Miscellaneous", NULL, 51},
-	{IT_STRING|IT_CVAR,         NULL, "Texture filter",       &cv_glfiltermode,         57},
-	{IT_STRING|IT_CVAR,         NULL, "Anisotropic",          &cv_glanisotropicmode,    62},
-	{IT_STRING|IT_CVAR,         NULL, "Bit depth",            &cv_scr_depth,            67},
-
-	{IT_HEADER, NULL, "Framebuffer", NULL, 77},
-	{IT_STRING|IT_CVAR,         NULL, "Framebuffer objects",  &cv_glframebuffer,        83},
-	{IT_STRING|IT_CVAR,         NULL, "Depth buffer quality", &cv_glrenderbufferdepth,  88},
+	{IT_HEADER, NULL, "General", NULL, 51},
+	{IT_STRING|IT_CVAR,         NULL, "Shaders",             &cv_glshaders,            63},
+	{IT_STRING|IT_CVAR,         NULL, "Palette rendering",   &cv_glpaletterendering,   73},
+	{IT_STRING|IT_CVAR,         NULL, "Lack of perspective", &cv_glshearing,           83},
 
 #ifdef ALAM_LIGHTING
 	{IT_SUBMENU|IT_STRING,      NULL, "Lighting...",          &OP_OpenGLLightingDef,    92},
@@ -1828,27 +1813,25 @@ static menuitem_t OP_OpenGLLightingMenu[] =
 static menuitem_t OP_SoundOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Game Audio", NULL, 0},
-	{IT_STRING | IT_CVAR,  NULL,  "Sound Effects", &cv_gamesounds, 6},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Sound Volume", &cv_soundvolume, 11},
+	{IT_STRING | IT_CVAR, NULL, "Sound Effects", &cv_gamesounds, 12},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "SFX Volume", &cv_soundvolume, 22},
 
-	{IT_STRING | IT_CVAR,  NULL,  "Digital Music", &cv_gamedigimusic, 21},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Digital Music Volume", &cv_digmusicvolume,  26},
+	{IT_STRING | IT_CVAR, NULL, "Music", &cv_gamedigimusic, 42},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Music Volume", &cv_digmusicvolume, 52},
 
-	{IT_STRING | IT_CVAR,  NULL,  "MIDI Music", &cv_gamemidimusic, 36},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "MIDI Music Volume", &cv_midimusicvolume, 41},
+	{IT_STRING | IT_CVAR, NULL, "Music Preference", &cv_musicpref, 72},
 
-	{IT_STRING | IT_CVAR,  NULL,  "Music Preference", &cv_musicpref, 51},
+	{IT_HEADER, NULL, "Miscellaneous", NULL, 90},
+	{IT_STRING | IT_CVAR, NULL, "Closed Captioning", &cv_closedcaptioning, 102},
+	{IT_STRING | IT_CVAR, NULL, "Reset Music Upon Dying", &cv_resetmusic, 112},
+	{IT_STRING | IT_CVAR, NULL, "Extra Life SFX", &cv_1upsound, 122},
+	{IT_STRING | IT_CVAR, NULL, "Play Super Music", &cv_supersound, 132},
 
-	{IT_HEADER, NULL, "Miscellaneous", NULL, 61},
-	{IT_STRING | IT_CVAR, NULL, "Closed Captioning", &cv_closedcaptioning, 67},
-	{IT_STRING | IT_CVAR, NULL, "Reset Music Upon Dying", &cv_resetmusic, 72},
-	{IT_STRING | IT_CVAR, NULL, "Default 1-Up sound", &cv_1upsound, 77},
-
-	{IT_STRING | IT_SUBMENU, NULL, "Advanced Settings...", &OP_SoundAdvancedDef, 87},
+	{IT_STRING | IT_SUBMENU, NULL, "Focus & MIDI Settings...", &OP_SoundAdvancedDef, 142},
 };
 
 #ifdef HAVE_OPENMPT
-#define OPENMPT_MENUOFFSET 32
+#define OPENMPT_MENUOFFSET 30
 #else
 #define OPENMPT_MENUOFFSET 0
 #endif
@@ -1857,7 +1840,7 @@ static menuitem_t OP_SoundOptionsMenu[] =
 #if defined(__ANDROID__)
 #define MIXERX_MENUOFFSET 55
 #else
-#define MIXERX_MENUOFFSET 81
+#define MIXERX_MENUOFFSET 90
 #endif // __ANDROID__
 #else
 #define MIXERX_MENUOFFSET 0
@@ -1874,15 +1857,15 @@ static menuitem_t OP_SoundAdvancedMenu[] =
 	{IT_HEADER, NULL, "MIDI Settings", NULL, OPENMPT_MENUOFFSET},
 	{IT_STRING | IT_CVAR, NULL, "MIDI Player", &cv_midiplayer, OPENMPT_MENUOFFSET+12},
 	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "FluidSynth Sound Font File", &cv_midisoundfontpath, OPENMPT_MENUOFFSET+24},
-#if !defined(__ANDROID__)
 	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "TiMidity++ Config Folder", &cv_miditimiditypath, OPENMPT_MENUOFFSET+51},
-#endif // __ANDROID__
 #endif // HAVE_MIXERX
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "MIDI Volume", &cv_midimusicvolume, OPENMPT_MENUOFFSET+12},
+	{IT_STRING | IT_CVAR, NULL, "MIDI Player", &cv_midiplayer, OPENMPT_MENUOFFSET+22},
+	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "FluidSynth Sound Font File", &cv_midisoundfontpath, OPENMPT_MENUOFFSET+32},
 
-	{IT_HEADER, NULL, "Miscellaneous", NULL, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET},
+	{IT_HEADER, NULL, "Focus settings", NULL, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET},
 	{IT_STRING | IT_CVAR, NULL, "Play Sound Effects if Unfocused", &cv_playsoundsifunfocused, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+12},
 	{IT_STRING | IT_CVAR, NULL, "Play Music if Unfocused", &cv_playmusicifunfocused, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+22},
-	{IT_STRING | IT_CVAR, NULL, "Let Levels Force Reset Music", &cv_resetmusicbyheader, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+32},
 };
 
 #undef OPENMPT_MENUOFFSET
@@ -2605,7 +2588,7 @@ menu_t OP_ColorOptionsDef =
 	0,
 	NULL, NULL
 };
-menu_t OP_SoundOptionsDef = DEFAULTSCROLLMENUSTYLE(
+menu_t OP_SoundOptionsDef = DEFAULTMENUSTYLE(
 	MTREE2(MN_OP_MAIN, MN_OP_SOUND),
 	"M_SOUND", OP_SoundOptionsMenu, &OP_MainDef, 30, 30);
 menu_t OP_SoundAdvancedDef = DEFAULTMENUSTYLE(
@@ -3371,7 +3354,7 @@ static void M_HandleMenuPresState(menu_t *newMenu)
 	}
 
 	// Change the music
-	M_ChangeMenuMusic("_title", false);
+	M_ChangeMenuMusic("_title", looptitle);
 
 	// Run the linedef execs
 	if (titlemapinaction)
@@ -4283,7 +4266,6 @@ static void Command_Manual_f(void)
 		return;
 
 	M_StartControlPanel();
-	if (shieldprompt_timer) return; // TODO: 2.3: Delete this line
 	currentMenu = &MISC_HelpDef;
 	M_ClearItemOn();
 
@@ -5315,7 +5297,6 @@ boolean M_Responder(event_t *ev)
 				if (modeattacking)
 					return true;
 				M_StartControlPanel();
-				if (shieldprompt_timer) return true; // TODO: 2.3: Delete this line
 				M_Options(0);
 				// Uncomment the below if you want the menu to reset to the top each time like before. M_SetupNextMenu will fix it automatically.
 				//OP_SoundOptionsDef.lastOn = 0;
@@ -5326,7 +5307,6 @@ boolean M_Responder(event_t *ev)
 				if (modeattacking)
 					return true;
 				M_StartControlPanel();
-				if (shieldprompt_timer) return true; // TODO: 2.3: Delete this line
 				M_Options(0);
 				M_VideoModeMenu(0);
 				return true;
@@ -5338,7 +5318,6 @@ boolean M_Responder(event_t *ev)
 				if (modeattacking)
 					return true;
 				M_StartControlPanel();
-				if (shieldprompt_timer) return true; // TODO: 2.3: Delete this line
 				M_Options(0);
 				M_SetupNextMenu(&OP_MainDef);
 				return true;
@@ -5381,7 +5360,7 @@ boolean M_Responder(event_t *ev)
 	{
 		// ignore ev_keydown events if the key maps to a character, since
 		// the ev_text event will follow immediately after in that case.
-		if (ev->type == ev_keydown && ch >= 32 && ch <= 127)
+		if (ev->type == ev_keydown && ((ch >= 32 && ch <= 127) || (ch >= KEY_KEYPAD7 && ch <= KEY_KPADDEL)))
 			return true;
 
 		routine(ch);
@@ -5681,231 +5660,6 @@ void M_DrawGameVersion(void)
 #undef ALIGNSTRING
 }
 
-// Handle the "Do you want to assign Shield Ability now?" pop-up for old configs // TODO: 2.3: Remove this line...
-static UINT8 shieldprompt_currentchoice = 0; // ...and this line...
-
-static void M_ShieldPromptUseDefaults(void) // ...and this function
-{
-	// With a default config from v2.2.10 to v2.2.13, the B button will be set to Custom 1,
-	// and Controls per Key defaults to "One", so it will override the default Shield button.
-	// A default config from v2.2.0 to v2.2.9 has Next Weapon on B, so it suffers from this too.
-
-	// So for "Use default Shield Ability buttons", we should update old configs to mitigate gamepad conflicts
-	// (even with "Several" Controls per Key!), and show a message with the default bindings
-
-	for (setupcontrols = gamecontrol; true; setupcontrols = gamecontrolbis) // Do stuff for both P1 and P2
-	{
-		INT32 JOY1 = (setupcontrols == gamecontrol) ? KEY_JOY1 : KEY_2JOY1; // Is this for P1 or for P2?
-
-		if ((setupcontrols[GC_CUSTOM1][0] == JOY1+1 || setupcontrols[GC_CUSTOM1][1] == JOY1+1)
-		&&  (setupcontrols[GC_CUSTOM2][0] == JOY1+3 || setupcontrols[GC_CUSTOM2][1] == JOY1+3)
-		&&  (setupcontrols[GC_CUSTOM3][0] == JOY1+8 || setupcontrols[GC_CUSTOM3][1] == JOY1+8))
-		{
-			// If the player has v2.2.13's default gamepad Custom 1/2/3 buttons,
-			// shuffle Custom 1/2/3 around to make room for Shield Ability on B
-			UINT8 shield_slot  = (setupcontrols[GC_SHIELD ][0] == KEY_NULL  ) ? 0 : 1;
-			UINT8 custom1_slot = (setupcontrols[GC_CUSTOM1][0] == JOY1+1) ? 0 : 1;
-			UINT8 custom2_slot = (setupcontrols[GC_CUSTOM2][0] == JOY1+3) ? 0 : 1;
-			UINT8 custom3_slot = (setupcontrols[GC_CUSTOM3][0] == JOY1+8) ? 0 : 1;
-
-			setupcontrols[GC_SHIELD ][shield_slot ] = JOY1+1; // Assign Shield Ability to B
-			setupcontrols[GC_CUSTOM1][custom1_slot] = JOY1+3; // Move Custom 1 from B to Y
-			setupcontrols[GC_CUSTOM2][custom2_slot] = JOY1+8; // Move Custom 2 from Y to LS
-			setupcontrols[GC_CUSTOM3][custom3_slot] = KEY_NULL; // Unassign Custom 3 from LS...
-			// (The alternative would be to check and update the ENTIRE gamepad layout.
-			// That'd be nice, but it would mess with people that are used to the old defaults.)
-		}
-		else if ((setupcontrols[GC_WEAPONNEXT][0] == JOY1+1 || setupcontrols[GC_WEAPONNEXT][1] == JOY1+1)
-		&&       (setupcontrols[GC_WEAPONPREV][0] == JOY1+2 || setupcontrols[GC_WEAPONPREV][1] == JOY1+2))
-		{
-			// Or if the user has a default config from v2.2.0 to v2.2.9,
-			// the B button will be Next Weapon, and X will be Previous Weapon.
-			// It's "safe" to discard one of them, you just have to press X multiple times to select in the other direction
-			UINT8 shield_slot  = (setupcontrols[GC_SHIELD    ][0] == KEY_NULL  ) ? 0 : 1;
-			UINT8 nweapon_slot = (setupcontrols[GC_WEAPONNEXT][0] == JOY1+1) ? 0 : 1;
-			UINT8 pweapon_slot = (setupcontrols[GC_WEAPONPREV][0] == JOY1+2) ? 0 : 1;
-
-			setupcontrols[GC_SHIELD    ][shield_slot ] = JOY1+1; // Assign Shield Ability to B
-			setupcontrols[GC_WEAPONNEXT][nweapon_slot] = JOY1+3; // Move Next Weapon from B to X
-			setupcontrols[GC_WEAPONPREV][pweapon_slot] = KEY_NULL; // Unassign Previous Weapon from X
-		}
-
-		if (setupcontrols == gamecontrolbis) // If we've already updated both players, break out
-			break;
-	}
-
-
-	// Now, show a message about the default Shield Ability bindings
-	if ((gamecontrol[GC_SHIELD][0] == KEY_LALT && gamecontrol[GC_SHIELD][1] == KEY_JOY1+1)
-	||  (gamecontrol[GC_SHIELD][0] == KEY_JOY1+1 && gamecontrol[GC_SHIELD][1] == KEY_LALT))
-	{
-		// Left Alt and the B button are both assigned
-		M_StartMessage(M_GetText("Shield Ability defaults to\nthe \x82""Left Alt\x80"" key on keyboard,\nand the \x85""B button\x80"" on gamepads."
-		"\n\nYou can always reassign it\nin the Options menu later."
-		"\n\n\nPress 'Enter' to continue\n"),
-			NULL, MM_NOTHING);
-		MessageDef.x = 43; // Change the pop-up message's background position/width
-		MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 27;
-	}
-	else if (gamecontrol[GC_SHIELD][0] == KEY_LALT || gamecontrol[GC_SHIELD][1] == KEY_LALT)
-	{
-		// Left Alt is assigned, but the B button isn't.
-		M_StartMessage(M_GetText("Shield Ability defaults to\nthe \x82""Left Alt\x80"" key on keyboard.\nThe \x85""B button\x80"" on gamepads was taken."
-		"\n\nYou can always reassign it\nin the Options menu later."
-		"\n\n\nPress 'Enter' to continue\n"),
-			NULL, MM_NOTHING);
-		MessageDef.x = 24; // Change the pop-up message's background position/width
-		MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 32;
-	}
-	else if (gamecontrol[GC_SHIELD][0] == KEY_JOY1+1 || gamecontrol[GC_SHIELD][1] == KEY_JOY1+1)
-	{
-		// The B button is assigned, but Left Alt isn't
-		M_StartMessage(M_GetText("Shield Ability defaults to\nthe \x85""B button\x80"" on gamepads.\nThe \x82""Left Alt\x80"" key on keyboard was taken."
-		"\n\nYou can always reassign it\nin the Options menu later."
-		"\n\n\nPress 'Enter' to continue\n"),
-			NULL, MM_NOTHING);
-		MessageDef.x = 8; // Change the pop-up message's background position/width
-		MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 36;
-	}
-	else if (gamecontrol[GC_SHIELD][0] == KEY_NULL && gamecontrol[GC_SHIELD][1] == KEY_NULL)
-	{
-		// Neither Left Alt nor the B button are assigned
-		M_StartMessage(M_GetText("Shield Ability is unassigned!\nThe \x82""Left Alt\x80"" key on keyboard and\nthe \x85""B button\x80"" on gamepads were taken."
-		"\n\nYou should assign Shield Ability\nin the Options menu later."
-		"\n\n\nPress 'Enter' to continue\n"),
-			NULL, MM_NOTHING);
-		MessageDef.x = 19; // Change the pop-up message's background position/width
-		MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 33;
-	}
-	else
-	{
-		// Neither Left Alt nor the B button are assigned... but something else is???
-		// (This can technically happen if you edit your config or use setcontrol in the console before opening the menu)
-		char keystr[16+16+2+7+1]; // Two 16-char keys + two colour codes + "' and '" + null
-
-		if (gamecontrol[GC_SHIELD][0] != KEY_NULL && gamecontrol[GC_SHIELD][1] != KEY_NULL)
-			STRBUFCPY(keystr, va("%s\x80""' and '\x82""%s",
-				G_KeyNumToName(gamecontrol[GC_SHIELD][0]),
-				G_KeyNumToName(gamecontrol[GC_SHIELD][1])));
-		else if (gamecontrol[GC_SHIELD][0] != KEY_NULL)
-			STRBUFCPY(keystr, G_KeyNumToName(gamecontrol[GC_SHIELD][0]));
-		else //if (gamecontrol[GC_SHIELD][1] != KEY_NULL)
-			STRBUFCPY(keystr, G_KeyNumToName(gamecontrol[GC_SHIELD][1]));
-
-		M_StartMessage(va("Shield Ability is assigned to\n'\x82""%s\x80""'."
-		"\n\nYou can always reassign it\nin the Options menu later."
-		"\n\n\nPress 'Enter' to continue\n",
-			keystr), NULL, MM_NOTHING);
-		MessageDef.x = 23; // Change the pop-up message's background position/width
-		MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 32;
-	}
-}
-
-static void M_HandleShieldPromptMenu(INT32 choice) // TODO: 2.3: Remove
-{
-	switch (choice)
-	{
-		case KEY_ESCAPE:
-			if (I_GetTime() <= shieldprompt_timer) // Don't mash past the pop-up by accident!
-				break;
-
-			S_StartSound(NULL, sfx_menu1);
-			noFurtherInput = true;
-			shieldprompt_timer = 0;
-			M_ShieldPromptUseDefaults();
-			break;
-
-		case KEY_ENTER:
-			if (I_GetTime() <= shieldprompt_timer) // Don't mash past the pop-up by accident!
-				break;
-
-			S_StartSound(NULL, sfx_menu1);
-			noFurtherInput = true;
-			shieldprompt_timer = 0;
-
-			if (shieldprompt_currentchoice == 0)
-			{
-				OP_ChangeControlsDef.lastOn = 8; // Highlight Shield Ability in the controls menu
-				M_Setup1PControlsMenu(0); // Set up P1's controls menu and call M_SetupNextMenu
-			}
-			else if (shieldprompt_currentchoice == 1) // Copy the Spin buttons to the Shield buttons
-			{
-				CV_SetValue(&cv_controlperkey, 2); // Make sure that Controls per Key is "Several"
-
-				gamecontrol   [GC_SHIELD][0] = gamecontrol   [GC_SPIN][0];
-				gamecontrol   [GC_SHIELD][1] = gamecontrol   [GC_SPIN][1];
-				gamecontrolbis[GC_SHIELD][0] = gamecontrolbis[GC_SPIN][0];
-				gamecontrolbis[GC_SHIELD][1] = gamecontrolbis[GC_SPIN][1];
-				CV_SetValue(&cv_shieldaxis,  cv_spinaxis.value);
-				CV_SetValue(&cv_shieldaxis2, cv_spinaxis2.value);
-
-				M_StartMessage(M_GetText("Spin and Shield Ability are now\nthe same button."
-				"\n\nYou can always reassign them\nin the Options menu later."
-				"\n\n\nPress 'Enter' to continue\n"),
-					NULL, MM_NOTHING);
-				MessageDef.x = 36; // Change the pop-up message's background position/width
-				MessageDef.lastOn = (MessageDef.lastOn & ~0xFF) | 29;
-			}
-			else
-				M_ShieldPromptUseDefaults();
-			break;
-
-		case KEY_UPARROW:
-			S_StartSound(NULL, sfx_menu1);
-			shieldprompt_currentchoice = (shieldprompt_currentchoice+2)%3;
-			break;
-
-		case KEY_DOWNARROW:
-			S_StartSound(NULL, sfx_menu1);
-			shieldprompt_currentchoice = (shieldprompt_currentchoice+1)%3;
-			break;
-	}
-
-	MessageDef.prevMenu = &MainDef;
-}
-
-static void M_DrawShieldPromptMenu(void) // TODO: 2.3: Remove
-{
-	INT16 cursorx = (BASEVIDWIDTH/2) - 24;
-
-	V_DrawFill(10-3, 68-3, 300+6, 40+6, 159);
-	// V_DrawCenteredString doesn't centre newlines, so we have to draw each line separately
-	V_DrawCenteredString(BASEVIDWIDTH/2, 68, V_ALLOWLOWERCASE, "Welcome back! Since you last played,");
-	V_DrawCenteredString(BASEVIDWIDTH/2, 76, V_ALLOWLOWERCASE, "Spin has been split into separate");
-	V_DrawCenteredString(BASEVIDWIDTH/2, 84, V_ALLOWLOWERCASE, "\"Spin\" and \"Shield Ability\" controls.");
-
-	V_DrawCenteredString(BASEVIDWIDTH/2, 98, V_ALLOWLOWERCASE, "Do you want to assign Shield Ability now?");
-
-
-	V_DrawCenteredString(BASEVIDWIDTH/2, 164,
-		(shieldprompt_currentchoice == 0) ? V_YELLOWMAP : 0, "Open Control Setup");
-	V_DrawCenteredString(BASEVIDWIDTH/2, 172,
-		(shieldprompt_currentchoice == 1) ? V_YELLOWMAP : 0, "Keep the old behaviour");
-	V_DrawCenteredString(BASEVIDWIDTH/2, 180,
-		(shieldprompt_currentchoice == 2) ? V_YELLOWMAP : 0, "Use default Shield Ability buttons");
-
-	switch (shieldprompt_currentchoice)
-	{
-		case 0:  cursorx -= V_StringWidth("Open Control Setup",                 0)/2; break;
-		case 1:  cursorx -= V_StringWidth("Keep the old behaviour",             0)/2; break;
-		default: cursorx -= V_StringWidth("Use default Shield Ability buttons", 0)/2; break;
-	}
-	V_DrawScaledPatch(cursorx, 164 + (shieldprompt_currentchoice*8), 0, W_CachePatchName("M_CURSOR", PU_PATCH));
-}
-#if 0 // bitten fix
-static menuitem_t OP_ShieldPromptMenu[] = {{IT_KEYHANDLER | IT_NOTHING, NULL, "", M_HandleShieldPromptMenu, 0}}; // TODO: 2.3: Remove
-
-menu_t OP_ShieldPromptDef = { // TODO: 2.3: Remove
-	MN_SPECIAL,
-	NULL,
-	1,
-	&MainDef,
-	OP_ShieldPromptMenu,
-	M_DrawShieldPromptMenu,
-	0, 0, 0, NULL
-};
-#endif
-
 //
 // M_StartControlPanel
 //
@@ -5937,17 +5691,6 @@ void M_StartControlPanel(void)
 		currentMenu = &MainDef;
 		M_SetItemOn(singleplr);
 		M_UpdateItemOn();
-
-#if 0 // bitten fix
-		if (shieldprompt_timer) // For old configs, show a pop-up about the new Shield button // TODO: 2.3: Remove
-		{
-			S_StartSound(NULL, sfx_strpst);
-			noFurtherInput = true;
-			shieldprompt_timer = I_GetTime() + TICRATE; // Don't mash past the pop-up by accident!
-
-			M_SetupNextMenu(&OP_ShieldPromptDef);
-		}
-#endif
 	}
 	else if (modeattacking)
 	{
@@ -6322,30 +6065,30 @@ void M_Init(void)
 	CV_RegisterVar(&cv_dummyloadless);
 	CV_RegisterVar(&cv_dummycutscenes);
 
-	quitmsg[QUITMSG] = M_GetText("Eggman's tied explosives\nto your girlfriend, and\nwill activate them if\nyou press the 'Y' key!\nPress 'N' to save her!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG1] = M_GetText("What would Tails say if\nhe saw you quitting the game?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG2] = M_GetText("Hey!\nWhere do ya think you're goin'?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG3] = M_GetText("Forget your studies!\nPlay some more!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG4] = M_GetText("You're trying to say you\nlike Sonic 2K6 better than\nthis, right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG5] = M_GetText("Don't leave yet -- there's a\nsuper emerald around that corner!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG6] = M_GetText("You'd rather work than play?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG7] = M_GetText("Go ahead and leave. See if I care...\n*sniffle*\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG] = M_GetText("Reveries Tip:\n\nBopping a badnik resets certain abilities, such as the Comet Dash and Lovely Ascent.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG1] = M_GetText("Reveries Tip:\n\nSuper Peelout is an advanced, situational move. Spindashing is usually faster!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG2] = M_GetText("Reveries Tip:\n\nTails' flight timer is ticking when Tails' tails twirl at a tremendous tempo.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG3] = M_GetText("Reveries Tip:\n\nHold spin while skidding to use the Quick Spindash technique! Well, you also need the ability to spindash in the first place.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG4] = M_GetText("Reveries Tip:\n\nWhile traveling at a rate above your normal top speed, your momentum will degrade the longer you remain in the air. Rolling and certain character abilities bypass this air drag!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG5] = M_GetText("Reveries Tip:\n\nEnemy wielding a shield in you way?\nBreak through with powerful moves!\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG6] = M_GetText("Reveries Tip:\n\nKeeping momentum as Knuckles can be tricky. Release jump the moment you glide into the ground to retain the most speed.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG7] = M_GetText("Reveries Tip:\n\nSpeeding through close quarters? You can turn slightly sharper with Speed Shoes or the Super form.\n\n(Press 'Y' to quit)");
 
-	quitmsg[QUIT2MSG] = M_GetText("If you leave now,\nEggman will take over the world!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG1] = M_GetText("Don't quit!\nThere are animals\nto save!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG2] = M_GetText("Aw c'mon, just bop\na few more robots!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG3] = M_GetText("Did you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG4] = M_GetText("If you leave, I'll use\nmy spin attack on you!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG5] = M_GetText("Don't go!\nYou might find the hidden\nlevels!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG6] = M_GetText("Hit the 'N' key, Sonic!\nThe 'N' key!\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG] = M_GetText("Reveries Tip:\n\nAmy's Hammer Spin is difficult to control, but ignores air drag. When activated, there is a short grace period before you begin falling faster. Tapping instead of holding the button will automatically cancel the move at the end of this period.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG1] = M_GetText("Reveries Tip:\n\nFang's bounce ignores air drag, and gains speed each time you consecutively land without canceling it.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG2] = M_GetText("Reveries Tip:\n\nSome abilities, such as shield abilities, restrict your ability to use more abilities. Other abilities, such as Fang's bounce, do not have the ability to disable abilities.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG3] = M_GetText("Reveries Tip:\n\nDash mode can't be lost while in the air, but can only be obtained while on the ground.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG4] = M_GetText("Reveries Tip:\n\nThe will of a Spring is difficult to resist.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG5] = M_GetText("Reveries Tip:\n\nSpin characters have the shared unique move Anti Flying Turtle Roll, accessible by pressing spin in the upwards launch state.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG6] = M_GetText("Reveries Tip:\n\nNonspin characters have the shared unique passive Spring Spark, allowing them to use their jump abilities after taking a spring.\n\n(Press 'Y' to quit)");
 
-	quitmsg[QUIT3MSG] = M_GetText("Are you really going to give up?\nWe certainly would never give you up.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG1] = M_GetText("Come on, just ONE more netgame!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG2] = M_GetText("Press 'N' to unlock\nthe Ultimate Cheat!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG3] = M_GetText("Why don't you go back and try\njumping on that house to\nsee what happens?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG4] = M_GetText("Every time you press 'Y', an\nSRB2 Developer cries...\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG5] = M_GetText("You'll be back to play soon, though...\n......right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG6] = M_GetText("Aww, is Egg Rock Zone too\ndifficult for you?\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG] = M_GetText("Reveries Tip:\n\nDid you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG1] = M_GetText("Eggeries Tip:\n\nOBEY EGGMAN\n\n(Press 'OBEY' to quit)");
+	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment and some spikes.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nBreak the rain so in silence reigns the horse of flames.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG4] = M_GetText("Reveries Tip:\n\nReveries is an anagram.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG5] = M_GetText("Reveries Tip:\n\nThe SRB2 Source Code is a bottomless tome of forbidden knowledge.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG6] = M_GetText("Reveries Tip:\n\nAvoid getting oilers in your boilers. Failure to comply may result in a quicksilver pinball.\n\n(Press 'Y' to quit)");
 
 	/*
 	Well the menu sucks for forcing us to have an item set
@@ -11662,10 +11405,6 @@ static void M_DrawLoadGameData(void)
 			{
 				if (savegameinfo[savetodraw].lives == -42)
 					col = 26;
-				else if (savegameinfo[savetodraw].botskin == 3) // & knuckles
-					col = 106;
-				else if (savegameinfo[savetodraw].botskin) // tailsbot or custom
-					col = 134;
 				else
 				{
 					if (charskin->prefoppositecolor)
@@ -14537,7 +14276,7 @@ static void M_ModeAttackEndGame(INT32 choice)
 	M_UpdateItemOn();
 	G_SetGamestate(GS_TIMEATTACK);
 	modeattacking = ATTACKING_NONE;
-	M_ChangeMenuMusic("_title", true);
+	M_ChangeMenuMusic("_title", looptitle);
 	Nextmap_OnChange();
 }
 
@@ -16038,15 +15777,6 @@ static void M_HandleConnectIP(INT32 choice)
 				setupm_ip[l] = (char)choice;
 				setupm_ip[l+1] = 0;
 			}
-			else if (choice >= 199 && choice <= 211 && choice != 202 && choice != 206) //numpad too!
-			{
-				char keypad_translation[] = {'7','8','9','-','4','5','6','+','1','2','3','0','.'};
-				choice = keypad_translation[choice - 199];
-				S_StartSound(NULL,sfx_menu1); // Tails
-				setupm_ip[l] = (char)choice;
-				setupm_ip[l+1] = 0;
-			}
-
 			break;
 	}
 
@@ -18515,11 +18245,11 @@ static void M_DrawVideoMode(void)
 				cv_scr_width.value, cv_scr_height.value));
 
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 138,
-			V_GREENMAP, "Green modes are recommended.");
-		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 146,
-			V_YELLOWMAP, "Other modes may have visual errors.");
+			V_GREENMAP, "Green modes fit most monitors best");
+		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 150,
+			V_YELLOWMAP, "If you are having performance issues");
 		V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y + 158,
-			V_YELLOWMAP, "Larger modes may have performance issues.");
+			V_YELLOWMAP, "try picking a smaller resolution");
 	}
 
 	// Draw the cursor for the VidMode menu

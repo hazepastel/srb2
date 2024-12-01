@@ -560,11 +560,6 @@ void M_FirstLoadConfig(void)
 	COM_BufInsertText(va("exec \"%s\"\n", configfile));
 	// no COM_BufExecute() needed; that does it right away
 
-	// For configs loaded at startup only, check for pre-Shield-button configs // TODO: 2.3: Remove
-	if (GETMAJOREXECVERSION(cv_execversion.value) < 55 // Pre-v2.2.14 configs
-	&& cv_execversion.value != 25) // Make sure that the config exists, too
-		shieldprompt_timer = 1;
-
 	// don't filter anymore vars and don't let this convsvar be changed
 	COM_BufInsertText(va("%s \"%d\"\n", cv_execversion.name, EXECVERSION));
 	CV_ToggleExecVersion(false);
@@ -802,10 +797,10 @@ static void M_PNGText(png_structp png_ptr, png_infop png_info_ptr, PNG_CONST png
 	char keytxt[SRB2PNGTXT][12] = {
 	"Title", "Description", "Playername", "Mapnum", "Mapname",
 	"Location", "Interface", "Render Mode", "Revision", "Build Date", "Build Time"};
-	char titletxt[] = "Sonic Robo Blast 2 " VERSIONSTRING;
+	char titletxt[] = "Sonic Robo Blast 2 Reveries " VERSIONSTRING;
 	png_charp playertxt =  cv_playername.zstring;
-	char desctxt[] = "SRB2 Screenshot";
-	char Movietxt[] = "SRB2 Movie";
+	char desctxt[] = "SRB2R Screenshot";
+	char Movietxt[] = "SRB2R Movie";
 	size_t i;
 	char interfacetxt[] =
 #ifdef HAVE_SDL
