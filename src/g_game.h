@@ -73,7 +73,6 @@ typedef enum {
 #define G_ControlStyle(ssplayer) (cv_directionchar[(ssplayer)-1].value == 3 ? CS_LMAOGALOG : ((!objectplacing && cv_analog[(ssplayer)-1].value ? CS_LMAOGALOG : 0) | (cv_directionchar[(ssplayer)-1].value ? CS_STANDARD : 0)))
 #define P_ControlStyle(player) ((((player)->pflags & PF_ANALOGMODE) ? CS_LMAOGALOG : 0) | (((player)->pflags & PF_DIRECTIONCHAR) ? CS_STANDARD : 0))
 
-extern consvar_t cv_classic, cv_classic2;
 extern consvar_t cv_sideaxis, cv_turnaxis, cv_moveaxis, cv_lookaxis, cv_jumpaxis, cv_spinaxis, cv_shieldaxis, cv_fireaxis, cv_firenaxis, cv_deadzone, cv_digitaldeadzone;
 extern consvar_t cv_sideaxis2,cv_turnaxis2,cv_moveaxis2,cv_lookaxis2,cv_jumpaxis2,cv_spinaxis2,cv_shieldaxis2,cv_fireaxis2,cv_firenaxis2,cv_deadzone2,cv_digitaldeadzone2;
 extern consvar_t cv_ghost_bestscore, cv_ghost_besttime, cv_ghost_bestrings, cv_ghost_last, cv_ghost_guest;

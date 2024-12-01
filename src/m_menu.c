@@ -1346,7 +1346,6 @@ static menuitem_t OP_P1ControlsMenu[] =
 	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Accel. tilt",       &cv_acceltilt, 130},
 	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Accel. deadzone",   &cv_acceldeadzone, 140},
 #endif
-=======
 	{IT_CALL    | IT_STRING, NULL, "Play Style...", M_Setup1PPlaystyleMenu, 80},
 };
 

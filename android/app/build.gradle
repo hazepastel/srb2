@@ -44,7 +44,6 @@ android {
                             'zones.pk3',
                             'player.dta',
                             'reveries.pk3',
-                            'patch.pk3',
                             'music.dta']
                     ))
                 }
