@@ -593,7 +593,7 @@ static int extracolormap_set(lua_State *L)
 		|| exc->fadergba != old_fade_rgba
 		|| exc->fadestart != old_fade_start
 		|| exc->fadeend != old_fade_end)
-	R_UpdateLightTable(exc, true);
+	R_GenerateLightTable(exc, true);
 
 	return 0;
 }
