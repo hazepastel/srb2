@@ -348,11 +348,11 @@ static boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 			if (player->panim == PA_FALL)
 			{
 				speed = FixedDiv(abs(mobj->momz), mobj->scale);
-				if (speed < 10<<FRACBITS)
+				if (speed < 9<<FRACBITS)
 					mobj->tics = 4;
-				else if (speed < 20<<FRACBITS)
+				else if (speed < 18<<FRACBITS)
 					mobj->tics = 3;
-				else if (speed < 30<<FRACBITS)
+				else if (speed < 32<<FRACBITS)
 					mobj->tics = 2;
 				else
 					mobj->tics = 1;
@@ -373,7 +373,7 @@ static boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 				speed = FixedDiv(player->speed, FixedMul(mobj->scale, player->mo->movefactor));
 				if (player->panim == PA_ROLL || player->panim == PA_JUMP)
 				{
-					if (speed >= 20<<FRACBITS)
+					if (speed >= 18<<FRACBITS)
 						mobj->tics = 1;
 					else
 						mobj->tics = 2;
@@ -382,9 +382,9 @@ static boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 				{
 					if (player->panim == PA_WALK)
 					{
-						if (speed >= 16<<FRACBITS)
+						if (speed >= 18<<FRACBITS)
 							mobj->tics = 2;
-						else if (speed >= 8<<FRACBITS)
+						else if (speed >= 9<<FRACBITS)
 							mobj->tics = 3;
 						else
 							mobj->tics = 4;

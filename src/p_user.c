@@ -6252,7 +6252,7 @@ static void P_3dMovement(player_t *player)
 		}
 		else
 		{
-			if (player->speed >= FixedMul(player->normalspeed>>1, player->mo->scale) && player->mo->friction <= ORIG_FRICTION)
+			if (player->speed >= FixedMul(18<<FRACBITS, player->mo->scale) && player->mo->friction <= ORIG_FRICTION)
 				deceleration -= FRACUNIT>>1;
 
 			deceleration = min(deceleration, FixedDiv(player->speed>>1, player->mo->scale));
@@ -8015,7 +8015,7 @@ static void P_SkidStuff(player_t *player)
 					P_SpawnSkidDust(player, 0, false);
 			}
 		}
-		else if (FixedHypot(pmx, pmy) >= FixedMul(player->runspeed/2, player->mo->scale) // if you were moving faster than half your run speed last frame
+		else if (FixedHypot(pmx, pmy) >= FixedMul(18<<FRACBITS, player->mo->scale) // if you were moving faster than 18 fracunits per tic
 		&& (player->mo->momx != pmx || player->mo->momy != pmy) // and you are moving differently this frame
 		&& (P_GetPlayerControlDirection(player) == 2) // and your controls are pointing in the opposite direction to your movement
 		&& !player->powers[pw_justsprung]) // and you are not sprung
@@ -8614,7 +8614,7 @@ void P_MovePlayer(player_t *player)
 		P_ResetScore(player);
 
 	// Spawn trail when moving fast enough to ignore roll friction
-	if (player->pflags & PF_SPINNING && !(player->pflags & PF_STARTDASH) && FixedHypot(player->speed, player->mo->momz) >= FixedMul(20<<FRACBITS, player->mo->scale) && !(player->pflags & PF_JUMPED))
+	if (player->pflags & PF_SPINNING && !(player->pflags & PF_STARTDASH) && FixedHypot(player->speed, player->mo->momz) >= FixedMul(18<<FRACBITS, player->mo->scale) && !(player->pflags & PF_JUMPED))
 	{
 		P_SpawnSpinMobj(player, player->spinitem);
 		G_GhostAddSpin();
@@ -8633,7 +8633,7 @@ void P_MovePlayer(player_t *player)
 	}
 
 	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL
-	&& (player->pflags & PF_SPINNING) && player->speed >= FixedMul(20<<FRACBITS, player->mo->scale) && onground && (leveltime & 1)
+	&& (player->pflags & PF_SPINNING) && player->speed >= FixedMul(18<<FRACBITS, player->mo->scale) && onground && (leveltime & 1)
 	&& !(player->mo->eflags & (MFE_UNDERWATER|MFE_TOUCHWATER)))
 		P_ElementalFire(player, false);
 
@@ -11294,7 +11294,7 @@ void P_DoTailsOverlay(player_t *player, mobj_t *tails)
 	{
 		if (!smilesonground || player->mo->state-states == S_PLAY_SKID)
 			chosenstate = S_TAILSOVERLAY_PLUS30DEGREES;
-		else if (player->speed >= FixedMul(player->runspeed/2, player->mo->scale))
+		else if (player->speed >= FixedMul(18<<FRACBITS, player->mo->scale))
 			chosenstate = S_TAILSOVERLAY_0DEGREES;
 		else
 			chosenstate = S_TAILSOVERLAY_MINUS30DEGREES;
@@ -11331,7 +11331,7 @@ void P_DoTailsOverlay(player_t *player, mobj_t *tails)
 	// animation...
 	if (player->panim == PA_SPRING || player->panim == PA_FALL || player->mo->state-states == S_PLAY_RIDE)
 	{
-		if (FixedDiv(abs(player->mo->momz), player->mo->scale) < 20<<FRACBITS)
+		if (FixedDiv(abs(player->mo->momz), player->mo->scale) < 18<<FRACBITS)
 			ticnum = 2;
 		else
 			ticnum = 1;
