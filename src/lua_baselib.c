@@ -1993,6 +1993,10 @@ static int lib_pLineIsBlocking(lua_State *L)
 	if (!line)
 		return LUA_ErrInvalid(L, "line_t");
 
+	// polyobject calculations are broken so here's some duct tape
+	if (line->polyobj)
+		return 0;
+
 	// P_LineOpening in P_LineIsBlocking sets these variables.
 	// We want to keep their old values after so that whatever
 	// map collision code uses them doesn't get messed up.
