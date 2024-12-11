@@ -3122,8 +3122,8 @@ void P_MobjCheckWater(mobj_t *mobj)
 			mobj->eflags |= MFE_TOUCHWATER;
 
 		// Actually in the water?
-		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - ((mobj->momz/2) + (height>>1)) > bottomheight)
-		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + ((mobj->momz/2) + (height>>1)) < topheight))
+		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - (mobj->momz + (height>>1)) > bottomheight)
+		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + (mobj->momz + (height>>1)) < topheight))
 			mobj->eflags |= MFE_UNDERWATER;
 
 		if (mobj->eflags & (MFE_TOUCHWATER|MFE_UNDERWATER))
