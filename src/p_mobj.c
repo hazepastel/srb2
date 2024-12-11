@@ -3100,6 +3100,9 @@ void P_MobjCheckWater(mobj_t *mobj)
 	// Reset water state.
 	mobj->eflags &= ~(MFE_UNDERWATER|MFE_TOUCHWATER|MFE_GOOWATER|MFE_TOUCHLAVA);
 
+	if (mobj->momz)
+		height += mobj->momz;
+
 	for (rover = sector->ffloors; rover; rover = rover->next)
 	{
 		fixed_t topheight, bottomheight;
