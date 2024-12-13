@@ -3103,6 +3103,7 @@ void P_MobjCheckWater(mobj_t *mobj)
 	for (rover = sector->ffloors; rover; rover = rover->next)
 	{
 		fixed_t topheight, bottomheight;
+		fixed_t fakemomz = mobj->momz;
 		if (!(rover->fofflags & FOF_EXISTS) || !(rover->fofflags & FOF_SWIMMABLE)
 		 || (((rover->fofflags & FOF_BLOCKPLAYER) && mobj->player)
 		 || ((rover->fofflags & FOF_BLOCKOTHERS) && !mobj->player)))
@@ -3124,18 +3125,22 @@ void P_MobjCheckWater(mobj_t *mobj)
 				continue;
 		}
 
+		// TODO 2.3: remove the demo compat check and fix goop to not jank out
+		if ((rover->fofflags & FOF_GOOWATER) || (demoversion < 0x0012))
+			fakemomz = 0;
+
 		// Set the watertop and waterbottom
 		mobj->watertop = topheight;
 		mobj->waterbottom = bottomheight;
 
 		// Just touching the water?
-		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - (mobj->momz + height) < bottomheight)
-		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + (mobj->momz + height) > topheight))
+		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - (fakemomz + height) < bottomheight)
+		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + (fakemomz + height) > topheight))
 			mobj->eflags |= MFE_TOUCHWATER;
 
 		// Actually in the water?
-		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - (mobj->momz + (height>>1)) > bottomheight)
-		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + (mobj->momz + (height>>1)) < topheight))
+		if (((mobj->eflags & MFE_VERTICALFLIP) && thingtop - (fakemomz + (height>>1)) > bottomheight)
+		 || (!(mobj->eflags & MFE_VERTICALFLIP) && mobj->z + (fakemomz + (height>>1)) < topheight))
 			mobj->eflags |= MFE_UNDERWATER;
 
 		if (mobj->eflags & (MFE_TOUCHWATER|MFE_UNDERWATER))
