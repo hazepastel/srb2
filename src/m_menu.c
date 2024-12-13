@@ -1439,31 +1439,34 @@ static menuitem_t OP_OpenGLLightingMenu[] =
 static menuitem_t OP_SoundOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Game Audio", NULL, 0},
-	{IT_STRING | IT_CVAR, NULL, "Sound Effects", &cv_gamesounds, 12},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "SFX Volume", &cv_soundvolume, 22},
+	{IT_STRING | IT_CVAR,  NULL,  "Sound Effects", &cv_gamesounds, 6},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Sound Volume", &cv_soundvolume, 11},
 
-	{IT_STRING | IT_CVAR, NULL, "Music", &cv_gamedigimusic, 42},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Music Volume", &cv_digmusicvolume, 52},
+	{IT_STRING | IT_CVAR,  NULL,  "Digital Music", &cv_gamedigimusic, 21},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "Digital Music Volume", &cv_digmusicvolume,  26},
 
-	{IT_STRING | IT_CVAR, NULL, "Music Preference", &cv_musicpref, 72},
+	{IT_STRING | IT_CVAR,  NULL,  "MIDI Music", &cv_gamemidimusic, 36},
+	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "MIDI Music Volume", &cv_midimusicvolume, 41},
 
-	{IT_HEADER, NULL, "Miscellaneous", NULL, 90},
-	{IT_STRING | IT_CVAR, NULL, "Closed Captioning", &cv_closedcaptioning, 102},
-	{IT_STRING | IT_CVAR, NULL, "Reset Music Upon Dying", &cv_resetmusic, 112},
-	{IT_STRING | IT_CVAR, NULL, "Extra Life SFX", &cv_1upsound, 122},
-	{IT_STRING | IT_CVAR, NULL, "Play Super Music", &cv_supersound, 132},
+	{IT_STRING | IT_CVAR,  NULL,  "Music Preference", &cv_musicpref, 51},
 
-	{IT_STRING | IT_SUBMENU, NULL, "Focus & MIDI Settings...", &OP_SoundAdvancedDef, 142},
+	{IT_HEADER, NULL, "Miscellaneous", NULL, 61},
+	{IT_STRING | IT_CVAR, NULL, "Closed Captioning", &cv_closedcaptioning, 67},
+	{IT_STRING | IT_CVAR, NULL, "Reset Music Upon Dying", &cv_resetmusic, 72},
+	{IT_STRING | IT_CVAR, NULL, "Extra Life SFX", &cv_1upsound, 77},
+	{IT_STRING | IT_CVAR, NULL, "Play Super Music", &cv_supersound, 82},
+
+	{IT_STRING | IT_SUBMENU, NULL, "Advanced Settings...", &OP_SoundAdvancedDef, 92},
 };
 
 #ifdef HAVE_OPENMPT
-#define OPENMPT_MENUOFFSET 30
+#define OPENMPT_MENUOFFSET 32
 #else
 #define OPENMPT_MENUOFFSET 0
 #endif
 
 #ifdef HAVE_MIXERX
-#define MIXERX_MENUOFFSET 90
+#define MIXERX_MENUOFFSET 81
 #else
 #define MIXERX_MENUOFFSET 0
 #endif
@@ -1477,15 +1480,15 @@ static menuitem_t OP_SoundAdvancedMenu[] =
 
 #ifdef HAVE_MIXERX
 	{IT_HEADER, NULL, "MIDI Settings", NULL, OPENMPT_MENUOFFSET},
-	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "MIDI Volume", &cv_midimusicvolume, OPENMPT_MENUOFFSET+12},
-	{IT_STRING | IT_CVAR, NULL, "MIDI Player", &cv_midiplayer, OPENMPT_MENUOFFSET+22},
-	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "FluidSynth Sound Font File", &cv_midisoundfontpath, OPENMPT_MENUOFFSET+32},
-	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "TiMidity++ Config Folder", &cv_miditimiditypath, OPENMPT_MENUOFFSET+59},
+	{IT_STRING | IT_CVAR, NULL, "MIDI Player", &cv_midiplayer, OPENMPT_MENUOFFSET+12},
+	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "FluidSynth Sound Font File", &cv_midisoundfontpath, OPENMPT_MENUOFFSET+24},
+	{IT_STRING | IT_CVAR | IT_CV_STRING, NULL, "TiMidity++ Config Folder", &cv_miditimiditypath, OPENMPT_MENUOFFSET+51},
 #endif
 
-	{IT_HEADER, NULL, "Focus settings", NULL, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET},
+	{IT_HEADER, NULL, "Miscellaneous", NULL, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET},
 	{IT_STRING | IT_CVAR, NULL, "Play Sound Effects if Unfocused", &cv_playsoundsifunfocused, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+12},
 	{IT_STRING | IT_CVAR, NULL, "Play Music if Unfocused", &cv_playmusicifunfocused, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+22},
+	{IT_STRING | IT_CVAR, NULL, "Let Levels Force Reset Music", &cv_resetmusicbyheader, OPENMPT_MENUOFFSET+MIXERX_MENUOFFSET+32},
 };
 
 #undef OPENMPT_MENUOFFSET
@@ -2157,7 +2160,7 @@ menu_t OP_ColorOptionsDef =
 	0,
 	NULL
 };
-menu_t OP_SoundOptionsDef = DEFAULTMENUSTYLE(
+menu_t OP_SoundOptionsDef = DEFAULTSCROLLMENUSTYLE(
 	MTREE2(MN_OP_MAIN, MN_OP_SOUND),
 	"M_SOUND", OP_SoundOptionsMenu, &OP_MainDef, 30, 30);
 menu_t OP_SoundAdvancedDef = DEFAULTMENUSTYLE(
@@ -2923,7 +2926,7 @@ static void M_HandleMenuPresState(menu_t *newMenu)
 	}
 
 	// Change the music
-	M_ChangeMenuMusic("_title", looptitle);
+	M_ChangeMenuMusic("_title", false);
 
 	// Run the linedef execs
 	if (titlemapinaction)
@@ -10640,7 +10643,7 @@ static void M_ModeAttackEndGame(INT32 choice)
 	M_UpdateItemOn();
 	G_SetGamestate(GS_TIMEATTACK);
 	modeattacking = ATTACKING_NONE;
-	M_ChangeMenuMusic("_title", looptitle);
+	M_ChangeMenuMusic("_title", true);
 	Nextmap_OnChange();
 }
 

@@ -3785,7 +3785,7 @@ static void P_DoBossVictory(mobj_t *mo)
 		}
 
 		if (mapheaderinfo[gamemap-1]->muspostbossname[0] &&
-			S_MusicPrefExists(mapheaderinfo[gamemap-1]->muspostbossname))
+			S_MusicExists(mapheaderinfo[gamemap-1]->muspostbossname, !midi_disabled, !digital_disabled))
 		{
 			// Touching the egg trap button calls P_DoPlayerExit, which calls P_RestoreMusic.
 			// So just park ourselves in the mapmus variables.

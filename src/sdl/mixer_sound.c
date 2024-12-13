@@ -95,6 +95,7 @@ UINT8 sound_started = false;
 static Mix_Music *music;
 static UINT8 music_volume, sfx_volume, internal_volume;
 static float loop_point;
+static float song_length; // length in seconds
 static boolean songpaused;
 static UINT32 music_bytes;
 static boolean is_looping;
@@ -206,7 +207,7 @@ consvar_t cv_miditimiditypath = CVAR_INIT ("midisoundbank", "./timidity", CV_SAV
 
 static void var_cleanup(void)
 {
-	loop_point = 0.0f;
+	song_length = loop_point = 0.0f;
 	music_bytes = fading_source = fading_target =\
 	 fading_timer = fading_duration = 0;
 
@@ -907,9 +908,9 @@ boolean I_SetSongSpeed(float speed)
 
 UINT32 I_GetSongLength(void)
 {
-#ifdef HAVE_GME
 	INT32 length;
 
+#ifdef HAVE_GME
 	if (gme)
 	{
 		gme_info_t *info;
@@ -957,7 +958,12 @@ UINT32 I_GetSongLength(void)
 		if (xlength >= 0)
 			return (UINT32)(xlength*1000);
 #endif
-		return 0; //used to check for LENGTHMS, but that's now gone
+		// VERY IMPORTANT to set your LENGTHMS= in your song files, folks!
+		// SDL mixer can't read music length itself.
+		length = (UINT32)(song_length*1000);
+		if (!length)
+			CONS_Debug(DBG_DETAILED, "Getting music length: music is missing LENGTHMS= tag. Needed for seeking.\n");
+		return length;
 	}
 }
 
@@ -1255,6 +1261,7 @@ boolean I_LoadSong(char *data, size_t len)
 
 	// Find the OGG loop point.
 	loop_point = 0.0f;
+	song_length = 0.0f;
 
 	while ((UINT32)(p - data) < len)
 	{
@@ -1344,6 +1351,9 @@ boolean I_PlaySong(boolean looping)
 #endif
 	if (!music)
 		return false;
+
+	if (fpclassify(song_length) == FP_ZERO && (I_SongType() == MU_OGG || I_SongType() == MU_MP3 || I_SongType() == MU_FLAC))
+		CONS_Debug(DBG_DETAILED, "This song is missing a LENGTHMS= tag! Required to make seeking work properly.\n");
 
 	if (I_SongType() != MU_MOD && I_SongType() != MU_MID && Mix_PlayMusic(music, 0) == -1)
 	{

@@ -2782,8 +2782,13 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
 
 	if (p-players == consoleplayer)
 	{
-		if ((mapmusflags & MUSIC_RELOADRESET) && !(mapheaderinfo[gamemap-1]->levelflags & LF_NORELOAD || netgame))
-			S_ReloadReset();
+		if (mapmusflags & MUSIC_RELOADRESET)
+		{
+			strncpy(mapmusname, mapheaderinfo[gamemap-1]->musname, 7);
+			mapmusname[6] = 0;
+			mapmusflags = (mapheaderinfo[gamemap-1]->mustrack & MUSIC_TRACKMASK);
+			mapmusposition = mapheaderinfo[gamemap-1]->muspos;
+		}
 
 		// This is in S_Start, but this was not here previously.
 		// if (RESETMUSIC)

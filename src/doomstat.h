@@ -108,8 +108,9 @@ extern boolean fromlevelselect;
 // Internal parameters for sound rendering.
 // ========================================
 
+extern boolean midi_disabled;
 extern boolean sound_disabled;
-extern boolean music_disabled;
+extern boolean digital_disabled;
 
 // =========================
 // Status flags for refresh.
