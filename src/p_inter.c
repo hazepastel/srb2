@@ -101,7 +101,7 @@ void P_ClearStarPost(INT32 postnum)
 	// scan the thinkers
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		mo2 = (mobj_t *)th;
@@ -130,7 +130,7 @@ void P_ResetStarposts(void)
 
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		post = (mobj_t *)th;
@@ -1009,7 +1009,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 						// scan the thinkers to find the corresponding anchorpoint
 						for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 						{
-							if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+							if (th->removing)
 								continue;
 
 							mo2 = (mobj_t *)th;
@@ -1103,7 +1103,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// scan the remaining thinkers
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -1153,7 +1153,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// in from the paraloop. Isn't this just so efficient?
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -1530,7 +1530,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// scan the remaining thinkers to find koopa
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -2012,7 +2012,7 @@ void P_TouchStarPost(mobj_t *post, player_t *player, boolean snaptopost)
 
 		for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 		{
-			if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+			if (th->removing)
 				continue;
 
 			mo2 = (mobj_t *)th;
@@ -2864,7 +2864,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 				// scan the thinkers to make sure all the old pinch dummies are gone on death
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo = (mobj_t *)th;

@@ -2977,8 +2977,7 @@ static void P_NetArchiveThinkers(save_t *save_p)
 		// save off the current thinkers
 		for (th = thlist[i].next; th != &thlist[i]; th = th->next)
 		{
-			if (!(th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed
-			 || th->function.acp1 == (actionf_p1)P_NullPrecipThinker))
+			if (!(th->removing || th->function.acp1 == (actionf_p1)P_NullPrecipThinker))
 				numsaved++;
 
 			if (th->function.acp1 == (actionf_p1)P_MobjThinker)
@@ -3191,7 +3190,7 @@ static void P_NetArchiveThinkers(save_t *save_p)
 			}
 #ifdef PARANOIA
 			else
-				I_Assert(th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed); // wait garbage collection
+				I_Assert(th->removing); // wait garbage collection
 #endif
 		}
 
@@ -3212,7 +3211,7 @@ mobj_t *P_FindNewPosition(UINT32 oldposition)
 
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		mobj = (mobj_t *)th;
@@ -4534,7 +4533,7 @@ static inline void P_FinishMobjs(void)
 	for (currentthinker = thlist[THINK_MOBJ].next; currentthinker != &thlist[THINK_MOBJ];
 		currentthinker = currentthinker->next)
 	{
-		if (currentthinker->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (currentthinker->removing)
 			continue;
 
 		mobj = (mobj_t *)currentthinker;
@@ -4552,7 +4551,7 @@ static void P_RelinkPointers(void)
 	for (currentthinker = thlist[THINK_MOBJ].next; currentthinker != &thlist[THINK_MOBJ];
 		currentthinker = currentthinker->next)
 	{
-		if (currentthinker->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (currentthinker->removing)
 			continue;
 
 		mobj = (mobj_t *)currentthinker;
@@ -5382,7 +5381,7 @@ void P_SaveNetGame(save_t *save_p, boolean resending)
 	// Assign the mobjnumber for pointer tracking
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		mobj = (mobj_t *)th;
