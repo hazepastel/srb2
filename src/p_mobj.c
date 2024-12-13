@@ -3114,7 +3114,7 @@ void P_MobjCheckWater(mobj_t *mobj)
 		}
 
 		// TODO 2.3: remove the demo compat check and fix goop to not jank out
-		if ((rover->fofflags & FOF_GOOWATER) || (demoversion < 0x0012))
+		if ((rover->fofflags & FOF_GOOWATER) || (demoplayback && demoversion < 0x0012))
 			fakemomz = 0;
 
 		// Set the watertop and waterbottom
