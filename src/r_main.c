@@ -247,6 +247,55 @@ static void FlipCam2_OnChange(void)
 }
 
 //
+// R_PointOnSide
+// Traverse BSP (sub) tree,
+// check point against partition plane.
+// Returns side 0 (front) or 1 (back).
+//
+// killough 5/2/98: reformatted
+//
+INT32 R_OldPointOnSide(fixed_t x, fixed_t y, node_t *restrict node)
+{
+	if (!node->dx)
+		return x <= node->x ? node->dy > 0 : node->dy < 0;
+
+	if (!node->dy)
+		return y <= node->y ? node->dx < 0 : node->dx > 0;
+
+	fixed_t dx = (x >> 1) - (node->x >> 1);
+	fixed_t dy = (y >> 1) - (node->y >> 1);
+
+	// Try to quickly decide by looking at sign bits.
+	// also use a mask to avoid branch prediction
+	INT32 mask = (node->dy ^ node->dx ^ dx ^ dy) >> 31;
+	return (mask & ((node->dy ^ dx) < 0)) |  // (left is negative)
+		(~mask & (FixedMul(dy, node->dx>>FRACBITS) >= FixedMul(node->dy>>FRACBITS, dx)));
+}
+
+// killough 5/2/98: reformatted
+INT32 R_OldPointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
+{
+	fixed_t lx = line->v1->x;
+	fixed_t ly = line->v1->y;
+	fixed_t ldx = line->v2->x - lx;
+	fixed_t ldy = line->v2->y - ly;
+
+	if (!ldx)
+		return x <= lx ? ldy > 0 : ldy < 0;
+
+	if (!ldy)
+		return y <= ly ? ldx < 0 : ldx > 0;
+
+	fixed_t dx = (x >> 1) - (lx >> 1);
+	fixed_t dy = (y >> 1) - (ly >> 1);
+
+	// Try to quickly decide by looking at sign bits.
+	if ((ldy ^ ldx ^ dx ^ dy) < 0)
+		return (ldy ^ dx) < 0;          // (left is negative)
+	return FixedMul(dy, ldx>>FRACBITS) >= FixedMul(ldy>>FRACBITS, dx);
+}
+
+//
 // R_PointToAngle
 // To get a global angle from cartesian coordinates,
 //  the coordinates are flipped until they are in
