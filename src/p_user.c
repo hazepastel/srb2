@@ -5404,19 +5404,26 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 			player->secondjump = 0;
 			player->pflags &= ~PF_THOKKED;
 		}
-		else if (player->powers[pw_carry] == CR_MACESPIN && player->mo->tracer) //move this later??? there's already handling for pw_carry below
+		// determine if the player is eligible for a normal jump
+		else if (onground || player->climbing || player->powers[pw_carry] || player->jerboatime)
 		{
-			player->powers[pw_carry] = CR_NONE;
-			P_SetTarget(&player->mo->tracer, NULL);
-			player->powers[pw_flashing] = TICRATE/4;
-			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
-		}
-		// can't jump while in air, can't jump while jumping
-		else if ((onground || player->climbing || player->powers[pw_carry] || player->jerboatime) && !(player->pflags & PF_JUMPED))
-		{
-			P_DoJump(player, true, true);
-			player->secondjump = 0;
-			player->pflags &= ~PF_THOKKED;
+			if (player->powers[pw_carry] == CR_MACESPIN && player->mo->tracer)
+			{
+				player->powers[pw_carry] = CR_NONE;
+				P_SetTarget(&player->mo->tracer, NULL);
+				player->powers[pw_flashing] = TICRATE/4;
+				player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
+			}
+			else
+			{
+				if (player->pflags & PF_JUMPED)
+				{
+					P_ResetPlayer(player);
+				}
+				P_DoJump(player, true, true);
+				player->secondjump = 0;
+				player->pflags &= ~PF_THOKKED;
+			}
 		}
 		else if (player->pflags & PF_SLIDING || ((gametyperules & GTR_TEAMFLAGS) && player->gotflag) || player->pflags & PF_SHIELDABILITY)
 			;
@@ -8610,7 +8617,7 @@ void P_MovePlayer(player_t *player)
 	// Also keep in mind the PF_JUMPED check.
 	// If we lacked this, stepping up while jumping up would reset score.
 	// (for instance, when climbing up off a wall.)
-	if ((onground || player->climbing) && ((player->pflags & (PF_STARTDASH|PF_SPINNING)) != PF_SPINNING) && !(player->pflags & PF_JUMPED) && player->powers[pw_invulnerability] <= 1)
+	if ((onground || player->climbing) && ((player->pflags & (PF_STARTDASH|PF_SPINNING)) != PF_SPINNING) && !(player->pflags & PF_JUMPED) && !(player->powers[pw_strong]) && player->powers[pw_invulnerability] <= 1)
 		P_ResetScore(player);
 
 	// Spawn trail when moving fast enough to ignore roll friction

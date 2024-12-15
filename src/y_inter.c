@@ -1385,21 +1385,21 @@ void Y_StartIntermission(void)
 				// too long so just show "YOU GOT THROUGH THE ACT"
 				if (strlen(skins[players[consoleplayer].skin]->realname) > 13)
 				{
-					strcpy(data.coop.passed1, "you got");
-					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "through act" : "through the act");
+					strcpy(data.coop.passed1, "You got");
+					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "through act" : "through Zone");
 				}
 				// long enough that "X GOT" won't fit so use "X PASSED THE ACT"
 				else if (strlen(skins[players[consoleplayer].skin]->realname) > 8)
 				{
 					strcpy(data.coop.passed1, skins[players[consoleplayer].skin]->realname);
-					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "passed act" : "passed the act");
+					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "passed act" : "passed Zone");
 				}
 				// length is okay for normal use
 				else
 				{
 					snprintf(data.coop.passed1, sizeof data.coop.passed1, "%s got",
 						skins[players[consoleplayer].skin]->realname);
-					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "through act" : "through the act");
+					strcpy(data.coop.passed2, (mapheaderinfo[gamemap-1]->actnum) ? "through act" : "through Zone");
 				}
 			}
 
@@ -2066,7 +2066,7 @@ static void Y_AwardCoopBonuses(void)
 				(bonuses_list[bonusnum][j])(&players[i], &localbonuses[j]);
 			else
 				Y_SetNullBonus(&players[i], &localbonuses[j]);
-			
+
 			players[i].score += localbonuses[j].points;
 			if (players[i].score > MAXSCORE)
 				players[i].score = MAXSCORE;
