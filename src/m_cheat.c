@@ -118,24 +118,23 @@ static cheatseq_t cheat_ultimate = {
 	{ SCRAMBLE('u'), SCRAMBLE('l'), SCRAMBLE('t'), SCRAMBLE('i'), SCRAMBLE('m'), SCRAMBLE('a'), SCRAMBLE('t'), SCRAMBLE('e'), 0xff }
 };
 
+// sonic 3 level select code
 static cheatseq_t cheat_ultimate_joy = {
 	0, cheatf_ultimate,
 	{ SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_DOWNARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW),
-	  SCRAMBLE(KEY_ENTER), 0xff }
+	  SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), 0xff }
 };
 
 static cheatseq_t cheat_warp = {
 	0, cheatf_warp,
-	{ SCRAMBLE('c'), SCRAMBLE('a'), SCRAMBLE('s'), SCRAMBLE('h'), SCRAMBLE('r'), SCRAMBLE('i'), SCRAMBLE('d'), SCRAMBLE('a'), 0xff }
+	{ SCRAMBLE('f'), SCRAMBLE('i'), SCRAMBLE('s'), SCRAMBLE('h'), SCRAMBLE('b'), SCRAMBLE('a'), SCRAMBLE('k'), SCRAMBLE('e'), 0xff }
 };
 
+// sonic & knuckles level select code
 static cheatseq_t cheat_warp_joy = {
 	0, cheatf_warp,
-	{ SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_ENTER), 0xff }
+	{ SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW),
+	  SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), 0xff }
 };
 
 #ifdef DEVELOP
@@ -193,41 +192,14 @@ static UINT8 cht_CheckCheat(cheatseq_t *cht, char key)
 
 boolean cht_Responder(event_t *ev)
 {
-	UINT8 ch = 0;
+	UINT8 ret = 0, ch = 0;
+	if (ev->type != ev_keydown)
+		return false;
 
-	if (ev->type == ev_gamepad_down)
-	{
-		switch (ev->key)
-		{
-			case GAMEPAD_BUTTON_DPAD_UP:
-				ch = KEY_UPARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_DOWN:
-				ch = KEY_DOWNARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_LEFT:
-				ch = KEY_LEFTARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_RIGHT:
-				ch = KEY_RIGHTARROW;
-				break;
-			case GAMEPAD_BUTTON_START:
-				ch = KEY_ENTER;
-				break;
-			default:
-				// no mapping
-				return false;
-		}
-	}
-	else if (ev->type == ev_keydown)
-	{
-		if (ev->key > 0xFF)
-			return false;
+	if (ev->key > 0xFF)
+		return false;
 
-		ch = (UINT8)ev->key;
-	}
-
-	UINT8 ret = 0;
+	ch = (UINT8)ev->key;
 
 	ret += cht_CheckCheat(&cheat_ultimate, (char)ch);
 	ret += cht_CheckCheat(&cheat_ultimate_joy, (char)ch);
@@ -284,7 +256,7 @@ void Command_CheatGod_f(void)
 
 	plyr = &players[consoleplayer];
 	plyr->pflags ^= PF_GODMODE;
-	CONS_Printf(M_GetText("God Mode %s\n"), plyr->pflags & PF_GODMODE ? M_GetText("On") : M_GetText("Off"));
+	CONS_Printf(M_GetText("Cheese Mode %s\n"), plyr->pflags & PF_GODMODE ? M_GetText("On") : M_GetText("Off"));
 
 	G_SetUsedCheats(false);
 }
@@ -564,7 +536,7 @@ void Command_Teleport_f(void)
 
 			for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 			{
-				if (th->removing)
+				if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
 					continue;
 
 				mo2 = (mobj_t *)th;
@@ -964,7 +936,7 @@ static CV_PossibleValue_t op_flags_t[] = {{0, "MIN"}, {15, "MAX"}, {0, NULL}};
 static CV_PossibleValue_t op_hoopflags_t[] = {{0, "MIN"}, {15, "MAX"}, {0, NULL}};
 
 consvar_t cv_mapthingnum = CVAR_INIT ("op_mapthingnum", "0", CV_NOTINNET, op_mapthing_t, NULL);
-consvar_t cv_speed = CVAR_INIT ("op_speed", "32", CV_NOTINNET, op_speed_t, NULL);
+consvar_t cv_speed = CVAR_INIT ("op_speed", "16", CV_NOTINNET, op_speed_t, NULL);
 consvar_t cv_opflags = CVAR_INIT ("op_flags", "0", CV_NOTINNET, op_flags_t, NULL);
 consvar_t cv_ophoopflags = CVAR_INIT ("op_hoopflags", "4", CV_NOTINNET, op_hoopflags_t, NULL);
 
@@ -1074,7 +1046,7 @@ static mapthing_t *OP_CreateNewMapThing(player_t *player, UINT16 type, boolean c
 
 		for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 		{
-			if (th->removing)
+			if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
 				continue;
 
 			mo = (mobj_t *)th;
