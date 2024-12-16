@@ -952,6 +952,7 @@ static INT16 GetJoystickAxisValue(INT32 axisval)
 INT16 G_JoyAxis(UINT8 which, joyaxis_e axissel)
 {
 	INT32 axisval;
+	INT32 value;
 
 	// find what axis to get
 	switch (axissel)
@@ -1377,11 +1378,6 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 
 	if (G_PlayerInputDown(forplayer, GC_TOSSFLAG))
 		cmd->buttons |= BT_TOSSFLAG;
-
-	// Shield button
-	axis = G_JoyAxis(forplayer, JA_SHIELD);
-	if (G_PlayerInputDown(forplayer, GC_SHIELD) || (usegamepad && axis > 0))
-		cmd->buttons |= BT_SHIELD;
 
 	// Lua scriptable buttons
 	if (G_PlayerInputDown(forplayer, GC_CUSTOM1))
