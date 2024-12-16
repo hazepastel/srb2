@@ -933,18 +933,17 @@ boolean CON_Responder(event_t *ev)
 	static INT32 alias_skips;
 
 	const char *cmd = NULL;
-	INT32 key;
+	INT32 key = ev->key;
+	boolean key_is_console = (key == gamecontrol[GC_CONSOLE][0] || key == gamecontrol[GC_CONSOLE][1]);
 
 	if (chat_on)
 		return false;
 
 	// let go keyup events, don't eat them
-	if (ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_console)
+	if (ev->type != ev_keydown && ev->type != ev_console)
 	{
 		return false;
 	}
-
-	key = ev->key;
 
 	// check for console toggle key
 	if (ev->type == ev_keydown)
@@ -952,7 +951,7 @@ boolean CON_Responder(event_t *ev)
 		if (modeattacking || metalrecording || marathonmode)
 			return false;
 
-		if ((key == gamecontrol[GC_CONSOLE][0] || key == gamecontrol[GC_CONSOLE][1]) && !shiftdown)
+		if (key_is_console)
 		{
 			I_SetTextInputMode(con_destlines == 0); // inverse, since this is changed next tic.
 			consoletoggle = true;
