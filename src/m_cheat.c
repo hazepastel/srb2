@@ -118,24 +118,23 @@ static cheatseq_t cheat_ultimate = {
 	{ SCRAMBLE('u'), SCRAMBLE('l'), SCRAMBLE('t'), SCRAMBLE('i'), SCRAMBLE('m'), SCRAMBLE('a'), SCRAMBLE('t'), SCRAMBLE('e'), 0xff }
 };
 
+// sonic 3 level select code
 static cheatseq_t cheat_ultimate_joy = {
 	0, cheatf_ultimate,
 	{ SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_DOWNARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW),
-	  SCRAMBLE(KEY_ENTER), 0xff }
+	  SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), 0xff }
 };
 
 static cheatseq_t cheat_warp = {
 	0, cheatf_warp,
-	{ SCRAMBLE('c'), SCRAMBLE('a'), SCRAMBLE('s'), SCRAMBLE('h'), SCRAMBLE('r'), SCRAMBLE('i'), SCRAMBLE('d'), SCRAMBLE('a'), 0xff }
+	{ SCRAMBLE('f'), SCRAMBLE('i'), SCRAMBLE('s'), SCRAMBLE('h'), SCRAMBLE('b'), SCRAMBLE('a'), SCRAMBLE('k'), SCRAMBLE('e'), 0xff }
 };
 
+// sonic & knuckles level select code
 static cheatseq_t cheat_warp_joy = {
 	0, cheatf_warp,
-	{ SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_ENTER), 0xff }
+	{ SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW),
+	  SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_RIGHTARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), 0xff }
 };
 
 #ifdef DEVELOP
@@ -193,41 +192,14 @@ static UINT8 cht_CheckCheat(cheatseq_t *cht, char key)
 
 boolean cht_Responder(event_t *ev)
 {
-	UINT8 ch = 0;
+	UINT8 ret = 0, ch = 0;
+	if (ev->type != ev_keydown)
+		return false;
 
-	if (ev->type == ev_gamepad_down)
-	{
-		switch (ev->key)
-		{
-			case GAMEPAD_BUTTON_DPAD_UP:
-				ch = KEY_UPARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_DOWN:
-				ch = KEY_DOWNARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_LEFT:
-				ch = KEY_LEFTARROW;
-				break;
-			case GAMEPAD_BUTTON_DPAD_RIGHT:
-				ch = KEY_RIGHTARROW;
-				break;
-			case GAMEPAD_BUTTON_START:
-				ch = KEY_ENTER;
-				break;
-			default:
-				// no mapping
-				return false;
-		}
-	}
-	else if (ev->type == ev_keydown)
-	{
-		if (ev->key > 0xFF)
-			return false;
+	if (ev->key > 0xFF)
+		return false;
 
-		ch = (UINT8)ev->key;
-	}
-
-	UINT8 ret = 0;
+	ch = (UINT8)ev->key;
 
 	ret += cht_CheckCheat(&cheat_ultimate, (char)ch);
 	ret += cht_CheckCheat(&cheat_ultimate_joy, (char)ch);
