@@ -438,7 +438,7 @@ consvar_t cv_spinaxis[2] = {
 	CVAR_INIT ("joyaxis_spin", "None", CV_SAVE, joyaxis_cons_t, NULL),
 	CVAR_INIT ("joyaxis2_spin", "None", CV_SAVE, joyaxis_cons_t, NULL)
 };
-consvar_t cv_shiwlsaxis[2] = {
+consvar_t cv_shieldaxis[2] = {
 	CVAR_INIT ("joyaxis_shield", "None", CV_SAVE, joyaxis_cons_t, NULL),
 	CVAR_INIT ("joyaxis2_shield", "None", CV_SAVE, joyaxis_cons_t, NULL)
 };
@@ -1006,7 +1006,7 @@ INT16 G_JoyAxis(UINT8 which, joyaxis_e axissel)
 			axisval = cv_spinaxis[which].value;
 			break;
 		case JA_SHIELD:
-			axisval = cv_shieldaxis.value;
+			axisval = cv_shieldaxis[which].value;
 			break;
 		case JA_FIRE:
 			axisval = cv_fireaxis[which].value;
@@ -1417,7 +1417,7 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 		cmd->buttons |= BT_TOSSFLAG;
 
 	// Shield button
-	axis = PlayerJoyAxis(ssplayer, JA_SHIELD);
+	axis = G_JoyAxis(forplayer, JA_SHIELD);
 	if (G_PlayerInputDown(forplayer, GC_SHIELD) || (usegamepad && axis > 0))
 		cmd->buttons |= BT_SHIELD;
 

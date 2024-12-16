@@ -614,12 +614,12 @@ static void M_ConfirmConnect(event_t *ev)
 {
 	if (ev->type == ev_keydown)
 	{
-		if (ev->key == ' ' || ev->key == 'y' || ev->key == KEY_ENTER || ev->key == KEY_JOY1)
+		if (ev->key == ' ' || ev->key == 'y' || ev->key == KEY_ENTER || ev->key == GAMEPAD_BUTTON_B)
 		{
 			BeginDownload(UseDirectDownloader());
 			M_ClearMenus(true);
 		}
-		else if (ev->key == 'n' || ev->key == KEY_ESCAPE || ev->key == KEY_JOY1 + 3)
+		else if (ev->key == 'n' || ev->key == KEY_ESCAPE || ev->key == GAMEPAD_BUTTON_X)
 		{
 			cl_mode = CL_ABORTED;
 			M_ClearMenus(true);
@@ -1163,7 +1163,7 @@ static boolean CL_ServerConnectionTicker(const char *tmpsave, tic_t *oldtic, tic
 			}
 		}
 
-		if (gamekeydown[KEY_ESCAPE] || gamekeydown[KEY_JOY1+1] || cl_mode == CL_ABORTED)
+		if (gamekeydown[KEY_ESCAPE] || gamepads[0].buttons[GAMEPAD_BUTTON_B] || cl_mode == CL_ABORTED)
 		{
 			CONS_Printf(M_GetText("Network game synchronization aborted.\n"));
 			M_StartMessage(M_GetText("Network game synchronization aborted.\n\nPress ESC\n"), NULL, MM_NOTHING);

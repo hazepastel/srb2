@@ -942,8 +942,6 @@ boolean CON_Responder(event_t *ev)
 	// let go keyup events, don't eat them
 	if (ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_console)
 	{
-		if (key_is_console)
-			consdown = false;
 		return false;
 	}
 
