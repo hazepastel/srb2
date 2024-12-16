@@ -329,7 +329,9 @@ consvar_t cv_consolechat = CVAR_INIT ("chatmode", "Window", CV_SAVE, consolechat
 // Pause game upon window losing focus
 consvar_t cv_pauseifunfocused = CVAR_INIT ("pauseifunfocused", "Yes", CV_SAVE, CV_YesNo, NULL);
 
-consvar_t cv_instantretry = CVAR_INIT ("instantretry", "No", CV_SAVE, CV_YesNo, NULL);
+static CV_PossibleValue_t menubuttons_cons_t[] = {{0, "Standard"}, {1, "Nintendo"}, {0, NULL}};
+consvar_t cv_menubuttons = CVAR_INIT ("menubuttons", "Standard", CV_SAVE, menubuttons_cons_t, NULL);
+
 static CV_PossibleValue_t crosshair_cons_t[] = {{0, "Off"}, {1, "Cross"}, {2, "Angle"}, {3, "Point"}, {0, NULL}};
 consvar_t cv_crosshair = CVAR_INIT ("crosshair", "Cross", CV_SAVE, crosshair_cons_t, NULL);
 consvar_t cv_crosshair2 = CVAR_INIT ("crosshair2", "Cross", CV_SAVE, crosshair_cons_t, NULL);
@@ -1379,6 +1381,9 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 	if (G_PlayerInputDown(forplayer, GC_TOSSFLAG))
 		cmd->buttons |= BT_TOSSFLAG;
 
+	if (G_PlayerInputDown(forplayer, GC_SHIELD))
+		cmd->buttons |= BT_SHIELD;
+
 	// Lua scriptable buttons
 	if (G_PlayerInputDown(forplayer, GC_CUSTOM1))
 		cmd->buttons |= BT_CUSTOM1;
@@ -2274,14 +2279,8 @@ boolean G_Responder(event_t *ev)
 					if (menuactive || pausedelay < 0 || leveltime < 2)
 						return true;
 
-					if (!cv_instantretry.value && pausedelay < 1+(NEWTICRATE/2))
-						pausedelay = 1+(NEWTICRATE/2);
-					else if (cv_instantretry.value || ++pausedelay > 1+(NEWTICRATE/2)+(NEWTICRATE/3))
-					{
-						G_SetModeAttackRetryFlag();
-						return true;
-					}
-					pausedelay++; // counteract subsequent subtraction this frame
+					G_SetModeAttackRetryFlag();
+					return true;
 				}
 				else
 				{

@@ -49,7 +49,7 @@ extern boolean promptactive;
 
 extern consvar_t cv_pauseifunfocused;
 
-extern consvar_t cv_instantretry;
+extern consvar_t cv_menubuttons;
 
 // used in game menu
 extern consvar_t cv_tutorialprompt;

@@ -1029,8 +1029,9 @@ static menuitem_t OP_MainMenu[] =
 {
 	{IT_SUBMENU | IT_STRING, NULL, "Player 1 Controls...", &OP_P1ControlsDef,   10},
 	{IT_SUBMENU | IT_STRING, NULL, "Player 2 Controls...", &OP_P2ControlsDef,   20},
+	{IT_CVAR    | IT_STRING, NULL, "Menu Button Layout",   &cv_menubuttons,     30},
 
-	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      40},
+	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      50},
 
 	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 60},
 
@@ -3172,18 +3173,35 @@ static void Command_Manual_f(void)
 
 static INT32 RemapGamepadButton(event_t *ev)
 {
-	switch (ev->key)
-	{
-		case GAMEPAD_BUTTON_A: return KEY_ENTER;
-		case GAMEPAD_BUTTON_X: return KEY_ENTER;
-		case GAMEPAD_BUTTON_Y: return KEY_BACKSPACE;
-		case GAMEPAD_BUTTON_B: return KEY_ESCAPE;
-		case GAMEPAD_BUTTON_DPAD_UP: return KEY_UPARROW;
-		case GAMEPAD_BUTTON_DPAD_DOWN: return KEY_DOWNARROW;
-		case GAMEPAD_BUTTON_DPAD_LEFT: return KEY_LEFTARROW;
-		case GAMEPAD_BUTTON_DPAD_RIGHT: return KEY_RIGHTARROW;
-	}
 
+	if (cv_menubuttons.value)
+	{
+		switch (ev->key)
+		{
+			case GAMEPAD_BUTTON_A: return KEY_ESCAPE;
+			case GAMEPAD_BUTTON_B: return KEY_ENTER;
+			case GAMEPAD_BUTTON_X: return KEY_ESCAPE;
+			case GAMEPAD_BUTTON_Y: return KEY_BACKSPACE;
+			case GAMEPAD_BUTTON_DPAD_UP: return KEY_UPARROW;
+			case GAMEPAD_BUTTON_DPAD_DOWN: return KEY_DOWNARROW;
+			case GAMEPAD_BUTTON_DPAD_LEFT: return KEY_LEFTARROW;
+			case GAMEPAD_BUTTON_DPAD_RIGHT: return KEY_RIGHTARROW;
+		}
+	}
+	else
+	{
+		switch (ev->key)
+		{
+			case GAMEPAD_BUTTON_A: return KEY_ENTER;
+			case GAMEPAD_BUTTON_B: return KEY_ESCAPE;
+			case GAMEPAD_BUTTON_X: return KEY_ESCAPE;
+			case GAMEPAD_BUTTON_Y: return KEY_BACKSPACE;
+			case GAMEPAD_BUTTON_DPAD_UP: return KEY_UPARROW;
+			case GAMEPAD_BUTTON_DPAD_DOWN: return KEY_DOWNARROW;
+			case GAMEPAD_BUTTON_DPAD_LEFT: return KEY_LEFTARROW;
+			case GAMEPAD_BUTTON_DPAD_RIGHT: return KEY_RIGHTARROW;
+		}
+	}
 	return KEY_GAMEPAD + ev->key;
 }
 
