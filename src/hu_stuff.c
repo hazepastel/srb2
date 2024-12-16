@@ -1781,29 +1781,6 @@ void HU_Drawer(void)
 
 		V_DrawCenteredString(BASEVIDWIDTH/2, 180, V_YELLOWMAP | V_ALLOWLOWERCASE, resynch_text);
 	}
-
-	if (modeattacking && pausedelay > 0 && !(pausebreakkey || cv_instantretry.value))
-	{
-		INT32 strength = ((pausedelay - 1 - NEWTICRATE/2)*10)/(NEWTICRATE/3);
-		INT32 y = hudinfo[HUD_LIVES].y - 13;
-
-		if (players[consoleplayer].powers[pw_carry] == CR_NIGHTSMODE)
-			y -= 16;
-		else
-		{
-			if (players[consoleplayer].pflags & PF_ANALOGMODE)
-				y -= 8;
-		}
-
-		V_DrawThinString(hudinfo[HUD_LIVES].x-2, y,
-			hudinfo[HUD_LIVES].f|((leveltime & 4) ? V_SKYMAP : V_BLUEMAP),
-			"HOLD TO RETRY...");
-
-		if (strength > 9)
-			V_DrawFill(0, 0, BASEVIDWIDTH, BASEVIDHEIGHT, 0);
-		else if (strength > 0)
-			V_DrawFadeScreen(0, strength);
-	}
 }
 
 //======================================================================
