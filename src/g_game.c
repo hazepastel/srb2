@@ -2096,13 +2096,14 @@ boolean pausebreakkey = false;
 
 static boolean ViewpointSwitchResponder(event_t *ev)
 {
-	// ViewpointSwitch Lua hook.
+	INT32 evtype = ev->type;
+	INT32 key = G_RemapGamepadEvent(ev, &evtype);
 	UINT8 canSwitchView = 0;
 
 	INT32 direction = 0;
-	if (ev->key == KEY_F12 || ev->key == gamecontrol[GC_VIEWPOINTNEXT][0] || ev->key == gamecontrol[GC_VIEWPOINTNEXT][1])
+	if (key == KEY_F12 || key == gamecontrol[GC_VIEWPOINTNEXT][0] || key == gamecontrol[GC_VIEWPOINTNEXT][1])
 		direction = 1;
-	if (ev->key == gamecontrol[GC_VIEWPOINTPREV][0] || ev->key == gamecontrol[GC_VIEWPOINTPREV][1])
+	if (key == gamecontrol[GC_VIEWPOINTPREV][0] || key == gamecontrol[GC_VIEWPOINTPREV][1])
 		direction = -1;
 	// This enabled reverse-iterating with shift+F12, sadly I had to
 	// disable this in case your shift key is bound to a control =((
@@ -2110,7 +2111,7 @@ static boolean ViewpointSwitchResponder(event_t *ev)
 	//	direction = -direction;
 
 	// allow spy mode changes even during the demo
-	if (!(gamestate == GS_LEVEL && ev->type == ev_keydown && direction != 0))
+	if (!(gamestate == GS_LEVEL && evtype == ev_keydown && direction != 0))
 		return false;
 
 	if (splitscreen || !netgame)
@@ -2269,9 +2270,7 @@ boolean G_Responder(event_t *ev)
 	switch (evtype)
 	{
 		case ev_keydown:
-			if (key == gamecontrol[GC_PAUSE][0]
-				|| key == gamecontrol[GC_PAUSE][1]
-				|| key == KEY_PAUSE)
+			if (key == gamecontrol[GC_PAUSE][0] || key == gamecontrol[GC_PAUSE][1] || key == KEY_PAUSE)
 			{
 				if (modeattacking && !demoplayback && (gamestate == GS_LEVEL))
 				{
@@ -2292,6 +2291,22 @@ boolean G_Responder(event_t *ev)
 						COM_ImmedExecute("pause");
 						return true;
 					}
+				}
+			}
+			if (key == gamecontrol[GC_CAMTOGGLE][0] || key == gamecontrol[GC_CAMTOGGLE][1])
+			{
+				if (!camtoggledelay[0])
+				{
+					camtoggledelay[0] = NEWTICRATE / 7;
+					CV_SetValue(&cv_chasecam, cv_chasecam.value ? 0 : 1);
+				}
+			}
+			if (key == gamecontrolbis[GC_CAMTOGGLE][0] || key == gamecontrolbis[GC_CAMTOGGLE][1])
+			{
+				if (!camtoggledelay[1])
+				{
+					camtoggledelay[1] = NEWTICRATE / 7;
+					CV_SetValue(&cv_chasecam2, cv_chasecam2.value ? 0 : 1);
 				}
 			}
 			return true;
@@ -2316,14 +2331,16 @@ boolean G_Responder(event_t *ev)
 //
 boolean G_LuaResponder(event_t *ev)
 {
+	INT32 evtype = ev->type;
+	G_RemapGamepadEvent(ev, &evtype);
 	boolean cancelled = false;
 
-	if (ev->type == ev_keydown)
+	if (evtype == ev_keydown)
 	{
 		cancelled = LUA_HookKey(ev, HOOK(KeyDown));
 		LUA_InvalidateUserdata(ev);
 	}
-	else if (ev->type == ev_keyup)
+	else if (evtype == ev_keyup)
 	{
 		cancelled = LUA_HookKey(ev, HOOK(KeyUp));
 		LUA_InvalidateUserdata(ev);
