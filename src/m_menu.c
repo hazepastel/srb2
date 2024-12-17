@@ -1029,9 +1029,8 @@ static menuitem_t OP_MainMenu[] =
 {
 	{IT_SUBMENU | IT_STRING, NULL, "Player 1 Controls...", &OP_P1ControlsDef,   10},
 	{IT_SUBMENU | IT_STRING, NULL, "Player 2 Controls...", &OP_P2ControlsDef,   20},
-	{IT_CVAR    | IT_STRING, NULL, "Menu Button Layout",   &cv_menubuttons,     30},
 
-	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      50},
+	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      40},
 
 	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 60},
 
@@ -1132,22 +1131,23 @@ static menuitem_t OP_ChangeControlsMenu[] =
 static menuitem_t OP_Gamepad1Menu[] =
 {
 	{IT_STRING | IT_CALL,  NULL, "Select Gamepad...", M_Setup1PGamepadMenu, 10},
-	{IT_STRING | IT_CVAR,  NULL, "Move \x17 Axis"    , &cv_moveaxis[0]      , 30},
-	{IT_STRING | IT_CVAR,  NULL, "Move \x18 Axis"    , &cv_sideaxis[0]      , 40},
-	{IT_STRING | IT_CVAR,  NULL, "Camera \x17 Axis"  , &cv_lookaxis[0]      , 50},
-	{IT_STRING | IT_CVAR,  NULL, "Camera \x18 Axis"  , &cv_turnaxis[0]      , 60},
+	{IT_STRING | IT_CVAR,  NULL, "Menu Button Style",  &cv_menubuttons,     30},
+	{IT_STRING | IT_CVAR,  NULL, "Player \x17 Axis"    , &cv_moveaxis[0]      , 50},
+	{IT_STRING | IT_CVAR,  NULL, "Player \x18 Axis"    , &cv_sideaxis[0]      , 60},
+	{IT_STRING | IT_CVAR,  NULL, "Camera \x17 Axis"  , &cv_lookaxis[0]      , 70},
+	{IT_STRING | IT_CVAR,  NULL, "Camera \x18 Axis"  , &cv_turnaxis[0]      , 80},
 
-	{IT_STRING | IT_CVAR, NULL, "First-Person Vert-Look", &cv_alwaysfreelook, 80},
-	{IT_STRING | IT_CVAR, NULL, "Third-Person Vert-Look", &cv_chasefreelook,  90},
-	{IT_STRING | IT_CVAR | IT_CV_FLOATSLIDER, NULL, "Analog Deadzone", &cv_deadzone[0], 100},
-	{IT_STRING | IT_CVAR | IT_CV_FLOATSLIDER, NULL, "Digital Deadzone", &cv_digitaldeadzone[0], 110},
+	{IT_STRING | IT_CVAR, NULL, "First-Person Vert-Look", &cv_alwaysfreelook, 100},
+	{IT_STRING | IT_CVAR, NULL, "Third-Person Vert-Look", &cv_chasefreelook,  110},
+	{IT_STRING | IT_CVAR | IT_CV_FLOATSLIDER, NULL, "Analog Deadzone", &cv_deadzone[0], 120},
+	{IT_STRING | IT_CVAR | IT_CV_FLOATSLIDER, NULL, "Digital Deadzone", &cv_digitaldeadzone[0], 130},
 };
 
 static menuitem_t OP_Gamepad2Menu[] =
 {
 	{IT_STRING | IT_CALL,  NULL, "Select Gamepad...", M_Setup2PGamepadMenu, 10},
-	{IT_STRING | IT_CVAR,  NULL, "Move \x17 Axis"    , &cv_moveaxis[1]      , 30},
-	{IT_STRING | IT_CVAR,  NULL, "Move \x18 Axis"    , &cv_sideaxis[1]      , 40},
+	{IT_STRING | IT_CVAR,  NULL, "Player \x17 Axis"    , &cv_moveaxis[1]      , 30},
+	{IT_STRING | IT_CVAR,  NULL, "Player \x18 Axis"    , &cv_sideaxis[1]      , 40},
 	{IT_STRING | IT_CVAR,  NULL, "Camera \x17 Axis"  , &cv_lookaxis[1]      , 50},
 	{IT_STRING | IT_CVAR,  NULL, "Camera \x18 Axis"  , &cv_turnaxis[1]      , 60},
 
