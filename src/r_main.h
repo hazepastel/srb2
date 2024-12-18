@@ -92,7 +92,7 @@ static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 	fixed_t ldy = line->v2->y - ly;
 
 	// use cross product to determine side quickly
-	INT64 v = ((INT64)y - ly) * ldx - ((INT64)x - lx) * ldy > 0;
+	INT64 v = ((INT64)y - ly) * ldx - ((INT64)x - lx) * ldy;
 	if (v == 0) // if we're on the line, use the old algorithm
 		return R_OldPointOnSegSide(x, y, line);
 	return v > 0;
