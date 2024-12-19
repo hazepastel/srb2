@@ -121,8 +121,7 @@ static cheatseq_t cheat_ultimate = {
 // sonic 3 level select code
 static cheatseq_t cheat_ultimate_joy = {
 	0, cheatf_ultimate,
-	{ SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_DOWNARROW), SCRAMBLE(KEY_DOWNARROW),
-	  SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_UPARROW), 0xff }
+	{ SCRAMBLE(KEY_UPARROW), SCRAMBLE(KEY_DOWNARROW), SCRAMBLE(KEY_LEFTARROW), SCRAMBLE(KEY_RIGHTARROW), 0xff }
 };
 
 static cheatseq_t cheat_warp = {
@@ -193,13 +192,33 @@ static UINT8 cht_CheckCheat(cheatseq_t *cht, char key)
 boolean cht_Responder(event_t *ev)
 {
 	UINT8 ret = 0, ch = 0;
-	if (ev->type != ev_keydown)
+	INT32 type = ev->type;
+	INT32 key = G_RemapGamepadEvent(ev, &type);
+
+	// remap dpad to arrow keys
+	switch (key)
+	{
+		case GAMEPAD_KEY(DPAD_UP):
+			key = KEY_UPARROW;
+			break;
+		case GAMEPAD_KEY(DPAD_DOWN):
+			key = KEY_DOWNARROW;
+			break;
+		case GAMEPAD_KEY(DPAD_LEFT):
+			key = KEY_LEFTARROW;
+			break;
+		case GAMEPAD_KEY(DPAD_RIGHT):
+			key = KEY_RIGHTARROW;
+			break;
+	}
+
+	if (type != ev_keydown)
 		return false;
 
-	if (ev->key > 0xFF)
+	if (key > 0xFF)
 		return false;
 
-	ch = (UINT8)ev->key;
+	ch = (UINT8)key;
 
 	ret += cht_CheckCheat(&cheat_ultimate, (char)ch);
 	ret += cht_CheckCheat(&cheat_ultimate_joy, (char)ch);
@@ -256,7 +275,7 @@ void Command_CheatGod_f(void)
 
 	plyr = &players[consoleplayer];
 	plyr->pflags ^= PF_GODMODE;
-	CONS_Printf(M_GetText("Cheese Mode %s\n"), plyr->pflags & PF_GODMODE ? M_GetText("On") : M_GetText("Off"));
+	CONS_Printf(M_GetText("God Mode %s\n"), plyr->pflags & PF_GODMODE ? M_GetText("On") : M_GetText("Off"));
 
 	G_SetUsedCheats(false);
 }
@@ -368,24 +387,16 @@ void Command_Charspeed_f(void)
 
 	if (COM_Argc() < 3)
 	{
-		CONS_Printf(M_GetText("charspeed <normalspeed/runspeed/thrustfactor/accelstart/acceleration/actionspd> <value>: set character speed\n"));
+		CONS_Printf(M_GetText("charspeed <normalspeed/actionspd> <value>: set character speed\n"));
 		return;
 	}
 
 	if (!strcasecmp(COM_Argv(1), "normalspeed"))
 		players[consoleplayer].normalspeed = atoi(COM_Argv(2))<<FRACBITS;
-	else if (!strcasecmp(COM_Argv(1), "runspeed"))
-		players[consoleplayer].runspeed = atoi(COM_Argv(2))<<FRACBITS;
-	else if (!strcasecmp(COM_Argv(1), "thrustfactor"))
-		players[consoleplayer].thrustfactor = atoi(COM_Argv(2));
-	else if (!strcasecmp(COM_Argv(1), "accelstart"))
-		players[consoleplayer].accelstart = atoi(COM_Argv(2));
-	else if (!strcasecmp(COM_Argv(1), "acceleration"))
-		players[consoleplayer].acceleration = atoi(COM_Argv(2));
 	else if (!strcasecmp(COM_Argv(1), "actionspd"))
 		players[consoleplayer].actionspd = atoi(COM_Argv(2))<<FRACBITS;
 	else
-		CONS_Printf(M_GetText("charspeed <normalspeed/runspeed/thrustfactor/accelstart/acceleration/actionspd> <value>: set character speed\n"));
+		CONS_Printf(M_GetText("charspeed <normalspeed/actionspd> <value>: set character speed\n"));
 }
 
 void Command_RTeleport_f(void)
@@ -536,7 +547,7 @@ void Command_Teleport_f(void)
 
 			for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 			{
-				if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+				if (th->removing)
 					continue;
 
 				mo2 = (mobj_t *)th;
@@ -936,7 +947,7 @@ static CV_PossibleValue_t op_flags_t[] = {{0, "MIN"}, {15, "MAX"}, {0, NULL}};
 static CV_PossibleValue_t op_hoopflags_t[] = {{0, "MIN"}, {15, "MAX"}, {0, NULL}};
 
 consvar_t cv_mapthingnum = CVAR_INIT ("op_mapthingnum", "0", CV_NOTINNET, op_mapthing_t, NULL);
-consvar_t cv_speed = CVAR_INIT ("op_speed", "16", CV_NOTINNET, op_speed_t, NULL);
+consvar_t cv_speed = CVAR_INIT ("op_speed", "32", CV_NOTINNET, op_speed_t, NULL);
 consvar_t cv_opflags = CVAR_INIT ("op_flags", "0", CV_NOTINNET, op_flags_t, NULL);
 consvar_t cv_ophoopflags = CVAR_INIT ("op_hoopflags", "4", CV_NOTINNET, op_hoopflags_t, NULL);
 
@@ -1046,7 +1057,7 @@ static mapthing_t *OP_CreateNewMapThing(player_t *player, UINT16 type, boolean c
 
 		for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 		{
-			if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+			if (th->removing)
 				continue;
 
 			mo = (mobj_t *)th;
