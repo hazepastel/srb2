@@ -1455,10 +1455,11 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 		if (
 			P_MobjWasRemoved(ticcmd_ztargetfocus[forplayer]) ||
 			(cv_directionchar[forplayer].value != 2) ||
-			(!P_CheckSight(player->mo, ticcmd_ztargetfocus[forplayer])) ||
+			(R_PointToDist2(player->mo->x, player->mo->y, ticcmd_ztargetfocus[forplayer]->x, ticcmd_ztargetfocus[forplayer]->y) > 3000<<FRACBITS) || // Locks on to the wrong mobj if too far away, so just cancel it
 			(player->playerstate != PST_LIVE) ||
 			player->exiting ||
-			!ticcmd_ztargetfocus[forplayer]->health
+			!ticcmd_ztargetfocus[forplayer]->health ||
+			(ticcmd_ztargetfocus[forplayer]->type == MT_EGGMOBILE3 && !ticcmd_ztargetfocus[forplayer]->movecount) // Sea Egg is moving around underground and shouldn't be tracked
 		)
 			P_SetTarget(&ticcmd_ztargetfocus[forplayer], NULL);
 		else
@@ -1491,7 +1492,7 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 			if (player->mo && R_PointToDist2(0, 0,
 				player->mo->x - ticcmd_ztargetfocus[forplayer]->x,
 				player->mo->y - ticcmd_ztargetfocus[forplayer]->y
-			) > FixedMul(50<<FRACBITS, player->mo->scale))
+			) > 50*player->mo->scale)
 			{
 				INT32 anglediff = R_PointToAngle2(player->mo->x, player->mo->y, ticcmd_ztargetfocus[forplayer]->x, ticcmd_ztargetfocus[forplayer]->y) - *myangle;
 				const INT32 maxturn = ANG10/2;
