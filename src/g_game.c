@@ -1509,7 +1509,6 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 
 	}
 
-
 	if (PLAYERINPUTDOWN(ssplayer, GC_CAMRESET))
 	{
 		if (thiscam->chase && !resetdown[forplayer])
