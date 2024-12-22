@@ -1514,7 +1514,7 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 	}
 	else if (cv_directionchar[forplayer].value == 2)
 	{
-		if (!ticcmd_ztargetfocus[forplayer] || !chasecam)
+		if (P_MobjWasRemoved(ticcmd_ztargetfocus[forplayer]) || !chasecam)
 		{
 			P_SetTarget(&ticcmd_ztargetfocus[forplayer], NULL);
 			CV_SetValue(&cv_directionchar[forplayer], 1);
