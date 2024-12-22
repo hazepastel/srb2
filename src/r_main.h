@@ -71,17 +71,11 @@ extern lighttable_t *zlight[LIGHTLEVELS][MAXLIGHTZ];
 // There a 0-31, i.e. 32 LUT in the COLORMAP lump.
 #define NUMCOLORMAPS 32
 
-INT32 R_OldPointOnSide(fixed_t x, fixed_t y, node_t *node);
-INT32 R_OldPointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
-
 // Utility functions.
 static inline INT32 R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 {
 	// use cross product to determine side quickly
-	INT64 v = ((INT64)y - node->y) * node->dx - ((INT64)x - node->x) * node->dy;
-	if (v == 0) // if we're on the line, use the old algorithm
-		return R_OldPointOnSide(x, y, node);
-	return v > 0;
+	return ((INT64)y - node->y) * node->dx - ((INT64)x - node->x) * node->dy > 0;
 }
 
 static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
@@ -92,10 +86,7 @@ static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 	fixed_t ldy = line->v2->y - ly;
 
 	// use cross product to determine side quickly
-	INT64 v = ((INT64)y - ly) * ldx - ((INT64)x - lx) * ldy > 0;
-	if (v == 0) // if we're on the line, use the old algorithm
-		return R_OldPointOnSegSide(x, y, line);
-	return v > 0;
+	return ((INT64)y - ly) * ldx - ((INT64)x - lx) * ldy > 0;
 }
 
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
