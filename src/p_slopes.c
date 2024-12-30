@@ -181,7 +181,7 @@ void T_DynamicSlopeLine (dynlineplanethink_t* th)
 {
 	pslope_t* slope = th->slope;
 	line_t* srcline = th->sourceline;
-	
+
 	fixed_t zdelta, oldoz = slope->o.z;
 
 	switch(th->type) {
@@ -1019,7 +1019,7 @@ void P_SlopeLaunch(mobj_t *mo)
 		vector3_t slopemom;
 		slopemom.x = mo->momx;
 		slopemom.y = mo->momy;
-		if (mo->player && (mo->player->pflags & PF_JUMPED))
+		if (mo->player && (mo->player->pflags & (PF_JUMPED|PF_NOJUMPDAMAGE)))
 			slopemom.z = mo->momz*4/3;
 		else
 			slopemom.z = mo->momz;
@@ -1027,7 +1027,7 @@ void P_SlopeLaunch(mobj_t *mo)
 
 		mo->momx = slopemom.x;
 		mo->momy = slopemom.y;
-		if (mo->player && (mo->player->pflags & PF_JUMPED))
+		if (mo->player && (mo->player->pflags & (PF_JUMPED|PF_NOJUMPDAMAGE)))
 			mo->momz = slopemom.z*3/4;
 		else
 			mo->momz = slopemom.z;

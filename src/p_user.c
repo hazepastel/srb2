@@ -11418,7 +11418,7 @@ void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 	fixed_t heightoffset = ((mo->eflags & MFE_VERTICALFLIP) ? mo->height - (P_GetPlayerHeight(player) >> 1) : (P_GetPlayerHeight(player) >> 1));
 	panim_t panim = player->panim;
 	tic_t dashmode = min(player->dashmode, DASHMODE_MAX);
-	boolean underwater = mo->eflags & MFE_UNDERWATER;
+	boolean underwater = ((mo->eflags & (MFE_UNDERWATER|MFE_TOUCHWATER)) == MFE_UNDERWATER);
 	statenum_t stat = fume->state-states;
 	boolean resetinterp = false;
 
@@ -11525,10 +11525,14 @@ void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 	if (resetinterp) R_ResetMobjInterpolationState(fume);
 
 	// If dashmode is high enough, spawn a trail
-	if (fume->extravalue1)
+	if (fume->extravalue1 && !fume->extravalue2)
 	{
 		mobj_t *ghost = P_SpawnGhostMobj(fume);
 		ghost->fuse = TICRATE/7;
+	}
+	else if (fume->extravalue2)
+	{
+		P_SetMobjState(fume, S_INVISIBLE);
 	}
 }
 
