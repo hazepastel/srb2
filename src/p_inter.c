@@ -375,7 +375,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			if (special->state != &states[S_STEAM1]) // Only when it bursts
 				return;
 
-			speed = speed*19/16; //gravity adjustment
+			speed = 19*speed/16; //gravity adjustment
 
 			toucher->eflags |= MFE_SPRUNG;
 			toucher->momz = flipval * FixedMul(speed, FixedSqrt(FixedMul(special->scale, toucher->scale))); // scale the speed with both objects' scales, just like with springs!
@@ -1234,7 +1234,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 					xspeed = FixedMul(FINECOSINE(fa),speed);
 					yspeed = FixedMul(FINESINE(fa),speed);
 
-					yspeed = yspeed*19/16; //gravity adjustment
+					yspeed = 19*yspeed/16; //gravity adjustment
 
 					P_InstaThrust(toucher, special->angle, xspeed/10);
 					toucher->momz = yspeed/11;

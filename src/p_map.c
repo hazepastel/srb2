@@ -164,8 +164,8 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 	boolean final = false;
 	UINT8 strong = 0;
 
-	vertispeed = vertispeed*19/16; //gravity adjustment
-	horizspeed = horizspeed*19/16;
+	vertispeed = 19*vertispeed/16; //gravity adjustment
+	horizspeed = 19*horizspeed/16;
 
 	// Object was already sprung this tic
 	if (object->eflags & MFE_SPRUNG)
@@ -509,7 +509,7 @@ static void P_DoFan(mobj_t *fan, mobj_t *object)
 	fixed_t speed = fan->info->mass; // fans use this for the vertical thrust
 	SINT8 flipval = P_MobjFlip(fan); // virtually everything here centers around the thruster's gravity, not the object's!
 
-	speed = speed*19/16; //gravity adjustment
+	speed = 19*speed/16; //gravity adjustment
 
 	if (p && object->state == &states[object->info->painstate]) // can't use fans when player is in pain!
 		return;

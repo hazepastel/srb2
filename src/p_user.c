@@ -1810,7 +1810,7 @@ boolean P_IsObjectOnGround(mobj_t *mo)
 //
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
 {
-	value = value*19/16; //gravity adjustment
+	value = 19*value/16; //gravity adjustment
 
 	if (mo->eflags & MFE_VERTICALFLIP)
 		value = -value;

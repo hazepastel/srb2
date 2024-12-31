@@ -13651,7 +13651,7 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 			P_SetMobjState(thing, S_PLAY_FALL);
 		}
 
-		thing->momz = thrust*19/16;
+		thing->momz = 19*thrust/16;
 	}
 
 	return true;
