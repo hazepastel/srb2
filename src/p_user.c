@@ -5905,7 +5905,7 @@ static void P_2dMovement(player_t *player)
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
 	{
-		normalspd >>= 1;
+		normalspd = FixedMul(normalspd, 2*FRACUNIT/3);
 		acceleration -= 160;
 	}
 
@@ -5934,7 +5934,7 @@ static void P_2dMovement(player_t *player)
 	topspeed = normalspd; //set normal top speed
 
 	if (player->fly1)
-		topspeed = 2*normalspd/3;
+		topspeed = FixedMul(topspeed, 3*FRACUNIT/4);
 
 	if (player->climbing)
 	{
@@ -6056,7 +6056,7 @@ static void P_3dMovement(player_t *player)
 
 	if (player->mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER))
 	{
-		normalspd >>= 1;
+		normalspd = FixedMul(normalspd, 2*FRACUNIT/3);
 		acceleration -= 160;
 	}
 
@@ -6085,7 +6085,7 @@ static void P_3dMovement(player_t *player)
 	topspeed = normalspd; //set normal top speed
 
 	if (player->fly1)
-		topspeed = 2*normalspd/3;
+		topspeed = FixedMul(topspeed, 3*FRACUNIT/4);
 
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
@@ -8400,7 +8400,7 @@ void P_MovePlayer(player_t *player)
 		else
 			angle = mo->angle + R_PointToAngle2(0, 0, cmd->forwardmove<<FRACBITS, -cmd->sidemove<<FRACBITS);
 
-		if (!player->skidtime) // TODO: make sure this works in 2D!
+		if (!player->skidtime)
 		{
 			angle_t anglediff = angle - moveangle;
 			fixed_t accelfactor = 4*FRACUNIT - 3*FINECOSINE((anglediff >> ANGLETOFINESHIFT) & FINEMASK);
@@ -8413,7 +8413,7 @@ void P_MovePlayer(player_t *player)
 			if (player->mo->eflags & MFE_UNDERWATER)
 				timefactor >>= 1;
 
-			if (player->speed > FixedMul(player->normalspeed*47/36, player->mo->scale))
+			if (player->speed > FixedMul(47*player->normalspeed/36, player->mo->scale))
 				timefactor = 0;
 
 			if (in2d)
@@ -8549,11 +8549,18 @@ void P_MovePlayer(player_t *player)
 
 	if (player->charability == CA_FLY || (player->charability == CA_SWIM && player->mo->eflags & MFE_UNDERWATER))
 	{
+		static UINT8 flycmd = 0;
 		// Fly counter for Tails.
 		if (player->powers[pw_tailsfly])
 		{
-			if (cmd->buttons & BT_JUMP)
+			if (cmd->buttons & BT_JUMP || cmd->buttons & BT_SPIN)
 			{
+
+				if (cmd->buttons & BT_SPIN)
+					flycmd = 2;
+				else
+					flycmd = 1;
+
 				if (player->fly1)
 					player->fly1 = max(player->fly1, 3);
 				else
@@ -8561,19 +8568,28 @@ void P_MovePlayer(player_t *player)
 			}
 			if (player->fly1)
 			{
-				fixed_t flyspd = player->normalspeed*2/3;
+				fixed_t flyspd = FixedMul(player->normalspeed, 3*FRACUNIT/4);
 				fixed_t flycap = 6<<FRACBITS;
 
 				P_SetMobjState(player->mo, player->mo->state->nextstate);
 
 				if (player->mo->eflags & MFE_UNDERWATER)
 				{
-					flyspd >>= 1;
+					flyspd = FixedMul(flyspd, 2*FRACUNIT/3);
 					flycap = 4<<FRACBITS;
 				}
 
-				if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(flycap, player->mo->scale))
+				if (flycmd == 2)
+				{
+					if (P_MobjFlip(player->mo)*player->mo->momz < 0)
+						P_SetObjectMomZ(player->mo, -(FRACUNIT>>2), true);
+					else
+						P_SetObjectMomZ(player->mo, -(FRACUNIT>>1), true);
+				}
+				else if (P_MobjFlip(player->mo)*player->mo->momz < FixedMul(flycap, player->mo->scale))
+				{
 					P_SetObjectMomZ(player->mo, FRACUNIT, true);
+				}
 
 				if (player->speed > FixedMul(flyspd, player->mo->scale))
 				{
@@ -12135,7 +12151,7 @@ void P_PlayerThink(player_t *player)
 				if (player->powers[pw_super] || player->powers[pw_sneakers])
 					normalspd = FixedMul(normalspd, 5*FRACUNIT/3);
 				if (player->mo->eflags & MFE_UNDERWATER)
-					normalspd >>= 1;
+					normalspd = FixedMul(normalspd, 2*FRACUNIT/3);
 
 				if ((player->speed > normalspd)
 				&& !(player->pflags & (PF_SPINNING|PF_BOUNCING|PF_GLIDING|PF_SLIDING)) && !(player->fly1))
@@ -12396,10 +12412,10 @@ void P_PlayerThink(player_t *player)
 		else if (notfloating) // Activate dash mode if we're on the ground.
 		{
 			if (player->normalspeed == skins[player->skin]->normalspeed)
-				player->normalspeed = skins[player->skin]->normalspeed*3/2; // enter dash mode INSTANTLY
+				player->normalspeed = FixedMul(skins[player->skin]->normalspeed, 3*FRACUNIT/2); // enter dash mode INSTANTLY
 
 			if (player->jumpfactor == skins[player->skin]->jumpfactor)
-				player->jumpfactor = skins[player->skin]->jumpfactor*6/5;
+				player->jumpfactor = FixedMul(skins[player->skin]->jumpfactor, 6*FRACUNIT/5);
 
 			if ((player->charflags & SF_MACHINE) && (player->powers[pw_strong] != STR_METAL))
 				player->powers[pw_strong] = STR_METAL;
