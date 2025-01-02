@@ -1036,6 +1036,16 @@ boolean R_IsPointInSector(sector_t *sector, fixed_t x, fixed_t y)
 	return passes % 2;
 }
 
+subsector_t *R_OldPointInSubsector(fixed_t x, fixed_t y)
+{
+	size_t nodenum = numnodes-1;
+
+	while (!(nodenum & NF_SUBSECTOR))
+		nodenum = nodes[nodenum].children[R_OldPointOnSide(x, y, nodes+nodenum)];
+
+	return &subsectors[nodenum & ~NF_SUBSECTOR];
+}
+
 //
 // R_PointInSubsector
 //
