@@ -6774,6 +6774,12 @@ void P_RunOverlays(void)
 		else
 			zoffs = 0;
 
+		// hide the overlay as well if we're part of a hidden shield
+		if ((mo->target->flags2 & (MF2_JUSTATTACKED|MF2_DONTDRAW)) == (MF2_JUSTATTACKED|MF2_DONTDRAW))
+			mo->flags2 |= (MF2_DONTDRAW|MF2_JUSTATTACKED);
+		else if (mo->flags2 & MF2_JUSTATTACKED)
+			mo->flags2 &= ~(MF2_DONTDRAW|MF2_JUSTATTACKED);
+
 		P_UnsetThingPosition(mo);
 		mo->x = mo->target->x;
 		mo->y = mo->target->y;
