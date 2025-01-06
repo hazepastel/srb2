@@ -4509,14 +4509,12 @@ void P_DoJump(player_t *player, boolean soundandstate, boolean allowflip)
 		if (player->powers[pw_carry] == CR_PTERABYTE)
 		{
 			S_StartSound(player->mo, sfx_s3kd7s);
-			player->mo->tracer->cusval += 10; // attempting to break free
+			player->mo->tracer->cusval += 14; // attempting to break free
 			player->mo->tracer->watertop = P_RandomRange(-player->mo->tracer->cusval, player->mo->tracer->cusval) << (FRACBITS - 1);
 			player->mo->tracer->waterbottom = P_RandomRange(-player->mo->tracer->cusval, player->mo->tracer->cusval) << (FRACBITS - 1);
 			player->mo->tracer->cvmem = P_RandomRange(-player->mo->tracer->cusval, player->mo->tracer->cusval) << (FRACBITS - 1);
 			return;
 		}
-
-		player->rsprung = 0;
 
 		// Jump this high.
 		if (player->powers[pw_carry] == CR_PLAYER)

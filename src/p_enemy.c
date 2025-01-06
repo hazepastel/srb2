@@ -13645,10 +13645,10 @@ static boolean PIT_DustDevilLaunch(mobj_t *thing)
 			player->powers[pw_carry] = CR_NONE;
 			player->powers[pw_nocontrol] = 0;
 			player->powers[pw_noautobrake] = (player->speed>>FRACBITS);
-			player->rsprung = 3;
 			P_SetTarget(&thing->tracer, NULL);
 			S_StartSound(thing, sfx_wdjump);
 			P_SetMobjState(thing, S_PLAY_FALL);
+			player->rsprung = 3;
 		}
 
 		thing->momz = 19*thrust/16;
