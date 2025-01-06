@@ -79,9 +79,7 @@ static inline INT32 R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 {
 	// use cross product to determine side quickly
 	INT64 v = ((INT64)y - node->y) * node->dx - ((INT64)x - node->x) * node->dy;
-	if (v == 0) // if we're on the line, use the old algorithm
-		return R_OldPointOnSide(x, y, node);
-	return v > 0;
+	return v >= 0;
 }
 
 static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
@@ -93,9 +91,7 @@ static inline INT32 R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 
 	// use cross product to determine side quickly
 	INT64 v = ((INT64)y - ly) * ldx - ((INT64)x - lx) * ldy;
-	if (v == 0) // if we're on the line, use the old algorithm
-		return R_OldPointOnSegSide(x, y, line);
-	return v > 0;
+	return v >= 0;
 }
 
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
@@ -105,6 +101,7 @@ fixed_t R_PointToDist(fixed_t x, fixed_t y);
 fixed_t R_PointToDist2(fixed_t px2, fixed_t py2, fixed_t px1, fixed_t py1);
 
 boolean R_IsPointInSector(sector_t *sector, fixed_t x, fixed_t y);
+subsector_t *R_OldPointInSubsector(fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsectorOrNull(fixed_t x, fixed_t y);
 
