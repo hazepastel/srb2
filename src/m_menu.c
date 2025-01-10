@@ -3355,7 +3355,7 @@ boolean M_Responder(event_t *ev)
 
 	if (!useEventHandler && ch == -1)
 		return false;
-	else if (ch == gamecontrol[GC_SYSTEMMENU][0] || ch == gamecontrol[GC_SYSTEMMENU][1]) // allow remappable ESC key
+	else if (ev->type != ev_text && (ch == gamecontrol[GC_SYSTEMMENU][0] || ch == gamecontrol[GC_SYSTEMMENU][1])) // allow remappable ESC key
 		ch = KEY_ESCAPE;
 
 	// F-Keys
@@ -11557,10 +11557,10 @@ static void M_ChooseRoom(INT32 choice)
 #endif
 
 	if (choice == 0)
-		ms_RoomId = -1;
+		CV_SetValue(&cv_masterserver_room_id, 0);
 	else
 	{
-		ms_RoomId = roomIds[choice-1];
+		CV_SetValue(&cv_masterserver_room_id, roomIds[choice-1]);
 		menuRoomIndex = choice - 1;
 	}
 

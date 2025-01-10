@@ -78,10 +78,11 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #include "SDL_cpuinfo.h"
 #define HAVE_SDLCPUINFO
 
-#if defined (__unix__) || defined(__APPLE__) || (defined (UNIXCOMMON) && !defined (__HAIKU__))
-#if defined (__linux__)
-#include <sys/vfs.h>
+#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#if defined (__linux__) || defined (__HAIKU__)
+#include <sys/statvfs.h>
 #else
+#include <sys/statvfs.h>
 #include <sys/param.h>
 #include <sys/mount.h>
 /*For meminfo*/
@@ -94,7 +95,7 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #endif
 #endif
 
-#if defined (__linux__) || (defined (UNIXCOMMON) && !defined (__HAIKU__))
+#if defined (__linux__) || defined (UNIXCOMMON)
 #ifndef NOTERMIOS
 #include <termios.h>
 #include <sys/ioctl.h> // ioctl
@@ -109,7 +110,9 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #if defined (__unix__) || (defined (UNIXCOMMON) && !defined (__APPLE__))
 #include <errno.h>
 #include <sys/wait.h>
+#ifndef __HAIKU__ // haiku's crash dialog is just objectively better
 #define NEWSIGNALHANDLER
+#endif
 #endif
 
 #ifndef NOMUMBLE
@@ -1996,18 +1999,13 @@ void I_ShutdownSystem(void)
 void I_GetDiskFreeSpace(INT64 *freespace)
 {
 #if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
-#if defined (SOLARIS) || defined (__HAIKU__)
-	*freespace = INT32_MAX;
-	return;
-#else // Both Linux and BSD have this, apparently.
-	struct statfs stfs;
-	if (statfs(srb2home, &stfs) == -1)
+	struct statvfs stfs;
+	if (statvfs(srb2home, &stfs) == -1)
 	{
 		*freespace = INT32_MAX;
 		return;
 	}
 	*freespace = stfs.f_bavail * stfs.f_bsize;
-#endif
 #elif defined (_WIN32)
 	static p_GetDiskFreeSpaceExA pfnGetDiskFreeSpaceEx = NULL;
 	static boolean testwin95 = false;
@@ -2329,8 +2327,10 @@ const char *I_LocateWad(void)
 	{
 		// change to the directory where we found srb2.pk3
 #if defined (_WIN32)
+		waddir = _fullpath(NULL, waddir, MAX_PATH);
 		SetCurrentDirectoryA(waddir);
 #else
+		waddir = realpath(waddir, NULL);
 		if (chdir(waddir) == -1)
 			I_OutputMsg("Couldn't change working directory\n");
 #endif
