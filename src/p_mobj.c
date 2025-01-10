@@ -1362,10 +1362,20 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 
 		if (mo->player->rsprung)
 		{
+			static angle_t prevdrangle = 0;
 			if (mo->player->panim != PA_SPRING && mo->player->panim != PA_FALL)
+			{
 				mo->player->rsprung = 0;
-			else if (P_MobjFlip(mo)*mo->momz < 0)
-				gravityadd = 17*gravityadd/20;
+			}
+			else if (mo->player->rsprung == 4 && (!(mo->player->pflags & PF_THOKKED)) && !mo->player->powers[pw_springlock])
+			{
+				if (mo->player->panim == PA_FALL)
+				{
+					gravityadd = 3*gravityadd/4;
+				}
+				mo->player->drawangle = prevdrangle+(ANG1<<3);
+			}
+			prevdrangle = mo->player->drawangle;
 		}
 		else if (P_MobjFlip(mo)*mo->momz > FixedMul(15<<FRACBITS, mo->scale))
 		{

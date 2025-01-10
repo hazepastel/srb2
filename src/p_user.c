@@ -5058,6 +5058,7 @@ void P_TwinSpinRejuvenate(player_t *player, mobjtype_t type)
 			P_SetScale(missile, missile->destscale/2, true);
 			missile->color = player->mo->color;
 			missile->colorized = true;
+			missile->blendmode = AST_ADD;
 			missile->flags |= (MF_NOCLIP|MF_NOCLIPHEIGHT);
 			missile->angle = ang + movang;
 			//missile->fuse = TICRATE/2;
@@ -5390,6 +5391,31 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 
 	if (cmd->buttons & BT_JUMP && !player->exiting && !P_PlayerInPain(player))
 	{
+		if (player->powers[pw_springlock])
+		{
+			if (player->rsprung == 1 && (!(player->pflags & PF_JUMPDOWN)))
+			{
+				player->rsprung = 4;
+				P_TwinSpinRejuvenate(player, MT_SUPERSPARK);
+				if (player->skin == 0)
+				{
+					if (P_RandomChance(FRACUNIT>>1))
+						S_StartSound(player->mo, sfx_cdpcm4);
+					else
+						S_StartSound(player->mo, sfx_cdpcm5);
+				}
+				else if (player->skin == 3)
+				{
+					S_StartSound(player->mo, sfx_cdpcm5);
+				}
+				else
+				{
+					S_StartSound(player->mo, sfx_s249);
+				}
+			}
+			player->pflags |= PF_JUMPDOWN;
+			return;
+		}
 		if (LUA_HookPlayer(player, HOOK(JumpSpecial)))
 			;
 		// all situations below this require jump button not to be pressed already

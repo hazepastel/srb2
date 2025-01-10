@@ -435,11 +435,9 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 			object->player->rsprung = 1;
 		}
 
-		if ((object->player->charflags & SF_NOJUMPSPIN) && spring->info->painchance != 3)
+		if ((object->player->charflags & SF_NOJUMPSPIN) && spring->info->painchance != 3 && !P_IsObjectOnGround(object))
 		{
-			P_TwinSpinRejuvenate(object->player, MT_SUPERSPARK);
-			if (!P_IsObjectOnGround(object))
-				object->player->pflags |= P_GetJumpFlags(object->player);
+			object->player->pflags |= P_GetJumpFlags(object->player);
 		}
 
 		if (spring->info->painchance == 1) // For all those ancient, SOC'd abilities.
