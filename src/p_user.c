@@ -4442,6 +4442,7 @@ boolean P_SuperReady(player_t *player, boolean transform)
 	&& !player->powers[pw_carry]
 	&& !P_PlayerInPain(player)
 	&& !player->climbing
+	&& !player->rsprung
 	&& !(player->pflags & (PF_STASIS|PF_THOKKED|PF_STARTDASH|PF_GLIDING|PF_SLIDING|PF_BOUNCING|PF_SHIELDABILITY))
 	&& !(maptol & TOL_NIGHTS))
 		return true;
@@ -4682,6 +4683,25 @@ void P_DoSpinDashDust(player_t *player)
 static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 {
 	boolean canstand = true; // can we stand on the ground? (mostly relevant for slopes)
+
+	if (player->rsprung == 4) // restrict spin inputs but allow turtle roll
+	{
+		if ((cmd->buttons & BT_SPIN) && player->panim == PA_SPRING && (!(player->charflags & SF_NOJUMPSPIN)) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
+		{
+			if (cmd->forwardmove || cmd->sidemove)
+			{
+				player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<FRACBITS, -cmd->sidemove<<FRACBITS);
+			}
+			else
+			{
+				player->drawangle = player->mo->angle = cmd->angleturn<<16;
+			}
+			player->rsprung = 5;
+			player->pflags |= PF_SPINDOWN;
+		}
+		return;
+	}
+
 	if (player->pflags & PF_STASIS
 		&& (player->pflags & PF_JUMPSTASIS || player->mo->state-states != S_PLAY_GLIDE_LANDING))
 		return;
@@ -5391,12 +5411,15 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 
 	if (cmd->buttons & BT_JUMP && !player->exiting && !P_PlayerInPain(player))
 	{
-		if (player->powers[pw_springlock])
+		if (player->powers[pw_springlock] && (!(player->pflags & PF_JUMPED)) && (!(player->charflags & SF_TRICKFORBIDDEN)))
 		{
 			if (player->rsprung == 1 && (!(player->pflags & PF_JUMPDOWN)))
 			{
 				player->rsprung = 4;
 				P_TwinSpinRejuvenate(player, MT_SUPERSPARK);
+				P_SetMobjState(player->mo, S_PLAY_SPRING);
+				S_StartSound(player->mo, sfx_s249);
+				player->pflags |= PF_FULLSTASIS;
 				if (player->skin == 0)
 				{
 					if (P_RandomChance(FRACUNIT>>1))
@@ -5406,11 +5429,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 				}
 				else if (player->skin == 3)
 				{
-					S_StartSound(player->mo, sfx_cdpcm5);
-				}
-				else
-				{
-					S_StartSound(player->mo, sfx_s249);
+					S_StartSound(player->mo, sfx_cdpcm6);
 				}
 			}
 			player->pflags |= PF_JUMPDOWN;
@@ -5451,8 +5470,25 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 		}
 		else if (player->pflags & PF_SLIDING || ((gametyperules & GTR_TEAMFLAGS) && player->gotflag) || player->pflags & PF_SHIELDABILITY)
 			;
-		else if ((player->pflags & PF_JUMPED) && !onground)
+		else if ((player->rsprung == 4 || (player->pflags & PF_JUMPED)) && !onground)
 		{
+			if (player->rsprung == 4)
+			{
+				if (player->cmd.forwardmove || player->cmd.sidemove)
+				{
+					player->drawangle = R_PointToAngle2(0, 0, player->cmd.forwardmove<<FRACBITS, -player->cmd.sidemove<<FRACBITS);
+				}
+				else
+				{
+					player->drawangle = player->mo->angle = player->cmd.angleturn<<16;
+				}
+				player->pflags |= P_GetJumpFlags(player);
+				if (!(player->pflags & SF_NOJUMPSPIN))
+				{
+					P_SetMobjState(player->mo, S_PLAY_JUMP);
+				}
+				player->rsprung = 0;
+			}
 			if (!LUA_HookPlayer(player, HOOK(AbilitySpecial)))
 			switch (player->charability)
 			{

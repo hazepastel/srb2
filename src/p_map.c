@@ -435,15 +435,11 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 			object->player->rsprung = 1;
 		}
 
-		if ((object->player->charflags & SF_NOJUMPSPIN) && spring->info->painchance != 3 && !P_IsObjectOnGround(object))
-		{
-			object->player->pflags |= P_GetJumpFlags(object->player);
-		}
-
 		if (spring->info->painchance == 1) // For all those ancient, SOC'd abilities.
 		{
-			object->player->pflags |= P_GetJumpFlags(object->player);
-			P_SetMobjState(object, S_PLAY_JUMP);
+			object->player->pflags |= PF_JUMPED;
+			P_SetMobjState(object, S_PLAY_ROLL);
+			object->player->panim = PA_FALL;
 		}
 		else if (spring->info->painchance == 2) // Adding momentum only.
 		{

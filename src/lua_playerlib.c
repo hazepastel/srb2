@@ -147,6 +147,7 @@ enum player_e
 	player_climbing,
 	player_deadtimer,
 	player_exiting,
+	player_rsprung,
 	player_homing,
 	player_dashmode,
 	player_skidtime,
@@ -296,6 +297,7 @@ static const char *const player_opt[] = {
 	"climbing",
 	"deadtimer",
 	"exiting",
+	"rsprung",
 	"homing",
 	"dashmode",
 	"skidtime",
@@ -599,6 +601,9 @@ static int player_get(lua_State *L)
 		break;
 	case player_exiting:
 		lua_pushinteger(L, plr->exiting);
+		break;
+	case player_rsprung:
+		lua_pushinteger(L, plr->rsprung);
 		break;
 	case player_homing:
 		lua_pushinteger(L, plr->homing);
@@ -1079,6 +1084,9 @@ static int player_set(lua_State *L)
 		break;
 	case player_exiting:
 		plr->exiting = (tic_t)luaL_checkinteger(L, 3);
+		break;
+	case player_rsprung:
+		plr->rsprung = (SINT8)luaL_checkinteger(L, 3);
 		break;
 	case player_homing:
 		plr->homing = (UINT8)luaL_checkinteger(L, 3);

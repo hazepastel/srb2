@@ -737,6 +737,7 @@ static boolean R_ProcessPatchableFields(skin_t *skin, char *stoken, char *value)
 	GETFLAG(NOSUPERJUMPBOOST)
 	GETFLAG(CANBUSTWALLS)
 	GETFLAG(NOSHIELDABILITY)
+	GETFLAG(TRICKFORBIDDEN)
 #undef GETFLAG
 
 	else if (!stricmp(stoken, "natkcolor"))

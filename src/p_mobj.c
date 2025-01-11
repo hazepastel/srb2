@@ -1354,38 +1354,45 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 	if (mo->eflags & MFE_UNDERWATER && !goopgravity)
 		gravityadd = gravityadd/3;
 
-	if (mo->player)
+#define plyr mo->player
+	if (plyr)
 	{
-		if ((mo->player->pflags & PF_GLIDING)
-		|| (mo->player->charability == CA_FLY && mo->player->panim == PA_ABILITY))
+		fixed_t flipz = P_MobjFlip(mo)*mo->momz;
+
+		if ((plyr->pflags & PF_GLIDING)
+		|| (plyr->charability == CA_FLY && plyr->panim == PA_ABILITY))
 			gravityadd = gravityadd/2; // less gravity while flying or gliding
 
-		if (mo->player->rsprung)
+		if (plyr->rsprung)
 		{
 			static angle_t prevdrangle = 0;
-			if (mo->player->panim != PA_SPRING && mo->player->panim != PA_FALL)
+			if ((plyr->panim != PA_SPRING && plyr->panim != PA_FALL) || (plyr->pflags & PF_THOKKED))
 			{
-				mo->player->rsprung = 0;
+				plyr->rsprung = 0;
+				S_StopSoundByID(mo, sfx_s249);
 			}
-			else if (mo->player->rsprung == 4 && (!(mo->player->pflags & PF_THOKKED)) && !mo->player->powers[pw_springlock])
+			else if (plyr->rsprung == 4 && !plyr->powers[pw_springlock])
 			{
-				if (mo->player->panim == PA_FALL)
+				if (flipz < 0)
 				{
 					gravityadd = 3*gravityadd/4;
 				}
-				mo->player->drawangle = prevdrangle+(ANG1<<3);
+				else if (flipz > mo->scale)
+				{
+					plyr->drawangle = prevdrangle+(ANG1<<3);
+				}
 			}
-			prevdrangle = mo->player->drawangle;
+			prevdrangle = plyr->drawangle;
 		}
-		else if (P_MobjFlip(mo)*mo->momz > FixedMul(15<<FRACBITS, mo->scale))
+		else if (flipz > FixedMul(15<<FRACBITS, mo->scale))
 		{
 			gravityadd = 4*gravityadd/3; // increase gravity to counter slope rocketing
 		}
 
-		if (mo->player->climbing || (mo->player->powers[pw_carry] == CR_NIGHTSMODE))
+		if (plyr->climbing || (plyr->powers[pw_carry] == CR_NIGHTSMODE))
 			gravityadd = 0;
 
-		if (!(mo->flags2 & MF2_OBJECTFLIP) != !(mo->player->powers[pw_gravityboots])) // negated to turn numeric into bool - would be double negated, but not needed if both would be
+		if (!(mo->flags2 & MF2_OBJECTFLIP) != !(plyr->powers[pw_gravityboots])) // negated to turn numeric into bool - would be double negated, but not needed if both would be
 		{
 			gravityadd = -gravityadd;
 			mo->eflags ^= MFE_VERTICALFLIP;
@@ -1417,6 +1424,7 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 			}
 		}
 	}
+#undef plyr
 
 	// Goop has slower, reversed gravity
 	if (goopgravity)
