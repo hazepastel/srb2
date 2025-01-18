@@ -4430,15 +4430,15 @@ static void P_DoSuperStuff(player_t *player)
 //
 // Returns true if player is ready to transform
 //
-boolean P_SuperReady(player_t *player, boolean transform)
+boolean P_SuperReady(player_t *player)
 {
-	if (transform
-	&& (player->charflags & SF_SUPER)
+	if ((player->charflags & SF_SUPER)
 	&& (player->rings >= 50)
 	&& (ALL7EMERALDS(emeralds))
 	&& (player->pflags & PF_JUMPED)
 	&& !player->powers[pw_super]
 	&& !(player->powers[pw_shield] & SH_NOSTACK)
+	&& !player->powers[pw_tailsfly]
 	&& !player->powers[pw_carry]
 	&& !P_PlayerInPain(player)
 	&& !player->climbing
@@ -5330,7 +5330,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 			;
 		else if (cmd->buttons & BT_SPIN)
 		{
-			if (spinshieldhack && !(player->pflags & PF_SPINDOWN) && P_SuperReady(player, true) && !(player->powers[pw_shield] & SH_NOSTACK)) // These two checks are no longer in P_SuperReady
+			if (spinshieldhack && !(player->pflags & PF_SPINDOWN) && P_SuperReady(player))
 			{
 				// If you're using two-button play, can turn Super and aren't already,
 				// and you don't have a shield, then turn Super!
@@ -8824,7 +8824,7 @@ void P_MovePlayer(player_t *player)
 		if ((cmd->buttons & BT_SHIELD) && !(player->pflags & PF_SHIELDDOWN) && !spinshieldhack)
 		{
 			// Transform into super if we can!
-			if (P_SuperReady(player, true))
+			if (P_SuperReady(player))
 				P_DoSuperTransformation(player, false);
 			//Otherwise, try to use a shield ability
 			else

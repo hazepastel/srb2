@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2024 by Sonic Team Junior.
+// Copyright (C) 1999-2025 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -1182,7 +1182,7 @@ static void IdentifyVersion(void)
 	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "zones.pk3"));
 
 	// Add the players
-	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "player.dta"));
+	D_AddFile(&startupwadfiles, va(pandf,srb2waddir, "characters.pk3"));
 
 #ifdef USE_PATCH_DTA
 	// Add our crappy patches to fix our bugs
@@ -1204,7 +1204,7 @@ static void IdentifyVersion(void)
 				I_Error("File "str" has been modified with non-music/sound lumps"); \
 		}
 
-		MUSICTEST("music.dta")
+		MUSICTEST("music.pk3")
 		//MUSICTEST("patch_music.pk3")
 	}
 #endif
@@ -1255,7 +1255,7 @@ void D_SRB2Main(void)
 	// Print GPL notice for our console users (Linux)
 	CONS_Printf(
 	"\n\nSonic Robo Blast 2\n"
-	"Copyright (C) 1998-2024 by Sonic Team Junior\n\n"
+	"Copyright (C) 1998-2025 by Sonic Team Junior\n\n"
 	"This program comes with ABSOLUTELY NO WARRANTY.\n\n"
 	"This is free software, and you are welcome to redistribute it\n"
 	"and/or modify it under the terms of the GNU General Public License\n"

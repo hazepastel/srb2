@@ -1345,10 +1345,10 @@ void PT_FileFragment(SINT8 node, INT32 netconsole)
 
 	if (!(strcmp(filename, "srb2.pk3")
 		&& strcmp(filename, "zones.pk3")
-		&& strcmp(filename, "player.dta")
+		&& strcmp(filename, "characters.pk3")
 		&& strcmp(filename, "patch.pk3")
 		&& strcmp(filename, "reveries.pk3")
-		&& strcmp(filename, "music.dta")
+		&& strcmp(filename, "music.pk3")
 		))
 		I_Error("Tried to download \"%s\"", filename);
 
