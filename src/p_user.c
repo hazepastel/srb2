@@ -4684,17 +4684,31 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 {
 	boolean canstand = true; // can we stand on the ground? (mostly relevant for slopes)
 
-	if (player->rsprung == 4) // restrict spin inputs but allow turtle roll
+	if (player->rsprung == 4 && player->panim == PA_SPRING) // restrict spin inputs but allow turtle roll
 	{
-		if ((cmd->buttons & BT_SPIN) && player->panim == PA_SPRING && (!(player->charflags & SF_NOJUMPSPIN)) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
+		if ((cmd->buttons & BT_SPIN) && (!(player->charflags & SF_NOJUMPSPIN)) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
 		{
-			if (cmd->forwardmove || cmd->sidemove)
+			if (player->pflags & PF_ANALOGMODE)
 			{
-				player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<FRACBITS, -cmd->sidemove<<FRACBITS);
+				if (cmd->forwardmove || cmd->sidemove)
+				{
+					player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+				}
+				else
+				{
+					player->drawangle = player->mo->angle = cmd->angleturn<<16;
+				}
 			}
 			else
 			{
-				player->drawangle = player->mo->angle = cmd->angleturn<<16;
+				if (cmd->forwardmove || cmd->sidemove)
+				{
+					player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+				}
+				else
+				{
+					player->drawangle = cmd->angleturn<<16;
+				}
 			}
 			player->rsprung = 5;
 			player->pflags |= PF_SPINDOWN;
@@ -4805,25 +4819,22 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 				}
 				break;
 			case CA2_GUNSLINGER:
-				if ((onground || (player->pflags & PF_JUMPED)) && !(player->pflags & (PF_THOKKED|PF_SPINNING|PF_BOUNCING)) && !player->weapondelay && !player->powers[pw_carry])
+				if ((player->jerboatime || (player->pflags & PF_JUMPED) || player->panim == PA_FALL || player->panim == PA_SPRING) && !(player->pflags & (PF_THOKKED|PF_SPINNING|PF_BOUNCING|PF_SHIELDABILITY)) && !player->weapondelay && !player->powers[pw_carry])
 				{
 					mobj_t *lockon = P_LookForEnemies(player, false, true);
 					if (lockon)
 					{
 						if (P_IsLocalPlayer(player)) // Only display it on your own view.
 						{
-							if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
+							mobj_t *visual = P_SpawnMobj(lockon->x, lockon->y, lockon->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
+
+							if (!P_MobjWasRemoved(visual))
 							{
-								mobj_t *visual = P_SpawnMobj(lockon->x, lockon->y, lockon->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
-
-								if (!P_MobjWasRemoved(visual))
-								{
-									P_SetTarget(&visual->target, lockon);
-									P_SetMobjStateNF(visual, visual->info->spawnstate+2);
-								}
-
-								visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
+								P_SetTarget(&visual->target, lockon);
+								P_SetMobjStateNF(visual, visual->info->spawnstate+2);
 							}
+
+							visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
 						}
 					}
 					if ((cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
@@ -5474,19 +5485,30 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 		{
 			if (player->rsprung == 4)
 			{
-				if (player->cmd.forwardmove || player->cmd.sidemove)
+				if (player->pflags & PF_ANALOGMODE)
 				{
-					player->drawangle = R_PointToAngle2(0, 0, player->cmd.forwardmove<<FRACBITS, -player->cmd.sidemove<<FRACBITS);
+					if (cmd->forwardmove || cmd->sidemove)
+					{
+						player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+					}
+					else
+					{
+						player->drawangle = player->mo->angle = cmd->angleturn<<16;
+					}
 				}
 				else
 				{
-					player->drawangle = player->mo->angle = player->cmd.angleturn<<16;
+					if (cmd->forwardmove || cmd->sidemove)
+					{
+						player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+					}
+					else
+					{
+						player->drawangle = cmd->angleturn<<16;
+					}
 				}
 				player->pflags |= P_GetJumpFlags(player);
-				if (!(player->pflags & SF_NOJUMPSPIN))
-				{
-					P_SetMobjState(player->mo, S_PLAY_JUMP);
-				}
+				P_SetMobjState(player->mo, S_PLAY_JUMP);
 				player->rsprung = 0;
 			}
 			if (!LUA_HookPlayer(player, HOOK(AbilitySpecial)))
