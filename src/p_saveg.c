@@ -813,7 +813,7 @@ static void P_NetUnArchivePlayers(save_t *save_p)
 		players[i].height = P_ReadFixed(save_p);
 		players[i].spinheight = P_ReadFixed(save_p);
 		players[i].prevdrangle = P_ReadAngle(save_p);
-		players[i].flycmd = P_ReadUINT8(save_p)
+		players[i].flycmd = P_ReadUINT8(save_p);
 		players[i].viewheight = 41*players[i].height/48; // scale cannot be factored in at this point
 	}
 }
