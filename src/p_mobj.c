@@ -179,27 +179,6 @@ static void P_CycleMobjState(mobj_t *mobj)
 }
 
 //
-// P_CycleMobjState for players.
-//
-static void P_CyclePlayerMobjState(mobj_t *mobj)
-{
-	// state animations
-	P_CycleStateAnimation(mobj);
-
-	// cycle through states,
-	// calling action functions at transitions
-	if (mobj->tics != -1)
-	{
-		mobj->tics--;
-
-		// you can cycle through multiple states in a tic
-		if (!mobj->tics && mobj->state)
-			if (!P_SetMobjState(mobj, mobj->state->nextstate))
-				return; // freed itself
-	}
-}
-
-//
 // P_SetPlayerMobjState
 // Returns true if the mobj is still present.
 //
@@ -3821,7 +3800,7 @@ static void P_PlayerMobjThinker(mobj_t *mobj)
 	}
 
 animonly:
-	P_CyclePlayerMobjState(mobj);
+	P_CycleMobjState(mobj);
 }
 
 static void CalculatePrecipFloor(precipmobj_t *mobj)
@@ -7048,14 +7027,6 @@ static void P_MobjScaleThink(mobj_t *mobj)
 		mobj->z     -= mobj->height - oldheight;
 		mobj->old_z -= mobj->height - oldheight;
 	}
-
-	if (mobj->scale == mobj->destscale)
-		/// \todo Lua hook for "reached destscale"?
-		switch (mobj->type)
-		{
-		default:
-			break;
-		}
 }
 
 static void P_MaceSceneryThink(mobj_t *mobj)
@@ -10356,10 +10327,7 @@ void P_MobjThinker(mobj_t *mobj)
 	}
 
 	// Can end up here if a player dies.
-	if (mobj->player)
-		P_CyclePlayerMobjState(mobj);
-	else
-		P_CycleMobjState(mobj);
+	P_CycleMobjState(mobj);
 
 	if (P_MobjWasRemoved(mobj))
 		return;
