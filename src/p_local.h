@@ -106,6 +106,7 @@ typedef struct camera_s
 
 	// Momentums, used to update position.
 	fixed_t momx, momy, momz;
+	fixed_t lastshift;
 } camera_t;
 
 extern camera_t camera, camera2;

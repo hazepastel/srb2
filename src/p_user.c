@@ -4664,7 +4664,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 
 	if (player->rsprung == 4 && player->panim == PA_SPRING) // restrict spin inputs but allow turtle roll
 	{
-		if ((cmd->buttons & BT_SPIN) && (!(player->charflags & SF_NOJUMPSPIN)) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
+		if ((cmd->buttons & BT_SPIN) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
 		{
 			if (player->pflags & PF_ANALOGMODE)
 			{
@@ -8578,7 +8578,6 @@ void P_MovePlayer(player_t *player)
 
 	if (player->charability == CA_FLY || (player->charability == CA_SWIM && player->mo->eflags & MFE_UNDERWATER))
 	{
-		static UINT8 flycmd = 0;
 		// Fly counter for Tails.
 		if (player->powers[pw_tailsfly])
 		{
@@ -8586,9 +8585,9 @@ void P_MovePlayer(player_t *player)
 			{
 
 				if (cmd->buttons & BT_SPIN)
-					flycmd = 2;
+					player->flycmd = 2;
 				else
-					flycmd = 1;
+					player->flycmd = 1;
 
 				if (player->fly1)
 					player->fly1 = max(player->fly1, 3);
@@ -8608,7 +8607,7 @@ void P_MovePlayer(player_t *player)
 					flycap = 4<<FRACBITS;
 				}
 
-				if (flycmd == 2)
+				if (player->flycmd == 2)
 				{
 					if (P_MobjFlip(player->mo)*player->mo->momz < 0)
 						P_SetObjectMomZ(player->mo, -(FRACUNIT>>2), true);
@@ -10108,11 +10107,10 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		// Shift the camera slightly to the sides depending on the player facing direction
 		UINT8 forplayer = (thiscam == &camera) ? 0 : 1;
 		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), cv_cam_shiftangle[forplayer].value);
-		static fixed_t lastshift = 0;
 
 		if (!player->cmd.forwardmove && !player->cmd.sidemove)
 		{
-			shift = lastshift;
+			shift = thiscam->lastshift;
 		}
 		else
 		{
@@ -10132,7 +10130,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		}
 		shiftx = -FixedMul(FINESINE(angle>>ANGLETOFINESHIFT), shift);
 		shifty = FixedMul(FINECOSINE(angle>>ANGLETOFINESHIFT), shift);
-		lastshift = shift;
+		thiscam->lastshift = shift;
 	}
 
 	// sets ideal cam pos

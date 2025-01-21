@@ -632,6 +632,9 @@ typedef struct player_s
 	tic_t quittime; // Time elapsed since user disconnected, zero if connected
 	tic_t lastinputtime; // the last tic the player has made any input
 	fixed_t fovadd; // adjust FOV for hw rendering
+
+	angle_t prevdrangle;
+	UINT8 flycmd;
 } player_t;
 
 // Values for dashmode

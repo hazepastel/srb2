@@ -433,7 +433,7 @@ static void P_NetArchivePlayers(save_t *save_p)
 		P_WriteUINT8(save_p, players[i].climbing);
 		P_WriteINT32(save_p, players[i].deadtimer);
 		P_WriteUINT32(save_p, players[i].exiting);
-		P_WriteUINT32(save_p, players[i].rsprung);
+		P_WriteSINT8(save_p, players[i].rsprung);
 		P_WriteUINT8(save_p, players[i].homing);
 		P_WriteUINT32(save_p, players[i].dashmode);
 		P_WriteUINT32(save_p, players[i].skidtime);
@@ -593,6 +593,8 @@ static void P_NetArchivePlayers(save_t *save_p)
 		P_WriteFixed(save_p, players[i].jumpfactor);
 		P_WriteFixed(save_p, players[i].height);
 		P_WriteFixed(save_p, players[i].spinheight);
+		P_WriteAngle(save_p, players[i].prevdrangle);
+		P_WriteUINT8(save_p, players[i].flycmd);
 	}
 }
 
@@ -666,7 +668,7 @@ static void P_NetUnArchivePlayers(save_t *save_p)
 		players[i].climbing = P_ReadUINT8(save_p); // Climbing on the wall
 		players[i].deadtimer = P_ReadINT32(save_p); // End game if game over lasts too long
 		players[i].exiting = P_ReadUINT32(save_p); // Exitlevel timer
-		players[i].rsprung = P_ReadUINT32(save_p); // reveries spring gravity
+		players[i].rsprung = P_ReadSINT8(save_p); // reveries spring gravity
 		players[i].homing = P_ReadUINT8(save_p); // Are you homing?
 		players[i].dashmode = P_ReadUINT32(save_p); // counter for dashmode ability
 		players[i].skidtime = P_ReadUINT32(save_p); // Skid timer
@@ -810,7 +812,8 @@ static void P_NetUnArchivePlayers(save_t *save_p)
 		players[i].jumpfactor = P_ReadFixed(save_p);
 		players[i].height = P_ReadFixed(save_p);
 		players[i].spinheight = P_ReadFixed(save_p);
-
+		players[i].prevdrangle = P_ReadAngle(save_p);
+		players[i].flycmd = P_ReadUINT8(save_p)
 		players[i].viewheight = 41*players[i].height/48; // scale cannot be factored in at this point
 	}
 }

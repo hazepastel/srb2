@@ -1344,7 +1344,6 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 
 		if (plyr->rsprung)
 		{
-			static angle_t prevdrangle = 0;
 			if ((plyr->panim != PA_SPRING && plyr->panim != PA_FALL) || (plyr->pflags & PF_THOKKED))
 			{
 				plyr->rsprung = 0;
@@ -1358,10 +1357,10 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 				}
 				else if (flipz > mo->scale)
 				{
-					plyr->drawangle = prevdrangle+(ANG1<<3);
+					plyr->drawangle = plyr->prevdrangle+(ANG1<<3);
 				}
 			}
-			prevdrangle = plyr->drawangle;
+			plyr->prevdrangle = plyr->drawangle;
 		}
 		else if (flipz > FixedMul(15<<FRACBITS, mo->scale))
 		{
