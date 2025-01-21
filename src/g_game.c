@@ -1520,7 +1520,6 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 			P_SetTarget(&ticcmd_ztargetfocus[forplayer], NULL);
 			CV_SetValue(&cv_directionchar[forplayer], 1);
 		}
-
 	}
 
 	if (G_PlayerInputDown(forplayer, GC_CAMRESET))
