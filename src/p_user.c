@@ -3049,7 +3049,7 @@ static void P_CheckUnderwaterAndSpaceTimer(player_t *player)
 			P_DamageMobj(player->mo, NULL, NULL, 1, DMG_DROWNED);
 	}
 
-	if (!(player->mo->eflags & MFE_UNDERWATER) && player->powers[pw_underwater])
+	if (((player->mo->eflags & (MFE_UNDERWATER|MFE_TOUCHWATER)) != MFE_UNDERWATER) && player->powers[pw_underwater])
 	{
 		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
 		{
@@ -12275,7 +12275,7 @@ void P_PlayerThink(player_t *player)
 	if (player->powers[pw_noautobrake] && player->powers[pw_noautobrake] < UINT16_MAX)
 		player->powers[pw_noautobrake]--;
 
-	if (player->powers[pw_underwater] && (player->pflags & PF_GODMODE || (player->powers[pw_shield] & SH_PROTECTWATER)))
+	if (player->powers[pw_underwater] && ((player->pflags & PF_GODMODE) || (player->powers[pw_shield] & SH_PROTECTWATER)))
 	{
 		if (player->powers[pw_underwater] <= 12*TICRATE+1)
 		{
@@ -12288,7 +12288,7 @@ void P_PlayerThink(player_t *player)
 	else if (player->powers[pw_underwater] && !(maptol & TOL_NIGHTS) && !((netgame || multiplayer) && (player->spectator || player->quittime))) // underwater timer
 		player->powers[pw_underwater]--;
 
-	if (player->powers[pw_spacetime] && (player->pflags & PF_GODMODE || (player->powers[pw_shield] & SH_PROTECTWATER)))
+	if (player->powers[pw_spacetime] && ((player->pflags & PF_GODMODE) || (player->powers[pw_shield] & SH_PROTECTWATER) || player->powers[pw_super]))
 		player->powers[pw_spacetime] = 0;
 	else if (player->powers[pw_spacetime] && !(maptol & TOL_NIGHTS) && !((netgame || multiplayer) && (player->spectator || player->quittime))) // underwater timer
 		player->powers[pw_spacetime]--;
