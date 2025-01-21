@@ -905,16 +905,14 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_directionchar[1]);
 
 	// hi here's some new controls
-	CV_RegisterVar(&cv_cam_shiftfacing[0]);
-	CV_RegisterVar(&cv_cam_shiftfacing[1]);
-	CV_RegisterVar(&cv_cam_turnfacing[0]);
-	CV_RegisterVar(&cv_cam_turnfacing[1]);
-	CV_RegisterVar(&cv_cam_turnfacingability[0]);
-	CV_RegisterVar(&cv_cam_turnfacingability[1]);
-	CV_RegisterVar(&cv_cam_turnfacingspindash[0]);
-	CV_RegisterVar(&cv_cam_turnfacingspindash[1]);
-	CV_RegisterVar(&cv_cam_turnfacinginput[0]);
-	CV_RegisterVar(&cv_cam_turnfacinginput[1]);
+	CV_RegisterVar(&cv_cam_shiftangle[0]);
+	CV_RegisterVar(&cv_cam_shiftangle[1]);
+	CV_RegisterVar(&cv_cam_turntoability[0]);
+	CV_RegisterVar(&cv_cam_turntoability[1]);
+	CV_RegisterVar(&cv_cam_turntospindash[0]);
+	CV_RegisterVar(&cv_cam_turntospindash[1]);
+	CV_RegisterVar(&cv_cam_turntoinput[0]);
+	CV_RegisterVar(&cv_cam_turntoinput[1]);
 	CV_RegisterVar(&cv_cam_centertoggle[0]);
 	CV_RegisterVar(&cv_cam_centertoggle[1]);
 	CV_RegisterVar(&cv_cam_lockedinput[0]);

@@ -5151,7 +5151,6 @@ static void P_DoShieldAbility(player_t *player)
 				break;
 			// Attraction blast
 			case SH_ATTRACT:
-				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 				player->pflags &= ~PF_SPINNING;
 				player->secondjump = 1;
 				player->homing = 2;
@@ -5160,13 +5159,17 @@ static void P_DoShieldAbility(player_t *player)
 				if (lockonshield)
 					{
 						player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockonshield->x, lockonshield->y);
-							player->pflags &= ~PF_NOJUMPDAMAGE;
-							P_SetMobjState(player->mo, S_PLAY_ROLL);
-							S_StartSound(player->mo, sfx_s3k40);
-							player->homing = 3*TICRATE;
+						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+						player->pflags &= ~PF_NOJUMPDAMAGE;
+						P_SetMobjState(player->mo, S_PLAY_ROLL);
+						S_StartSound(player->mo, sfx_s3k40);
+						player->homing = 3*TICRATE;
 					}
 					else
+					{
 						S_StartSound(player->mo, sfx_s3ka6);
+						player->secondjump = 0;
+					}
 					break;
 				// Bubble bounce
 				case SH_BUBBLEWRAP:
@@ -5636,9 +5639,12 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 			{
 				player->pflags &= ~(PF_THOKKED|PF_SHIELDABILITY);
 				player->secondjump = 0;
+				player->glidetime = 0;
 				P_SetObjectMomZ(player->mo, 6<<FRACBITS, false);
 				if (player->mo->eflags & MFE_UNDERWATER)
+				{
 					player->mo->momz = FixedMul(player->mo->momz, FRACUNIT/3);
+				}
 				player->homing = 0;
 			}
 		}
@@ -10101,23 +10107,32 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 	{
 		// Shift the camera slightly to the sides depending on the player facing direction
 		UINT8 forplayer = (thiscam == &camera) ? 0 : 1;
-		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), cv_cam_shiftfacing[forplayer].value);
+		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), cv_cam_shiftangle[forplayer].value);
+		static fixed_t lastshift = 0;
 
-		if (player->powers[pw_carry] == CR_NIGHTSMODE)
+		if (!player->cmd.forwardmove && !player->cmd.sidemove)
 		{
-			fixed_t cos = FINECOSINE((angle_t) (player->flyangle * ANG1)>>ANGLETOFINESHIFT);
-			shift = FixedMul(shift, min(FRACUNIT, player->speed*abs(cos)/6000));
-			shift += FixedMul(camsideshift[forplayer] - shift, FRACUNIT-(camspeed>>2));
+			shift = lastshift;
 		}
-		else if (ticcmd_centerviewdown[(thiscam == &camera) ? 0 : 1])
-			shift = FixedMul(camsideshift[forplayer], FRACUNIT-camspeed);
 		else
-			shift += FixedMul(camsideshift[forplayer] - shift, FRACUNIT-(camspeed>>3));
-		camsideshift[forplayer] = shift;
+		{
+			if (player->powers[pw_carry] == CR_NIGHTSMODE)
+			{
+				fixed_t cos = FINECOSINE((angle_t) (player->flyangle * ANG1)>>ANGLETOFINESHIFT);
+				shift = FixedMul(shift, min(FRACUNIT, player->speed*abs(cos)/6000));
+				shift += FixedMul(camsideshift[forplayer] - shift, FRACUNIT-(camspeed>>2));
+			}
+			else if (ticcmd_centerviewdown[(thiscam == &camera) ? 0 : 1])
+				shift = FixedMul(camsideshift[forplayer], FRACUNIT-camspeed);
+			else
+				shift += FixedMul(camsideshift[forplayer] - shift, FRACUNIT-(camspeed>>3));
+			camsideshift[forplayer] = shift;
 
-		shift = FixedMul(shift, camdist);
+			shift = FixedMul(shift, camdist);
+		}
 		shiftx = -FixedMul(FINESINE(angle>>ANGLETOFINESHIFT), shift);
 		shifty = FixedMul(FINECOSINE(angle>>ANGLETOFINESHIFT), shift);
+		lastshift = shift;
 	}
 
 	// sets ideal cam pos

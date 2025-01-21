@@ -7584,9 +7584,7 @@ static void P_MobjSceneryThink(mobj_t *mobj)
 	case MT_ATTRACT_ORB:
 		if (!(mobj->flags2 & MF2_SHIELD))
 			return;
-		if (/*(mobj->target) -- the following is implicit by P_AddShield
-		&& (mobj->target->player)
-		&& */ (mobj->target->player->homing) && (mobj->target->player->pflags & PF_SHIELDABILITY))
+		if (mobj->target->player->homing)
 		{
 			P_SetMobjState(mobj, mobj->info->painstate);
 			mobj->tics++;
