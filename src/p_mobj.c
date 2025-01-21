@@ -3088,7 +3088,6 @@ void P_MobjCheckWater(mobj_t *mobj)
 	ffloor_t *rover;
 	player_t *p = mobj->player; // Will just be null if not a player.
 	fixed_t height = (p ? P_GetPlayerHeight(p) : mobj->height); // for players, calculation height does not necessarily match actual height for gameplay reasons (spin, etc)
-	boolean wasgroundpounding = (p && ((p->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) && (p->pflags & PF_SHIELDABILITY));
 
 	// Default if no water exists.
 	mobj->watertop = mobj->waterbottom = mobj->z - 1000*FRACUNIT;
@@ -3154,7 +3153,7 @@ void P_MobjCheckWater(mobj_t *mobj)
 		return;
 
 	// Specific things for underwater players
-	if (p && (mobj->eflags & MFE_UNDERWATER) == MFE_UNDERWATER)
+	if (p && (mobj->eflags & (MFE_UNDERWATER|MFE_TOUCHWATER)) == MFE_UNDERWATER)
 	{
 		if (!((p->powers[pw_super]) || (p->powers[pw_invulnerability])))
 		{
@@ -3182,12 +3181,6 @@ void P_MobjCheckWater(mobj_t *mobj)
 			// Then we'll set it!
 			p->powers[pw_underwater] = underwatertics + 1;
 		}
-
-		if ((wasgroundpounding = ((mobj->eflags & MFE_GOOWATER) && wasgroundpounding)))
-		{
-			p->pflags &= ~PF_SHIELDABILITY;
-			mobj->momz >>= 1;
-		}
 	}
 
 	// The rest of this code only executes on a water state change.
@@ -3209,13 +3202,14 @@ void P_MobjCheckWater(mobj_t *mobj)
 			if (P_MobjFlip(mobj)*mobj->momz > 0)
 			{
 				mobj->momz -= (mobj->momz/8); // cut momentum a little bit to prevent multiple bobs
-				//CONS_Printf("leaving\n");
 			}
 			else
 			{
-				if (!wasgroundpounding)
-					mobj->momz >>= 1; // kill momentum significantly, to make the goo feel thick.
-				//CONS_Printf("entering\n");
+				mobj->momz >>= 1; // kill momentum significantly, to make the goo feel thick
+				if (p && (p->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP)
+				{
+					p->pflags &= ~PF_SHIELDABILITY;
+				}
 			}
 		}
 		else if (wasinwater && P_MobjFlip(mobj)*mobj->momz > 0)

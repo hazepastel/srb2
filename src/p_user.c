@@ -1163,10 +1163,6 @@ boolean P_PlayerCanDamage(player_t *player, mobj_t *thing)
 	if (player->pflags & PF_SPINNING)
 		return true;
 
-	// Shield stomp.
-	if (((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL || (player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) && (player->pflags & PF_SHIELDABILITY))
-		return true;
-
 	// pw_strong checks below here
 
 	// Omnidirectional attacks.
@@ -2545,25 +2541,7 @@ boolean P_PlayerHitFloor(player_t *player, boolean dorollstuff)
 			{
 				player->pflags &= ~PF_SHIELDABILITY;
 
-				if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL) // Elemental shield's stomp attack.
-				{
-					if (player->mo->eflags & (MFE_UNDERWATER|MFE_TOUCHWATER)) // play a blunt sound
-						S_StartSound(player->mo, sfx_s3k4c);
-					else // create a fire pattern on the ground
-					{
-						S_StartSound(player->mo, sfx_s3k47);
-						P_ElementalFire(player, true);
-					}
-					P_SetObjectMomZ(player->mo,
-					(player->mo->eflags & MFE_UNDERWATER)
-					? 6*FRACUNIT/5
-					: 5*FRACUNIT/2,
-					false);
-					P_SetMobjState(player->mo, S_PLAY_FALL);
-					player->mo->momx = player->mo->momy = 0;
-					clipmomz = false;
-				}
-				else if ((player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) // Bubble shield's bounce attack.
+				if ((player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) // Bubble shield's bounce attack.
 				{
 					P_DoBubbleBounce(player);
 					clipmomz = false;
@@ -4864,7 +4842,7 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 						player->drawangle = player->mo->angle;
 #undef zpos
 
-						P_Thrust(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), -(player->speed/3));
+						P_Thrust(player->mo, R_PointToAngle2(0, 0, player->rmomx, player->rmomy), -(player->speed>>2));
 						player->pflags |= PF_SPINDOWN;
 						P_SetWeaponDelay(player, TICRATE/2);
 						if (player->pflags & PF_JUMPED) //ensure nojumpdamage is applied if needed
@@ -4938,50 +4916,11 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 //
 // P_DoJumpShield
 //
-// Jump Shield Activation
+// DUMMY
 //
 void P_DoJumpShield(player_t *player)
 {
-	boolean electric = ((player->powers[pw_shield] & SH_PROTECTELECTRIC) == SH_PROTECTELECTRIC);
-
-	if (player->pflags & PF_THOKKED)
-		return;
-
-	player->pflags &= ~PF_JUMPED;
-	P_DoJump(player, false, true);
-	player->secondjump = 0;
-	player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-	player->pflags &= ~(PF_STARTJUMP|PF_SPINNING|PF_BOUNCING);
-	if (electric)
-	{
-		mobj_t *spark;
-		INT32 i;
-#define numangles 6
-#define limitangle (360/numangles)
-		const angle_t travelangle = player->mo->angle + P_RandomRange(-limitangle, limitangle)*ANG1;
-		for (i = 0; i < numangles; i++)
-		{
-			spark = P_SpawnMobjFromMobj(player->mo, 0, 0, 0, MT_THUNDERCOIN_SPARK);
-			if (!P_MobjWasRemoved(spark))
-			{
-				P_InstaThrust(spark, travelangle + i*(ANGLE_MAX/numangles), FixedMul(4*FRACUNIT, spark->scale));
-				if (i % 2)
-					P_SetObjectMomZ(spark, -4*FRACUNIT, false);
-				spark->fuse = 18;
-			}
-		}
-#undef limitangle
-#undef numangles
-		player->pflags &= ~PF_NOJUMPDAMAGE;
-		P_SetMobjState(player->mo, S_PLAY_ROLL);
-		S_StartSound(player->mo, sfx_s3k45);
-	}
-	else
-	{
-		player->pflags |= PF_NOJUMPDAMAGE;
-		P_SetMobjState(player->mo, S_PLAY_FALL);
-		S_StartSound(player->mo, sfx_wdjump);
-	}
+	player->secondjump = 1;
 }
 
 //
@@ -5231,6 +5170,7 @@ static void P_DoShieldAbility(player_t *player)
 					break;
 				// Bubble bounce
 				case SH_BUBBLEWRAP:
+					if (!(player->mo->eflags & MFE_GOOWATER))
 					{
 						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 						player->pflags &= ~PF_SPINNING;
@@ -5241,16 +5181,17 @@ static void P_DoShieldAbility(player_t *player)
 						S_StartSound(player->mo, sfx_s3k44);
 						player->secondjump = 1;
 						P_SetObjectMomZ(player->mo, -24*FRACUNIT, false);
-						break;
 					}
+					break;
 				// Flame burst
 				case SH_FLAMEAURA:
 					player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-					P_Thrust(player->mo, player->mo->angle, FixedMul(30*FRACUNIT - FixedSqrt(FixedDiv(player->speed, player->mo->scale)), player->mo->scale));
+					P_Thrust(player->mo, player->mo->angle, FixedMul(61*FRACUNIT - FixedSqrt(FixedDiv(player->speed, player->mo->scale)), player->mo->scale));
 					player->drawangle = player->mo->angle;
 					player->pflags &= ~(PF_NOJUMPDAMAGE|PF_SPINNING);
 					P_SetMobjState(player->mo, S_PLAY_ROLL);
 					S_StartSound(player->mo, sfx_s3k43);
+					break;
 				default:
 					break;
 		}
