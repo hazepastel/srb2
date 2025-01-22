@@ -905,10 +905,6 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_directionchar[1]);
 
 	// hi here's some new controls
-	CV_RegisterVar(&cv_cam_shiftangle[0]);
-	CV_RegisterVar(&cv_cam_shiftangle[1]);
-	CV_RegisterVar(&cv_cam_turntoability[0]);
-	CV_RegisterVar(&cv_cam_turntoability[1]);
 	CV_RegisterVar(&cv_cam_turntospindash[0]);
 	CV_RegisterVar(&cv_cam_turntospindash[1]);
 	CV_RegisterVar(&cv_cam_turntoinput[0]);

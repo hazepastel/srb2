@@ -77,8 +77,7 @@ extern consvar_t cv_sideaxis[2], cv_turnaxis[2], cv_moveaxis[2], cv_lookaxis[2],
 extern CV_PossibleValue_t joyaxis_cons_t[];
 
 // hi here's some new controls
-extern consvar_t cv_cam_shiftangle[2],
-	cv_cam_turntoability[2], cv_cam_turntospindash[2], cv_cam_turntoinput[2],
+extern consvar_t cv_cam_turntospindash[2], cv_cam_turntoinput[2],
 	cv_cam_centertoggle[2], cv_cam_lockedinput[2], cv_cam_lockonboss[2];
 
 typedef enum

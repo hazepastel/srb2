@@ -5364,12 +5364,20 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 	// ABILITIES!//
 	///////////////
 
-	if (cmd->buttons & BT_JUMP && !player->exiting && !P_PlayerInPain(player))
+	if ((cmd->buttons & BT_JUMP || player->rsprung == -1) && !player->exiting && !P_PlayerInPain(player))
 	{
 		if (player->powers[pw_springlock] && (!(player->pflags & (PF_JUMPED|PF_NOJUMPDAMAGE|PF_THOKKED|PF_SHIELDABILITY))) && (!(player->charflags & SF_TRICKFORBIDDEN)))
 		{
-			if (player->rsprung == 1 && (!(player->pflags & PF_JUMPDOWN)))
+			if (abs(player->rsprung) == 1 && (!(player->pflags & PF_JUMPDOWN)))
 			{
+				// Some lua mods need an extra tic to set their jumped flag, but I don't want to eat the player's inputs
+				// Just catch it for now, then automatically trick next tic if still eligible
+				if (player->mo->eflags & MFE_SPRUNG)
+				{
+					player->rsprung = -1;
+					player->pflags &= ~PF_JUMPDOWN;
+					return;
+				}
 				player->rsprung = 4;
 				P_TwinSpinRejuvenate(player, MT_SUPERSPARK);
 				P_SetMobjState(player->mo, S_PLAY_SPRING);
@@ -10106,9 +10114,9 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 	{
 		// Shift the camera slightly to the sides depending on the player facing direction
 		UINT8 forplayer = (thiscam == &camera) ? 0 : 1;
-		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), cv_cam_shiftangle[forplayer].value);
+		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), FRACUNIT>>2);
 
-		if (!player->cmd.forwardmove && !player->cmd.sidemove && focusangle == thiscam->lastangle)
+		if (!player->cmd.forwardmove && !player->cmd.sidemove && angle == thiscam->lastangle)
 		{
 			shift = thiscam->lastshift;
 		}
@@ -10130,7 +10138,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		}
 		shiftx = -FixedMul(FINESINE(angle>>ANGLETOFINESHIFT), shift);
 		shifty = FixedMul(FINECOSINE(angle>>ANGLETOFINESHIFT), shift);
-		thiscam->lastangle = focusangle;
+		thiscam->lastangle = angle;
 		thiscam->lastshift = shift;
 	}
 

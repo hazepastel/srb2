@@ -362,14 +362,6 @@ consvar_t cv_directionchar[2] = {
 
 // hi here's some new controls
 static CV_PossibleValue_t zerotoone_cons_t[] = {{0, "MIN"}, {FRACUNIT, "MAX"}, {0, NULL}};
-consvar_t cv_cam_shiftangle[2] = {
-	CVAR_INIT ("cam_shiftangle", "0.25", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
-	CVAR_INIT ("cam2_shiftangle", "0.25", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
-};
-consvar_t cv_cam_turntoability[2] = {
-	CVAR_INIT ("cam_turntoability", "0.125", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
-	CVAR_INIT ("cam2_turntoability", "0.125", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
-};
 consvar_t cv_cam_turntospindash[2] = {
 	CVAR_INIT ("cam_turntospindash", "0.439972", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
 	CVAR_INIT ("cam2_turntospindash", "0.439972", CV_FLOAT|CV_SAVE|CV_ALLOWLUA, zerotoone_cons_t, NULL),
@@ -1687,9 +1679,7 @@ void G_BuildTiccmd(ticcmd_t *cmd, INT32 realtics, UINT8 ssplayer)
 			fixed_t camadjustfactor = 0;
 			boolean alt = false; // Reduce intensity on diagonals and prevent backwards movement from turning the camera
 
-			if (player->pflags & PF_GLIDING)
-				camadjustfactor = cv_cam_turntoability[forplayer].value/4;
-			else if (player->pflags & PF_STARTDASH)
+			if (player->pflags & PF_STARTDASH)
 				camadjustfactor = cv_cam_turntospindash[forplayer].value/4;
 			else
 				alt = true;
