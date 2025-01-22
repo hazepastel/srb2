@@ -5366,7 +5366,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 
 	if (cmd->buttons & BT_JUMP && !player->exiting && !P_PlayerInPain(player))
 	{
-		if (player->powers[pw_springlock] && (!(player->pflags & PF_JUMPED)) && (!(player->charflags & SF_TRICKFORBIDDEN)))
+		if (player->powers[pw_springlock] && (!(player->pflags & (PF_JUMPED|PF_NOJUMPDAMAGE|PF_THOKKED|PF_SHIELDABILITY))) && (!(player->charflags & SF_TRICKFORBIDDEN)))
 		{
 			if (player->rsprung == 1 && (!(player->pflags & PF_JUMPDOWN)))
 			{
@@ -10108,7 +10108,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		UINT8 forplayer = (thiscam == &camera) ? 0 : 1;
 		fixed_t shift = FixedMul(FINESINE((player->mo->angle - angle) >> ANGLETOFINESHIFT), cv_cam_shiftangle[forplayer].value);
 
-		if (!player->cmd.forwardmove && !player->cmd.sidemove)
+		if (!player->cmd.forwardmove && !player->cmd.sidemove && focusangle == thiscam->lastangle)
 		{
 			shift = thiscam->lastshift;
 		}
@@ -10130,6 +10130,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		}
 		shiftx = -FixedMul(FINESINE(angle>>ANGLETOFINESHIFT), shift);
 		shifty = FixedMul(FINECOSINE(angle>>ANGLETOFINESHIFT), shift);
+		thiscam->lastangle = focusangle;
 		thiscam->lastshift = shift;
 	}
 
