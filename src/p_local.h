@@ -302,7 +302,7 @@ void P_SceneryThinker(mobj_t *mobj);
 
 // This does not need to be added to Lua.
 // To test it in Lua, check mobj.valid
-static inline boolean P_MobjWasRemoved(mobj_t *mobj)
+FORCEINLINE ATTRINLINE boolean P_MobjWasRemoved(mobj_t *mobj)
 {
 	return mobj == NULL || mobj->thinker.function.acp1 != (actionf_p1)P_MobjThinker;
 }
