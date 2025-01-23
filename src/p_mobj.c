@@ -11275,7 +11275,7 @@ void P_RemoveMobj(mobj_t *mobj)
 
 // This does not need to be added to Lua.
 // To test it in Lua, check mobj.valid
-boolean P_MobjWasRemoved(mobj_t *mobj)
+static inline boolean P_MobjWasRemoved(mobj_t *mobj)
 {
 	if (mobj && mobj->thinker.function.acp1 == (actionf_p1)P_MobjThinker)
 		return false;
