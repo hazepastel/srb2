@@ -1791,15 +1791,22 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			return;
 
 		case MT_CANARIVORE_GAS:
-			// if player and gas touch, attach gas to player (overriding any gas that already attached) and apply slowdown effect
+			// whirlwind shield ignores gas
+			if ((player->powers[pw_shield] & SH_NOSTACK) == SH_WHIRLWIND)
+			{
+				return;
+			}
+			// otherwise stick to them and drop their speed
 			special->flags |= MF_NOGRAVITY|MF_NOCLIPHEIGHT;
 			P_UnsetThingPosition(special);
 			special->x = toucher->x - toucher->momx/2;
 			special->y = toucher->y - toucher->momy/2;
 			special->z = toucher->z - toucher->momz/2;
 			P_SetThingPosition(special);
-			toucher->momx = FixedMul(toucher->momx, 50*FRACUNIT/51);
-			toucher->momy = FixedMul(toucher->momy, 50*FRACUNIT/51);
+			if (player->speed > FixedMul(player->normalspeed/6, toucher->scale))
+			{
+				P_Thrust(toucher, R_PointToAngle2(0, 0, toucher->momx, toucher->momy), FixedMul(-(FRACUNIT>>5), toucher->scale));
+			}
 			special->momx = toucher->momx;
 			special->momy = toucher->momy;
 			special->momz = toucher->momz;

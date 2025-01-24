@@ -13461,7 +13461,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		S_MINECART_DTH1,// deathstate
 		S_NULL,         // xdeathstate
 		sfx_s3k59,      // deathsound
-		20*FRACUNIT,    // speed
+		21*FRACUNIT,    // speed
 		22*FRACUNIT,    // radius
 		32*FRACUNIT,    // height
 		0,              // display offset

@@ -11017,7 +11017,9 @@ static void P_MinecartThink(player_t *player)
 	if (!minecart || P_MobjWasRemoved(minecart) || !minecart->health)
 	{
 		// Minecart died on you, so kill yourself.
-		P_KillMobj(player->mo, NULL, NULL, 0);
+		if (!(player->pflags & PF_GODMODE))
+			P_KillMobj(player->mo, NULL, NULL, 0);
+
 		return;
 	}
 
@@ -11142,8 +11144,6 @@ static void P_MinecartThink(player_t *player)
 			else if (detright && player->cmd.sidemove > 0)
 				sidelock = detright;
 
-			//if (player->cmd.buttons & BT_SPIN && currentSpeed > 4*FRACUNIT)
-			//	currentSpeed -= FRACUNIT/8;
 
 			// Jumping
 			if (sidelock || ((player->cmd.buttons & BT_JUMP) && !(player->pflags & PF_JUMPDOWN)))
@@ -11164,9 +11164,16 @@ static void P_MinecartThink(player_t *player)
 
 			if (!jumped)
 			{
-				// Natural acceleration and boosters
-				if (currentSpeed < minecart->info->speed)
-					currentSpeed += FRACUNIT/4;
+				// Natural acceleration, or artificial brake
+				if ((player->pflags & PF_SHIELDDOWN) && currentSpeed > player->mo->scale)
+				{
+					currentSpeed -= FRACUNIT>>1;
+					P_SpawnSkidDust(player, minecart->radius, true);
+				}
+				else if (currentSpeed < minecart->info->speed)
+				{
+					currentSpeed += FRACUNIT>>1;
+				}
 
 				if (minecart->standingslope)
 				{
