@@ -5383,17 +5383,6 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 				P_SetMobjState(player->mo, S_PLAY_SPRING);
 				S_StartSound(player->mo, sfx_s249);
 				player->pflags |= PF_FULLSTASIS;
-				if (player->skin == 0)
-				{
-					if (P_RandomChance(FRACUNIT>>1))
-						S_StartSound(player->mo, sfx_cdpcm4);
-					else
-						S_StartSound(player->mo, sfx_cdpcm5);
-				}
-				else if (player->skin == 3)
-				{
-					S_StartSound(player->mo, sfx_cdpcm6);
-				}
 			}
 			player->pflags |= PF_JUMPDOWN;
 			return;

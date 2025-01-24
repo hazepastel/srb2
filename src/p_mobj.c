@@ -1354,6 +1354,10 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 				if (flipz < 0)
 				{
 					gravityadd = 3*gravityadd/4;
+					if (!plyr->cmd.forwardmove && !plyr->cmd.sidemove)
+					{
+						plyr->drawangle = plyr->cmd.angleturn<<16;
+					}
 				}
 				else if (flipz > mo->scale)
 				{
