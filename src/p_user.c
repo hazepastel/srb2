@@ -4666,26 +4666,29 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 	{
 		if ((cmd->buttons & BT_SPIN) && (!(player->pflags & (PF_SPINDOWN|PF_JUMPED|PF_SPINNING|PF_THOKKED))) && (!(player->mo->eflags & MFE_SPRUNG)))
 		{
-			if (player->pflags & PF_ANALOGMODE)
+			if (player->flycmd == 3)
 			{
-				if (cmd->forwardmove || cmd->sidemove)
+				if (player->pflags & PF_ANALOGMODE)
 				{
-					player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+					if (cmd->forwardmove || cmd->sidemove)
+					{
+						player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+					}
+					else
+					{
+						player->drawangle = player->mo->angle = cmd->angleturn<<16;
+					}
 				}
 				else
 				{
-					player->drawangle = player->mo->angle = cmd->angleturn<<16;
-				}
-			}
-			else
-			{
-				if (cmd->forwardmove || cmd->sidemove)
-				{
-					player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
-				}
-				else
-				{
-					player->drawangle = cmd->angleturn<<16;
+					if (cmd->forwardmove || cmd->sidemove)
+					{
+						player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+					}
+					else
+					{
+						player->drawangle = cmd->angleturn<<16;
+					}
 				}
 			}
 			player->rsprung = 5;
@@ -5383,6 +5386,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 				P_SetMobjState(player->mo, S_PLAY_SPRING);
 				S_StartSound(player->mo, sfx_s249);
 				player->pflags |= PF_FULLSTASIS;
+				player->flycmd = 3;
 			}
 			player->pflags |= PF_JUMPDOWN;
 			return;
@@ -5426,26 +5430,29 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 		{
 			if (player->rsprung == 4)
 			{
-				if (player->pflags & PF_ANALOGMODE)
+				if (player->flycmd == 3)
 				{
-					if (cmd->forwardmove || cmd->sidemove)
+					if (player->pflags & PF_ANALOGMODE)
 					{
-						player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+						if (cmd->forwardmove || cmd->sidemove)
+						{
+							player->drawangle = player->mo->angle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+						}
+						else
+						{
+							player->drawangle = player->mo->angle = cmd->angleturn<<16;
+						}
 					}
 					else
 					{
-						player->drawangle = player->mo->angle = cmd->angleturn<<16;
-					}
-				}
-				else
-				{
-					if (cmd->forwardmove || cmd->sidemove)
-					{
-						player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
-					}
-					else
-					{
-						player->drawangle = cmd->angleturn<<16;
+						if (cmd->forwardmove || cmd->sidemove)
+						{
+							player->drawangle = R_PointToAngle2(0, 0, cmd->forwardmove<<16, -cmd->sidemove<<16) + (cmd->angleturn<<16);
+						}
+						else
+						{
+							player->drawangle = cmd->angleturn<<16;
+						}
 					}
 				}
 				player->pflags |= P_GetJumpFlags(player);

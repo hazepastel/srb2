@@ -3973,30 +3973,30 @@ void M_Init(void)
 	CV_RegisterVar(&cv_dummyloadless);
 	CV_RegisterVar(&cv_dummycutscenes);
 
-	quitmsg[QUITMSG] = M_GetText("Reveries Tip:\n\nBopping a badnik resets certain abilities, such as the Comet Dash and Lovely Ascent.\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG1] = M_GetText("Reveries Tip:\n\nSuper Peelout is an advanced, situational move. Spindashing is usually faster!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG2] = M_GetText("Reveries Tip:\n\nTails' flight timer is ticking when Tails' tails twirl at a tremendous tempo.\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG3] = M_GetText("Reveries Tip:\n\nHold spin while skidding to use the Quick Spindash technique! Well, you also need the ability to spindash in the first place.\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG4] = M_GetText("Reveries Tip:\n\nWhile traveling at a rate above your normal top speed, your momentum will degrade the longer you remain in the air. Rolling and certain character abilities bypass this air drag!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG5] = M_GetText("Reveries Tip:\n\nEnemy wielding a shield in you way?\nBreak through with powerful moves!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG6] = M_GetText("Reveries Tip:\n\nKeeping momentum as Knuckles can be tricky. Release jump the moment you glide into the ground to retain the most speed.\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG7] = M_GetText("Reveries Tip:\n\nSpeeding through close quarters? You can turn slightly sharper with Speed Shoes or the Super form.\n\n(Press 'Y' to quit)");
+	quitmsg[QUITMSG] = M_GetText("Reveries Tip:\n\nBopping a badnik while in a rolling jump state allows you to use your jump abilities again even if they've already been used.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUITMSG1] = M_GetText("Reveries Tip:\n\nSuper Peelout is an advanced, situational move. Build up enough speed and press Shield to instantly trick without needing a spring. Beware, spindashing is faster over short distances!\n\n(Press 'Y Key' to quit)");
+	quitmsg[QUITMSG2] = M_GetText("Reveries Tip:\n\nTails' flight timer is ticking when Tails' tails twirl at a tremendous tempo.\n\n(Press 'Y Key' to quit)");
+	quitmsg[QUITMSG3] = M_GetText("Reveries Tip:\n\nHold the Spin button while skidding to use the Quick Spindash technique! Well, you also need the ability to spindash in the first place.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUITMSG4] = M_GetText("Reveries Tip:\n\nWhile traveling at a rate above your normal top speed, your momentum will degrade the longer you remain in the air. Rolling and certain character abilities bypass this air drag!\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUITMSG5] = M_GetText("Reveries Tip:\n\nEnemy wielding a shield in you way?\nBreak through with powerful moves!\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUITMSG6] = M_GetText("Reveries Tip:\n\nKeeping momentum as Knuckles can be tricky. Release the Jump button the instant you glide into the ground to retain more speed.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUITMSG7] = M_GetText("Reveries Tip:\n\nHitting an enemy or monitor with the Quick Roll gives Metal Sonic extra speed and increases the duration of the roll.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
 
-	quitmsg[QUIT2MSG] = M_GetText("Reveries Tip:\n\nAmy's Hammer Spin is difficult to control, but ignores air drag. When activated, there is a short grace period before you begin falling faster. Tapping instead of holding the button will automatically cancel the move at the end of this period.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG1] = M_GetText("Reveries Tip:\n\nFang's bounce ignores air drag, and gains speed each time you consecutively land without canceling it.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG2] = M_GetText("Reveries Tip:\n\nSome abilities, such as shield abilities, restrict your ability to use more abilities. Other abilities, such as Fang's bounce, do not have the ability to disable abilities.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG3] = M_GetText("Reveries Tip:\n\nDash mode can't be lost while in the air, but can only be obtained while on the ground.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG4] = M_GetText("Reveries Tip:\n\nThe will of a Spring is difficult to resist.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG5] = M_GetText("Reveries Tip:\n\nSpin characters have the shared unique move Anti Flying Turtle Roll, accessible by pressing spin in the upwards launch state.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG6] = M_GetText("Reveries Tip:\n\nNonspin characters have the shared unique passive Spring Spark, allowing them to use their jump abilities after taking a spring.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT2MSG] = M_GetText("Reveries Tip:\n\nAmy's Hammer Spin is difficult to control, but ignores air drag. When activated, there is a short grace period before you begin falling faster. Tapping instead of holding the button will automatically cancel Hammer Spin at the end of this period.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG1] = M_GetText("Reveries Tip:\n\nFang's bounce ignores air drag, and gains speed each time you consecutively land without canceling it.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG2] = M_GetText("Reveries Tip:\n\nSome abilities, such as shield abilities, restrict your ability to use more abilities. Other abilities, such as Fang's bounce, do not have the ability to disable abilities.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG3] = M_GetText("Reveries Tip:\n\nDash mode can't be lost while in the air, but can only be obtained while on the ground.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG4] = M_GetText("Reveries Tip:\n\nThe will of a spring is difficult to resist.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG5] = M_GetText("Reveries Tip:\n\nCharacters that roll while jumping have access to the Anti Flying Turtle Roll by pressing Spin in the upwards launch state.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT2MSG6] = M_GetText("Reveries Tip:\n\nMost characters can perform a trick by pressing Jump the instant you hit a spring. Tricking enables your Jump+Jump ability and the Super Turtle Roll.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
 
-	quitmsg[QUIT3MSG] = M_GetText("Reveries Tip:\n\nDid you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG1] = M_GetText("Eggeries Tip:\n\nOBEY EGGMAN\n\n(Press 'OBEY' to quit)");
-	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment and some spikes.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nBreak the rain so in silence reigns the horse of flames.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG4] = M_GetText("Reveries Tip:\n\nReveries is an anagram.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG5] = M_GetText("Reveries Tip:\n\nThe SRB2 Source Code is a bottomless tome of forbidden knowledge.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG6] = M_GetText("Reveries Tip:\n\nAvoid getting oilers in your boilers. Failure to comply may result in a quicksilver pinball.\n\n(Press 'Y' to quit)");
+	quitmsg[QUIT3MSG] = M_GetText("Reveries Tip:\n\nDid you get all those Chaos Emeralds?\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT3MSG1] = M_GetText("Eggeries Tip:\n\nOBEY EGGMAN\n\n(Type 'OBEY' or press 'Confirm Loyalty Button' to quit)");
+	quitmsg[QUIT3MSG2] = M_GetText("Reveries Tip:\n\nThe fourth path of Castle Eggman Act 2 holds the key of enlightenment and some spikes.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT3MSG3] = M_GetText("Reveries Tip:\n\nDuring an Elemental Rise, press Shield a second time to stop and detonate early.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT3MSG4] = M_GetText("Reveries Tip:\n\nReveries is an anagram.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT3MSG5] = M_GetText("Reveries Tip:\n\nForce Stasis restores your speed when it ends, but not your vertical momentum. You may also press Jump to redirect your stored speed downwards.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
+	quitmsg[QUIT3MSG6] = M_GetText("Reveries Tip:\n\nAvoid getting oilers in your boilers. Failure to comply may result in a quicksilver pinball.\n\n(Press 'Y Key' or 'Confirm Button' to quit)");
 
 	/*
 	Well the menu sucks for forcing us to have an item set
