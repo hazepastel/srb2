@@ -11164,13 +11164,7 @@ static void P_MinecartThink(player_t *player)
 
 			if (!jumped)
 			{
-				// Natural acceleration, or artificial brake
-				if ((player->pflags & PF_SHIELDDOWN) && currentSpeed > player->mo->scale)
-				{
-					currentSpeed -= FRACUNIT>>1;
-					P_SpawnSkidDust(player, minecart->radius, true);
-				}
-				else if (currentSpeed < minecart->info->speed)
+				if (currentSpeed < minecart->info->speed)
 				{
 					currentSpeed += FRACUNIT>>1;
 				}
