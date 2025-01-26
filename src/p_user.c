@@ -11519,7 +11519,7 @@ void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 	statenum_t stat = fume->state-states;
 	boolean resetinterp = false;
 
-	if (panim != PA_WALK && panim != PA_RUN && panim != PA_DASH) // turn invisible when not in a coherent movement state
+	if (player->skidtime || (panim != PA_WALK && panim != PA_RUN && panim != PA_DASH)) // turn invisible when not in a coherent movement state
 	{
 		if (stat != fume->info->spawnstate)
 			P_SetMobjState(fume, fume->info->spawnstate);
