@@ -11540,9 +11540,6 @@ void P_DoMetalJetFume(player_t *player, mobj_t *fume)
 		return;
 	}
 
-	if (player->skidtime) // Rotate during metal sonic's new skid animation
-		angle += ANGLE_90;
-
 	if (underwater) // No fume underwater; spawn bubbles instead!
 	{
 		fume->movedir	+= FixedAngle(FixedDiv(2 * player->speed, 3 * mo->scale));
