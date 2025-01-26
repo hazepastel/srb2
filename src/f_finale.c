@@ -1126,13 +1126,13 @@ static const char *credits[] = {
 	"Alice \"Alacroix\" de Lemos",
 	"Logan \"Hyperchaotix\" McCloud",
 	"Alexander \"DrTapeworm\" Moench-Ford",
+    "\"orbitalviolet\"", // summit showdown hehehehe (aka Evertone)
 	"Andrew \"Senku Niola\" Moran",
 	"\"MotorRoach\"",
 	"\"Princess Plushima\"", // flowbubble
 	"\"Revolution\"", // HUD tweaks
 	"Phillip \"TelosTurntable\" Robinson",
 	"\"Scizor300\"",
-	"\"Skydusk\"",
 	"Wessel \"sphere\" Smit",
 	"\"SonicX8000\"", // title card and fonts
 	"David \"Instant Sonic\" Spencer Jr.",
@@ -1181,11 +1181,9 @@ static const char *credits[] = {
 	"Mujamel \"MK\" Khan",
 	"\"Kaito Sinclaire\"",
 	"Alexander \"DrTapeworm\" Moench-Ford",
-	"\"orbitalviolet\"", // summit showdown hehehehe (aka Evertone)
 	"\"Radicalicious\"",
 	"\"Revan\"",
 	"Anna \"QueenDelta\" Sandlin",
-	"\"Skydusk\"",
 	"Wessel \"sphere\" Smit",
 	"\"SSNTails\"",
 	"Aaron \"Othius\" Stojkov",
