@@ -3456,6 +3456,12 @@ static void P_SuperDamage(player_t *player, mobj_t *inflictor, mobj_t *source, I
 
 void P_RemoveShield(player_t *player)
 {
+	if ((player->powers[pw_shield] & SH_STACK) == SH_NUKECHARGE) // Give them what's coming to them!
+	{
+		P_BlackOw(player); // BAM!
+		player->pflags |= PF_JUMPDOWN;
+	}
+
 	if (player->powers[pw_shield] & SH_FORCE)
 	{ // Multi-hit
 		if (player->powers[pw_shield] & SH_FORCEHP)
@@ -3465,13 +3471,7 @@ void P_RemoveShield(player_t *player)
 	}
 	else if (player->powers[pw_shield] & SH_NOSTACK)
 	{ // First layer shields
-		if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ARMAGEDDON) // Give them what's coming to them!
-		{
-			P_BlackOw(player); // BAM!
-			player->pflags |= PF_JUMPDOWN;
-		}
-		else
-			player->powers[pw_shield] &= SH_STACK;
+		player->powers[pw_shield] &= SH_STACK;
 	}
 	else
 	{ // Second layer shields

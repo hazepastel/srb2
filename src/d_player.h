@@ -203,7 +203,7 @@ typedef enum
 	SH_PROTECTWATER = 0x800,
 	SH_PROTECTELECTRIC = 0x1000,
 	SH_PROTECTSPIKE = 0x2000, // cactus shield one day? thanks, subarashii
-	//SH_PROTECTNUKE = 0x4000, // intentionally no hardcoded defense against nukes
+	SH_NUKECHARGE = 0x4000,
 
 	// Indivisible shields
 	SH_PITY = 1, // the world's most basic shield ever, given to players who suck at Match
@@ -227,7 +227,7 @@ typedef enum
 	// Mostly for use with Mario mode.
 	SH_FIREFLOWER = 0x200,
 
-	SH_STACK = SH_FIREFLOWER, // second-layer shields
+	SH_STACK = SH_FIREFLOWER|SH_NUKECHARGE, // second-layer shields
 	SH_NOSTACK = ~SH_STACK
 } shieldtype_t; // pw_shield
 

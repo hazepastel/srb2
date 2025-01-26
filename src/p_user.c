@@ -1902,6 +1902,7 @@ void P_SpawnShieldOrb(player_t *player)
 		return;
 
 	shieldobj->flags2 |= MF2_SHIELD;
+
 	P_SetTarget(&shieldobj->target, player->mo);
 	P_SetTarget(&shieldobj->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_PINK)
@@ -1956,6 +1957,23 @@ void P_SpawnShieldOrb(player_t *player)
 				shieldobj->flags2 |= MF2_SHADOW;
 		}
 	}
+	if ((player->powers[pw_shield] & SH_STACK) == SH_NUKECHARGE)
+	{
+		ov = P_SpawnMobj(shieldobj->x, shieldobj->y, shieldobj->z, MT_OVERLAY);
+		if (!P_MobjWasRemoved(ov))
+		{
+			P_SetTarget(&ov->target, shieldobj);
+		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetMobjState(ov, S_ARMF1);
+		}
+		ov = P_SpawnMobj(shieldobj->x, shieldobj->y, shieldobj->z, MT_OVERLAY);
+		if (!P_MobjWasRemoved(ov))
+		{
+			P_SetTarget(&ov->target, shieldobj);
+		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetMobjState(ov, S_ARMB1);
+		}
+	}
 }
 
 //
@@ -1970,8 +1988,16 @@ void P_SwitchShield(player_t *player, UINT16 shieldtype)
 	boolean donthavealready;
 
 	// If you already have a bomb shield, use it!
-	if ((shieldtype == SH_ARMAGEDDON) && (player->powers[pw_shield] & SH_NOSTACK) == SH_ARMAGEDDON)
-		P_BlackOw(player);
+	if (shieldtype == SH_ARMAGEDDON)
+	{
+		shieldtype = SH_NUKECHARGE;
+		if ((player->powers[pw_shield] & SH_STACK) == shieldtype)
+			P_BlackOw(player);
+
+		player->powers[pw_shield] = (player->powers[pw_shield] & SH_NOSTACK)|shieldtype;
+		P_SpawnShieldOrb(player);
+		return;
+	}
 
 	donthavealready = (shieldtype & SH_FORCE)
 		? (!(player->powers[pw_shield] & SH_FORCE) || (player->powers[pw_shield] & SH_FORCEHP) < (shieldtype & ~SH_FORCE))
@@ -4189,7 +4215,7 @@ static void P_DoFiring(player_t *player, ticcmd_t *cmd)
 		if (mo)
 			P_InstaThrust(mo, player->mo->angle, ((mo->info->speed>>FRACBITS)*player->mo->scale) + player->speed);
 		S_StartSound(player->mo, sfx_mario7);
-		P_SetWeaponDelay(player, TICRATE); // Short delay between fireballs so you can't spam them everywhere
+		P_SetWeaponDelay(player, TICRATE>>1); // Short delay between fireballs so you can't spam them everywhere
 		return;
 	}
 
@@ -5967,7 +5993,7 @@ static void P_2dMovement(player_t *player)
 	topspeed = normalspd; //set normal top speed
 
 	if (player->fly1)
-		topspeed = FixedMul(topspeed, 3*FRACUNIT/4);
+		topspeed = FixedMul(topspeed, 11*FRACUNIT/16);
 
 	if (player->climbing)
 	{
@@ -6118,7 +6144,7 @@ static void P_3dMovement(player_t *player)
 	topspeed = normalspd; //set normal top speed
 
 	if (player->fly1)
-		topspeed = FixedMul(topspeed, 3*FRACUNIT/4);
+		topspeed = FixedMul(topspeed, 11*FRACUNIT/16);
 
 	if (spin) // Prevent gaining speed whilst rolling!
 		topspeed = oldMagnitude;
@@ -7870,11 +7896,12 @@ void P_BlackOw(player_t *player)
 
 	for (i = 0; i < MAXPLAYERS; i++)
 		if (playeringame[i] && R_PointToDist2(0, 0, player->mo->x - players[i].mo->x,
-			player->mo->y - players[i].mo->y) < 1536*FRACUNIT)
+			player->mo->y - players[i].mo->y) < 3000<<FRACBITS)
 			P_FlashPal(&players[i], PAL_NUKE, 10);
 
-	P_NukeEnemies(player->mo, player->mo, 1536*FRACUNIT); // Search for all nearby enemies and nuke their pants off!
-	player->powers[pw_shield] = player->powers[pw_shield] & SH_STACK;
+	P_NukeEnemies(player->mo, player->mo, 3000<<FRACBITS); // Search for all nearby enemies and nuke their pants off!
+	player->powers[pw_shield] = player->powers[pw_shield] & SH_NOSTACK;
+	P_SpawnShieldOrb(player);
 }
 
 void P_ElementalFire(player_t *player, boolean cropcircle)
@@ -8600,7 +8627,7 @@ void P_MovePlayer(player_t *player)
 			}
 			if (player->fly1)
 			{
-				fixed_t flyspd = FixedMul(player->normalspeed, 3*FRACUNIT/4);
+				fixed_t flyspd = FixedMul(player->normalspeed, 11*FRACUNIT/16);
 				fixed_t flycap = 6<<FRACBITS;
 
 				P_SetMobjState(player->mo, player->mo->state->nextstate);
@@ -9149,9 +9176,16 @@ void P_NukeEnemies(mobj_t *inflictor, mobj_t *source, fixed_t radius)
 		}
 
 		if (mo->flags & MF_BOSS || mo->type == MT_PLAYER) //don't OHKO bosses nor players!
+		{
 			P_DamageMobj(mo, inflictor, source, 1, DMG_NUKE);
+		}
 		else
+		{
+			mobj_t *quicksilver = P_SpawnMobjFromMobj(mo, 0, 0, mo->height>>1, MT_RING);
+			quicksilver->color = SKINCOLOR_CLOUDY;
+			quicksilver->colorized = true;
 			P_DamageMobj(mo, inflictor, source, 1000, DMG_NUKE);
+		}
 	}
 }
 

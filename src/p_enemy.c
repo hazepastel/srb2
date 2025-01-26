@@ -564,18 +564,26 @@ static boolean P_LookForShield(mobj_t *actor)
 		if ((player->powers[pw_shield] & SH_PROTECTELECTRIC)
 			&& (R_PointToDist2(0, 0, R_PointToDist2(0, 0, actor->x-player->mo->x, actor->y-player->mo->y), actor->z-player->mo->z) < FixedMul(RING_DIST, player->mo->scale)))
 		{
-			P_SetTarget(&actor->tracer, player->mo);
-
-			if (actor->hnext)
-				P_SetTarget(&actor->hnext->hprev, actor->hprev);
-			if (actor->hprev)
-				P_SetTarget(&actor->hprev->hnext, actor->hnext);
-
-			return true;
+			goto ringattract;
 		}
-	}
+		else if ((actor->color == SKINCOLOR_CLOUDY)
+			&& (R_PointToDist2(0, 0, R_PointToDist2(0, 0, actor->x-player->mo->x, actor->y-player->mo->y), actor->z-player->mo->z) < FixedMul(RING_DIST>>1, player->mo->scale)))
+		{
+			goto ringattract;
+		}
 
-	//return false;
+		return false;
+
+ringattract:
+		P_SetTarget(&actor->tracer, player->mo);
+
+		if (actor->hnext)
+			P_SetTarget(&actor->hnext->hprev, actor->hprev);
+		if (actor->hprev)
+			P_SetTarget(&actor->hprev->hnext, actor->hnext);
+
+		return true;
+	}
 }
 
 #ifdef WEIGHTEDRECYCLER
@@ -4596,22 +4604,6 @@ void A_AttractChase(mobj_t *actor)
 	else
 		actor->flags2 &= ~MF2_DONTDRAW;
 
-	// Turn rings into flingrings if shield is lost or out of range
-	if (actor->tracer && actor->tracer->player
-		&& !(actor->tracer->player->powers[pw_shield] & SH_PROTECTELECTRIC) && actor->info->reactiontime && actor->type != (mobjtype_t)actor->info->reactiontime)
-	{
-		mobj_t *newring;
-		newring = P_SpawnMobj(actor->x, actor->y, actor->z, actor->info->reactiontime);
-		if (!P_MobjWasRemoved(newring))
-		{
-			newring->momx = actor->momx;
-			newring->momy = actor->momy;
-			newring->momz = actor->momz;
-		}
-		P_RemoveMobj(actor);
-		return;
-	}
-
 	P_LookForShield(actor); // Go find 'em, boy!
 
 	if (!actor->tracer
@@ -4626,13 +4618,13 @@ void A_AttractChase(mobj_t *actor)
 	}
 
 	// If a FlingRing gets attracted by a shield, change it into a normal ring.
-	if (actor->type == (mobjtype_t)actor->info->reactiontime)
-	{
-		actor->type = mobjinfo[actor->type].painchance; // Become the regular version of the fling object.
-		actor->flags = mobjinfo[actor->type].flags;		// Reset actor flags.
-		P_SetMobjState(actor, actor->info->spawnstate); // Go to regular object's spawn state.
-		return;
-	}
+	//if (actor->type == (mobjtype_t)actor->info->reactiontime)
+	//{
+		//actor->type = mobjinfo[actor->type].painchance; // Become the regular version of the fling object.
+		//actor->flags = mobjinfo[actor->type].flags;		// Reset actor flags.
+		//P_SetMobjState(actor, actor->info->spawnstate); // Go to regular object's spawn state.
+		//return;
+	//}
 
 	// Keep stuff from going down inside floors and junk
 	actor->flags &= ~MF_NOCLIPHEIGHT;

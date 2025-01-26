@@ -1351,18 +1351,21 @@ fixed_t P_GetMobjGravity(mobj_t *mo)
 			}
 			else if (plyr->rsprung == 4 && !plyr->powers[pw_springlock])
 			{
-				if (flipz < 0)
+				if (plyr->flycmd == 3)
+				{
+					if (plyr->panim == PA_SPRING && flipz > mo->scale)
+					{
+						plyr->drawangle = plyr->prevdrangle+(ANG1<<3);
+					}
+					else
+					{
+						plyr->flycmd = 4;
+						plyr->drawangle = plyr->cmd.angleturn<<16;
+					}
+				}
+				else if (flipz < 0)
 				{
 					gravityadd = 3*gravityadd/4;
-				}
-				else if (flipz > mo->scale)
-				{
-					plyr->drawangle = plyr->prevdrangle+(ANG1<<3);
-				}
-				else if (plyr->flycmd == 3)
-				{
-					plyr->flycmd = 4;
-					plyr->drawangle = plyr->cmd.angleturn<<16;
 				}
 			}
 			plyr->prevdrangle = plyr->drawangle;
