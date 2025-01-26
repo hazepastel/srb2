@@ -1902,7 +1902,6 @@ void P_SpawnShieldOrb(player_t *player)
 		return;
 
 	shieldobj->flags2 |= MF2_SHIELD;
-
 	P_SetTarget(&shieldobj->target, player->mo);
 	P_SetTarget(&shieldobj->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_PINK)
@@ -1931,7 +1930,7 @@ void P_SpawnShieldOrb(player_t *player)
 		if (!P_MobjWasRemoved(ov))
 		{
 			P_SetTarget(&ov->target, shieldobj);
-		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, shieldobj->info->meleestate);
 		}
 	}
@@ -1941,7 +1940,7 @@ void P_SpawnShieldOrb(player_t *player)
 		if (!P_MobjWasRemoved(ov))
 		{
 			P_SetTarget(&ov->target, shieldobj);
-		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, shieldobj->info->missilestate);
 		}
 	}
@@ -1963,15 +1962,19 @@ void P_SpawnShieldOrb(player_t *player)
 		if (!P_MobjWasRemoved(ov))
 		{
 			P_SetTarget(&ov->target, shieldobj);
-		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, S_ARMF1);
+			ov->color = SKINCOLOR_RED;
+			ov->colorized = true;
 		}
 		ov = P_SpawnMobj(shieldobj->x, shieldobj->y, shieldobj->z, MT_OVERLAY);
 		if (!P_MobjWasRemoved(ov))
 		{
 			P_SetTarget(&ov->target, shieldobj);
-		P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
+			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, S_ARMB1);
+			ov->color = SKINCOLOR_RED;
+			ov->colorized = true;
 		}
 	}
 }
@@ -1992,7 +1995,14 @@ void P_SwitchShield(player_t *player, UINT16 shieldtype)
 	{
 		shieldtype = SH_NUKECHARGE;
 		if ((player->powers[pw_shield] & SH_STACK) == shieldtype)
+		{
 			P_BlackOw(player);
+		}
+		else if (((player->powers[pw_shield] & SH_STACK) == SH_FIREFLOWER) && !(player->powers[pw_super] || (mariomode && player->powers[pw_invulnerability])))
+		{
+			player->mo->color = P_GetPlayerColor(player);
+			G_GhostAddColor(GHC_NORMAL);
+		}
 
 		player->powers[pw_shield] = (player->powers[pw_shield] & SH_NOSTACK)|shieldtype;
 		P_SpawnShieldOrb(player);

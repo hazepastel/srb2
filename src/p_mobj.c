@@ -3167,10 +3167,12 @@ void P_MobjCheckWater(mobj_t *mobj)
 			boolean electric = !!(p->powers[pw_shield] & SH_PROTECTELECTRIC);
 			if (electric || ((p->powers[pw_shield] & SH_PROTECTFIRE) && !(p->powers[pw_shield] & SH_PROTECTWATER) && !(mobj->eflags & MFE_TOUCHLAVA)))
 			{ // Water removes electric and non-water fire shields...
-			    if (electric)
-				    P_FlashPal(p, PAL_WHITE, 1);
-
+				if (electric)
+				{
+					P_FlashPal(p, PAL_WHITE, 1);
+				}
 				p->powers[pw_shield] = p->powers[pw_shield] & SH_STACK;
+				P_SpawnShieldOrb(p);
 			}
 		}
 
@@ -6302,7 +6304,7 @@ void P_Attract(mobj_t *source, mobj_t *dest, boolean nightsgrab) // Home in on y
 	fixed_t tz = dest->z + (dest->height/2); // Aim for center
 	fixed_t xydist = P_AproxDistance(tx - source->x, ty - source->y);
 
-	if (!dest || dest->health <= 0 || !dest->player || !source->tracer)
+	if (!dest || dest->health <= 0 || !dest->player || !source->tracer || P_PlayerInPain(dest->player))
 		return;
 
 	// change angle

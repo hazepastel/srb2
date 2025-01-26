@@ -113,7 +113,7 @@ boolean P_CanPickupItem(player_t *player, boolean weapon)
 		return P_CanPickupItem(&players[consoleplayer], true); // weapon is true to prevent infinite recursion if p1 is bot - doesn't occur in vanilla, but may be relevant for mods
 	}
 
-	if (player->powers[pw_flashing] > (flashingtics/4)*3 && player->powers[pw_flashing] < UINT16_MAX)
+	if (P_PlayerInPain(player))
 		return false;
 
 	return true;
@@ -1521,6 +1521,8 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				player->mo->color = SKINCOLOR_WHITE;
 				G_GhostAddColor(GHC_FIREFLOWER);
 			}
+
+			P_SpawnShieldOrb(player);
 
 			break;
 

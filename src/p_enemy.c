@@ -4617,15 +4617,6 @@ void A_AttractChase(mobj_t *actor)
 		return;
 	}
 
-	// If a FlingRing gets attracted by a shield, change it into a normal ring.
-	//if (actor->type == (mobjtype_t)actor->info->reactiontime)
-	//{
-		//actor->type = mobjinfo[actor->type].painchance; // Become the regular version of the fling object.
-		//actor->flags = mobjinfo[actor->type].flags;		// Reset actor flags.
-		//P_SetMobjState(actor, actor->info->spawnstate); // Go to regular object's spawn state.
-		//return;
-	//}
-
 	// Keep stuff from going down inside floors and junk
 	actor->flags &= ~MF_NOCLIPHEIGHT;
 
