@@ -430,9 +430,6 @@ static void SetSkin(player_t *player, INT32 skinnum)
 	player->revitem = skin->revitem < 0 ? (mobjtype_t)mobjinfo[MT_PLAYER].raisestate : (UINT32)skin->revitem;
 	player->followitem = skin->followitem;
 
-	if (((player->powers[pw_shield] & SH_NOSTACK) == SH_PINK) && (player->revitem == MT_LHRT || player->spinitem == MT_LHRT || player->thokitem == MT_LHRT)) // Healers can't keep their buff.
-		player->powers[pw_shield] &= SH_STACK;
-
 	player->actionspd = skin->actionspd;
 	player->mindash = skin->mindash;
 	player->maxdash = (skin->maxdash)-(5<<FRACBITS);

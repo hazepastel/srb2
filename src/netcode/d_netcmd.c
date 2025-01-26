@@ -356,8 +356,8 @@ consvar_t cv_rollingdemos = CVAR_INIT ("rollingdemos", "On", CV_SAVE, CV_OnOff, 
 static CV_PossibleValue_t timetic_cons_t[] = {{0, "Classic"}, {1, "Centiseconds"}, {2, "Mania"}, {3, "Tics"}, {0, NULL}};
 consvar_t cv_timetic = CVAR_INIT ("timerres", "Centiseconds", CV_SAVE, timetic_cons_t, NULL);
 
-static CV_PossibleValue_t powerupdisplay_cons_t[] = {{0, "Never"}, {1, "First-person only"}, {2, "Always"}, {0, NULL}};
-consvar_t cv_powerupdisplay = CVAR_INIT ("powerupdisplay", "First-person only", CV_SAVE, powerupdisplay_cons_t, NULL);
+static CV_PossibleValue_t powerupdisplay_cons_t[] = {{0, "Never"}, {1, "First person only"}, {2, "Always"}, {0, NULL}};
+consvar_t cv_powerupdisplay = CVAR_INIT ("powerupdisplay", "Always", CV_SAVE, powerupdisplay_cons_t, NULL);
 
 static CV_PossibleValue_t pointlimit_cons_t[] = {{1, "MIN"}, {MAXSCORE, "MAX"}, {0, "None"}, {0, NULL}};
 consvar_t cv_pointlimit = CVAR_INIT ("pointlimit", "None", CV_SAVE|CV_NETVAR|CV_CALL|CV_NOINIT|CV_ALLOWLUA, pointlimit_cons_t, PointLimit_OnChange);

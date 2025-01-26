@@ -1546,13 +1546,14 @@ static void ST_drawPowerupHUD(void)
 		{
 			switch (stplyr->powers[pw_shield] & SH_NOSTACK)
 			{
+				case 62:             p = pinkshield;    break;
 				case SH_WHIRLWIND:   p = jumpshield;    break;
 				case SH_ELEMENTAL:   p = watershield;   break;
-				case SH_ARMAGEDDON:  p = bombshield;    break;
 				case SH_ATTRACT:     p = ringshield;    break;
 				case SH_FORCE:       p = forceshield;   break;
-				case SH_PITY:        p = pityshield;    break;
+				case SH_PITY:        p = pinkshield;    break;
 				case SH_PINK:        p = pinkshield;    break;
+				case SH_ARMAGEDDON|SH_PROTECTSPIKE: p = pityshield; break;
 				case SH_FLAMEAURA:   p = flameshield;   break;
 				case SH_BUBBLEWRAP:  p = bubbleshield;  break;
 				case SH_THUNDERCOIN: p = thundershield; break;
@@ -1573,11 +1574,14 @@ static void ST_drawPowerupHUD(void)
 
 	offs -= shieldoffs[q];
 
-	//Fire Flower "shield"
-	if ((stplyr->powers[pw_shield] & SH_FIREFLOWER) == SH_FIREFLOWER)
+	// stackable shields
+	if (stplyr->powers[pw_shield] & SH_STACK)
 	{
 		stackoffs[q] = ICONSEP;
-		V_DrawSmallScaledPatch(offs, hudinfo[HUD_POWERUPS].y, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS, fireflower);
+		if ((stplyr->powers[pw_shield] & SH_STACK) == SH_NUKECHARGE)
+			V_DrawSmallScaledPatch(offs, hudinfo[HUD_POWERUPS].y, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS, bombshield);
+		else
+			V_DrawSmallScaledPatch(offs, hudinfo[HUD_POWERUPS].y, V_PERPLAYER|hudinfo[HUD_POWERUPS].f|V_HUDTRANS, fireflower);
 	}
 	else if (stackoffs[q])
 	{
@@ -1619,7 +1623,7 @@ static void ST_drawPowerupHUD(void)
 	V_DrawRightAlignedThinString(offs + 16, hudinfo[HUD_POWERUPS].y + 8, V_PERPLAYER|hudinfo[HUD_POWERUPS].f, va("%d", timer/TICRATE));
 
 	// Invincibility, both from monitor and after being hit
-	invulntime = stplyr->powers[pw_flashing] ? stplyr->powers[pw_flashing] : stplyr->powers[pw_invulnerability];
+	invulntime = (!camera.chase && stplyr->powers[pw_flashing]) ? stplyr->powers[pw_flashing] : stplyr->powers[pw_invulnerability];
 	// Note: pw_flashing always makes the icon flicker regardless of time, unlike pw_invulnerability
 	if (stplyr->powers[pw_invulnerability] > 3*TICRATE || (invulntime && leveltime & 1))
 	{

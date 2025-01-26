@@ -1868,8 +1868,7 @@ void P_SpawnShieldOrb(player_t *player)
 	case SH_ARMAGEDDON:
 		orbtype = MT_ARMAGEDDON_ORB;
 		break;
-	case SH_PITY:
-	case SH_PINK: // PITY IN PINK
+	case SH_PINK:
 		orbtype = MT_PITY_ORB;
 		break;
 	case SH_FLAMEAURA:
@@ -1906,7 +1905,7 @@ void P_SpawnShieldOrb(player_t *player)
 	P_SetTarget(&shieldobj->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_PINK)
 	{
-		shieldobj->color = SKINCOLOR_PINK;
+		shieldobj->color = SKINCOLOR_ROSY;
 		shieldobj->colorized = true;
 	}
 	else
@@ -1964,8 +1963,6 @@ void P_SpawnShieldOrb(player_t *player)
 			P_SetTarget(&ov->target, shieldobj);
 			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, S_ARMF1);
-			ov->color = SKINCOLOR_RED;
-			ov->colorized = true;
 		}
 		ov = P_SpawnMobj(shieldobj->x, shieldobj->y, shieldobj->z, MT_OVERLAY);
 		if (!P_MobjWasRemoved(ov))
@@ -1973,8 +1970,6 @@ void P_SpawnShieldOrb(player_t *player)
 			P_SetTarget(&ov->target, shieldobj);
 			P_SetTarget(&ov->dontdrawforviewmobj, player->mo); // Hide the shield in first-person
 			P_SetMobjState(ov, S_ARMB1);
-			ov->color = SKINCOLOR_RED;
-			ov->colorized = true;
 		}
 	}
 }
