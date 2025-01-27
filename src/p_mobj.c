@@ -323,8 +323,8 @@ static boolean P_SetPlayerMobjState(mobj_t *mobj, statenum_t state)
 		mobj->tics = st->tics;
 
 		// Adjust the player's animation speed
-		if (mobj->state-states == S_PLAY_WAIT && (player->charflags & SF_FASTWAIT))
-			mobj->tics = 5;
+		if (state == S_PLAY_WAIT && (player->charflags & SF_FASTWAIT))
+			mobj->tics = 6;
 		else if (player->panim == PA_EDGE && (player->charflags & SF_FASTEDGE))
 			mobj->tics = 2;
 		else if (!(disableSpeedAdjust || player->charflags & SF_NOSPEEDADJUST))

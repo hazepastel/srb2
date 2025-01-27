@@ -566,7 +566,7 @@ static boolean P_LookForShield(mobj_t *actor)
 		{
 			goto ringattract;
 		}
-		else if ((actor->color == SKINCOLOR_CLOUDY)
+		else if ((actor->color == SKINCOLOR_SLATE)
 			&& (R_PointToDist2(0, 0, R_PointToDist2(0, 0, actor->x-player->mo->x, actor->y-player->mo->y), actor->z-player->mo->z) < FixedMul(RING_DIST>>1, player->mo->scale)))
 		{
 			goto ringattract;

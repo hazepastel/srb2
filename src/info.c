@@ -691,7 +691,7 @@ playersprite_t spr2defaults[NUMPLAYERSPRITES] = {
 
 	0, // SPR2_MSC0,
 	0, // SPR2_MSC1,
-	0, // SPR2_MSC2,
+	SPR2_SKID, // SPR2_MSC2,
 	0, // SPR2_MSC3,
 	0, // SPR2_MSC4,
 	0, // SPR2_MSC5,

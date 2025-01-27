@@ -9156,41 +9156,40 @@ void P_NukeEnemies(mobj_t *inflictor, mobj_t *source, fixed_t radius)
 
 		mo = (mobj_t *)think;
 
-		if (!(mo->flags & MF_SHOOTABLE) && !(mo->type == MT_EGGGUARD || mo->type == MT_MINUS))
+		boolean isring = (mo->type == MT_RING);
+
+		if (!isring && !(mo->flags & (MF_SHOOTABLE|MF_ENEMY|MF_BOSS)))
 			continue;
 
 		if (mo->flags & MF_MONITOR)
-			continue; // Monitors cannot be 'nuked'.
-
-		if (!G_RingSlingerGametype() && mo->type == MT_PLAYER)
-			continue; // Don't hurt players in Co-Op!
-
-		if (abs(inflictor->x - mo->x) > radius || abs(inflictor->y - mo->y) > radius || abs(inflictor->z - mo->z) > radius)
-			continue; // Workaround for possible integer overflow in the below -Red
-
-		if (R_PointToDist2(0, 0, R_PointToDist2(0, 0, inflictor->x - mo->x, inflictor->y - mo->y), inflictor->z - mo->z) > radius)
 			continue;
 
-		if (mo->type == MT_MINUS && !(mo->flags & (MF_SPECIAL|MF_SHOOTABLE)))
-			mo->flags = (mo->flags & ~MF_NOCLIPTHING)|MF_SPECIAL|MF_SHOOTABLE;
+		if (!G_RingSlingerGametype() && mo->player)
+			continue; // Don't hurt players in Co-Op!
 
-		if (mo->type == MT_EGGGUARD && mo->tracer) // Egg Guard's shield needs to be removed if it has one!
+		if (R_PointToDist2(inflictor->x, inflictor->y, mo->x, mo->y) > radius)
+			continue;
+
+		if (source->player)
+			P_AddPlayerScore(source->player, 1); // +1 score for all qualifying mobjs
+
+		if (isring)
 		{
-			P_KillMobj(mo->tracer, inflictor, source, DMG_NUKE);
-			P_KillMobj(mo, inflictor, source, DMG_NUKE);
+			mo->color = SKINCOLOR_SLATE;
+			mo->colorized = true;
+			continue;
 		}
 
-		if (mo->flags & MF_BOSS || mo->type == MT_PLAYER) //don't OHKO bosses nor players!
+		if ((mo->flags & MF_BOSS) || mo->player) //don't OHKO bosses nor players!
 		{
-			P_DamageMobj(mo, inflictor, source, 1, DMG_NUKE);
+			P_DamageMobj(mo, inflictor, source, 3, DMG_NUKE);
+			continue;
 		}
-		else
-		{
-			mobj_t *quicksilver = P_SpawnMobjFromMobj(mo, 0, 0, mo->height>>1, MT_RING);
-			quicksilver->color = SKINCOLOR_CLOUDY;
-			quicksilver->colorized = true;
-			P_DamageMobj(mo, inflictor, source, 1000, DMG_NUKE);
-		}
+
+		mobj_t *quicksilver = P_SpawnMobjFromMobj(mo, 0, 0, mo->height>>1, MT_RING);
+		quicksilver->color = SKINCOLOR_SLATE;
+		quicksilver->colorized = true;
+		P_KillMobj(mo, inflictor, source, DMG_NUKE);
 	}
 }
 
