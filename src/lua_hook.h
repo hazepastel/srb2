@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 2012-2016 by John "JTE" Muniz.
-// Copyright (C) 2012-2023 by Sonic Team Junior.
+// Copyright (C) 2012-2024 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -73,6 +73,7 @@ automatically.
 	X (MusicChange),\
 	X (PlayerHeight),/* override player height */\
 	X (PlayerCanEnterSpinGaps),\
+	X (AddonLoaded),\
 	X (KeyDown),\
 	X (KeyUp),\
 
