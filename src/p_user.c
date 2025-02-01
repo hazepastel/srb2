@@ -5211,21 +5211,30 @@ static void P_DoShieldAbility(player_t *player)
 						S_StartSound(player->mo, sfx_s3ka6);
 					}
 					break;
-				// Bubble bounce
-				case SH_BUBBLEWRAP:
-					if (!(player->mo->eflags & MFE_GOOWATER))
+			// Elemental stomp/Bubble bounce
+			case SH_ELEMENTAL:
+			case SH_BUBBLEWRAP:
+				{
+					boolean elem = ((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL);
+					player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+					player->pflags &= ~PF_SPINNING;
+					if (elem)
 					{
-						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-						player->pflags &= ~PF_SPINNING;
+						player->mo->momx = player->mo->momy = 0;
+						S_StartSound(player->mo, sfx_s3k43);
+					}
+					else
+					{
 						player->mo->momx -= (player->mo->momx/3);
 						player->mo->momy -= (player->mo->momy/3);
 						player->pflags &= ~PF_NOJUMPDAMAGE;
 						P_SetMobjState(player->mo, S_PLAY_ROLL);
 						S_StartSound(player->mo, sfx_s3k44);
-						player->secondjump = 1;
-						P_SetObjectMomZ(player->mo, -24*FRACUNIT, false);
 					}
+					player->secondjump = 0;
+					P_SetObjectMomZ(player->mo, -24*FRACUNIT, false);
 					break;
+				}
 				// Flame burst
 				case SH_FLAMEAURA:
 					player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
