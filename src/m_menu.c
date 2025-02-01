@@ -294,6 +294,7 @@ static void M_Setup1PPlaystyleMenu(INT32 choice);
 static void M_Setup2PPlaystyleMenu(INT32 choice);
 static void M_AssignGamepad(INT32 choice);
 static void M_ChangeControl(INT32 choice);
+static void M_OverrideControl(INT32 choice);
 
 // Video & Sound
 static void M_VideoOptions(INT32 choice);
@@ -1054,6 +1055,9 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Jump",             M_ChangeControl, GC_JUMP        },
 	{IT_CALL | IT_STRING2, NULL, "Spin",             M_ChangeControl, GC_SPIN        },
 	{IT_CALL | IT_STRING2, NULL, "Shield / Peelout", M_ChangeControl, GC_SHIELD      },
+	{IT_CALL | IT_STRING2, NULL, "Assign Spin to Shield",  M_OverrideControl, 0},
+
+
 	{IT_HEADER, NULL, "Camera", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
 	{IT_CALL | IT_STRING2, NULL, "Look Up",        M_ChangeControl, GC_LOOKUP      },
@@ -13567,6 +13571,20 @@ static void M_ChangeControl(INT32 choice)
 	strlcpy(controltochangetext, currentMenu->menuitems[choice].text, 33);
 
 	M_StartMessage(tmp, M_ChangeControlResponse, MM_EVENTHANDLER);
+}
+
+static void M_OverrideControl(INT32 choice)
+{
+	(void)choice;
+
+	gamecontrol   [GC_SHIELD][0] = gamecontrol   [GC_SPIN][0];
+	gamecontrol   [GC_SHIELD][1] = gamecontrol   [GC_SPIN][1];
+	gamecontrolbis[GC_SHIELD][0] = gamecontrolbis[GC_SPIN][0];
+	gamecontrolbis[GC_SHIELD][1] = gamecontrolbis[GC_SPIN][1];
+	M_StartMessage(M_GetText("Spin and Shield / Peelout are now\nthe same button."
+	"\n\nYou can always reassign them them later."
+	"\n\n(Press 'Y Key' or 'Confirm Button' to exit)\n"),
+	NULL, MM_NOTHING);
 }
 
 static const char *M_GetGamepadAxisName(consvar_t *cv)
