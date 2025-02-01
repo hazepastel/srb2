@@ -5207,8 +5207,8 @@ static void P_DoShieldAbility(player_t *player)
 					}
 					else
 					{
+						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 						S_StartSound(player->mo, sfx_s3ka6);
-						player->secondjump = 0;
 					}
 					break;
 				// Bubble bounce

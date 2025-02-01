@@ -87,42 +87,12 @@
 #define SLIDER_WIDTH 78
 #define SERVERS_PER_PAGE 11
 
-typedef enum
-{
-	QUITMSG = 0,
-	QUITMSG1,
-	QUITMSG2,
-	QUITMSG3,
-	QUITMSG4,
-	QUITMSG5,
-	QUITMSG6,
-	QUITMSG7,
-
-	QUIT2MSG,
-	QUIT2MSG1,
-	QUIT2MSG2,
-	QUIT2MSG3,
-	QUIT2MSG4,
-	QUIT2MSG5,
-	QUIT2MSG6,
-
-	QUIT3MSG,
-	QUIT3MSG1,
-	QUIT3MSG2,
-	QUIT3MSG3,
-	QUIT3MSG4,
-	QUIT3MSG5,
-	QUIT3MSG6,
-	NUM_QUITMESSAGES
-} text_enum;
-
 #ifdef HAVE_THREADS
 I_mutex m_menu_mutex;
 #endif
 
 M_waiting_mode_t m_waiting_mode = M_NOT_WAITING;
 
-const char *quitmsg[NUM_QUITMESSAGES];
 
 // Stuff for customizing the player select screen Tails 09-22-2003
 description_t *description = NULL;
@@ -3982,31 +3952,6 @@ void M_Init(void)
 	CV_RegisterVar(&cv_dummymarathon);
 	CV_RegisterVar(&cv_dummyloadless);
 	CV_RegisterVar(&cv_dummycutscenes);
-
-	quitmsg[QUITMSG] = M_GetText("Eggman's tied explosives\nto your girlfriend, and\nwill activate them if\nyou press the 'Y' key!\nPress 'N' to save her!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG1] = M_GetText("What would Tails say if\nhe saw you quitting the game?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG2] = M_GetText("Hey!\nWhere do ya think you're goin'?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG3] = M_GetText("Forget your studies!\nPlay some more!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG4] = M_GetText("You're trying to say you\nlike Sonic 2K6 better than\nthis, right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG5] = M_GetText("Don't leave yet -- there's a\nsuper emerald around that corner!\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG6] = M_GetText("You'd rather work than play?\n\n(Press 'Y' to quit)");
-	quitmsg[QUITMSG7] = M_GetText("Go ahead and leave. See if I care...\n*sniffle*\n\n(Press 'Y' to quit)");
-
-	quitmsg[QUIT2MSG] = M_GetText("If you leave now,\nEggman will take over the world!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG1] = M_GetText("Don't quit!\nThere are animals\nto save!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG2] = M_GetText("Aw c'mon, just bop\na few more robots!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG3] = M_GetText("Did you get all those Chaos Emeralds?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG4] = M_GetText("If you leave, I'll use\nmy spin attack on you!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG5] = M_GetText("Don't go!\nYou might find the hidden\nlevels!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT2MSG6] = M_GetText("Hit the 'N' key, Sonic!\nThe 'N' key!\n\n(Press 'Y' to quit)");
-
-	quitmsg[QUIT3MSG] = M_GetText("Are you really going to give up?\nWe certainly would never give you up.\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG1] = M_GetText("Come on, just ONE more netgame!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG2] = M_GetText("Press 'N' to unlock\nthe Ultimate Cheat!\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG3] = M_GetText("Why don't you go back and try\njumping on that house to\nsee what happens?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG4] = M_GetText("Every time you press 'Y', an\nSRB2 Developer cries...\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG5] = M_GetText("You'll be back to play soon, though...\n......right?\n\n(Press 'Y' to quit)");
-	quitmsg[QUIT3MSG6] = M_GetText("Aww, is Egg Rock Zone too\ndifficult for you?\n\n(Press 'Y' to quit)");
 
 	/*
 	Well the menu sucks for forcing us to have an item set
@@ -11079,7 +11024,7 @@ static void M_EndGame(INT32 choice)
 	if (!Playing())
 		return;
 
-	M_StartMessage(M_GetText("Are you sure you want to end the game?\n\n(Press 'Y' to confirm)\n"), M_ExitGameResponse, MM_YESNO);
+	M_StartMessage(M_GetText("Are you sure you want to end the game?\n\n(Press 'Y Key' or 'Confirm Button' to end)\n"), M_ExitGameResponse, MM_YESNO);
 }
 
 //===========================================================================
@@ -13119,7 +13064,7 @@ static void M_EraseDataResponse(INT32 ch)
 
 static void M_EraseData(INT32 choice)
 {
-	const char *eschoice, *esstr = M_GetText("Are you sure you want to erase\n%s?\n\n(Press 'Y' to confirm)\n");
+	const char *eschoice, *esstr = M_GetText("Are you sure you want to erase\n%s?\n\n(Press 'Y Key' or 'Confirm Button' to erase)\n");
 
 	erasecontext = (UINT8)choice;
 
@@ -14387,8 +14332,6 @@ void M_QuitResponse(INT32 ch)
 
 static void M_QuitSRB2(INT32 choice)
 {
-	// We pick index 0 which is language sensitive, or one at random,
-	// between 1 and maximum number.
 	(void)choice;
-	M_StartMessage(quitmsg[M_RandomKey(NUM_QUITMESSAGES)], M_QuitResponse, MM_YESNO);
+	M_StartMessage(M_GetText("Are you sure you would like to quit SRB2?\n(Press 'Y Key' or 'Confirm Button' to quit)"), M_QuitResponse, MM_YESNO);
 }
