@@ -1347,6 +1347,7 @@ void G_InitGamepads(void)
 		gamepads[i].num = i;
 }
 
+
 void G_DefineDefaultControls(void)
 {
 	INT32 i;
@@ -1423,8 +1424,8 @@ void G_DefineDefaultControls(void)
 		gamecontroldefault[i][GC_CUSTOM3       ][1] = GAMEPAD_KEY(RIGHTSTICK); // Right Stick
 		gamecontroldefault[i][GC_PAUSE         ][1] = GAMEPAD_KEY(BACK); // Back
 		gamecontroldefault[i][GC_SYSTEMMENU    ][0] = GAMEPAD_KEY(START); // Start
-		gamecontroldefault[i][GC_VIEWPOINTNEXT ][1] = GAMEPAD_KEY(DPAD_UP); // D-Pad Up
-		gamecontroldefault[i][GC_CAMTOGGLE     ][1] = GAMEPAD_KEY(DPAD_DOWN); // D-Pad Down
+		gamecontroldefault[i][GC_CAMTOGGLE     ][1] = GAMEPAD_KEY(DPAD_UP); // D-Pad Up
+		gamecontroldefault[i][GC_SCORES        ][1] = GAMEPAD_KEY(DPAD_DOWN); // D-Pad Down
 		gamecontroldefault[i][GC_WEAPONPREV    ][1] = GAMEPAD_KEY(DPAD_LEFT); // D-Pad Left
 		gamecontroldefault[i][GC_WEAPONNEXT    ][1] = GAMEPAD_KEY(DPAD_RIGHT); // D-Pad Right
 		gamecontroldefault[i][GC_FIRE          ][1] = GAMEPAD_AXIS(TRIGGERRIGHT); // R2
@@ -1441,8 +1442,8 @@ void G_DefineDefaultControls(void)
 		gamecontrolbisdefault[i][GC_CUSTOM3       ][1] = GAMEPAD_KEY(RIGHTSTICK); // Right Stick
 		//gamecontrolbisdefault[i][GC_PAUSE  ][1] = GAMEPAD_KEY(BACK); // Back
 		//gamecontrolbisdefault[i][GC_SYSTEMMENU  ][0] = GAMEPAD_KEY(START); // Start
-		gamecontrolbisdefault[i][GC_VIEWPOINTNEXT ][1] = GAMEPAD_KEY(DPAD_UP); // D-Pad Up
-		gamecontrolbisdefault[i][GC_CAMTOGGLE     ][1] = GAMEPAD_KEY(DPAD_DOWN); // D-Pad Down
+		gamecontrolbisdefault[i][GC_CAMTOGGLE     ][1] = GAMEPAD_KEY(DPAD_UP); // D-Pad Up
+		gamecontrolbisdefault[i][GC_SCORES        ][1] = GAMEPAD_KEY(DPAD_DOWN); // D-Pad Down
 		gamecontrolbisdefault[i][GC_WEAPONPREV    ][1] = GAMEPAD_KEY(DPAD_LEFT); // D-Pad Left
 		gamecontrolbisdefault[i][GC_WEAPONNEXT    ][1] = GAMEPAD_KEY(DPAD_RIGHT); // D-Pad Right
 		gamecontrolbisdefault[i][GC_FIRE          ][1] = GAMEPAD_AXIS(TRIGGERRIGHT); // R2

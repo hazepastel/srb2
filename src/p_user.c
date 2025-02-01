@@ -5151,126 +5151,140 @@ static void P_DoTwinSpin(player_t *player)
 }
 
 //
-// returns true if the player used a shield ability, false otherwise
-// passing in the mobjs from P_DoJumpStuff is a bit hackily specific, but I don't care enough to make a more elaborate solution (I think that is more appropriately approached with a more general MT_LOCKON spawning system)
+// Use the player's shield ability
 //
-static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lockonthok, mobj_t *visual)
+static void P_DoShieldAbility(player_t *player)
 {
+	if (LUA_HookPlayer(player, HOOK(PeeloutSpecial)))
+		return;
+
+	if (!(player->powers[pw_shield] & SH_NOSTACK) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (!(player->pflags & PF_JUMPED) && (((player->powers[pw_shield] & SH_NOSTACK) != SH_WHIRLWIND) || P_IsObjectOnGround(player->mo))) || (player->charflags & SF_NOSHIELDABILITY))
+		return;
+
+	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
+		return;
+
 	mobj_t *lockonshield = NULL;
 
-	if ((player->powers[pw_shield] & SH_NOSTACK) && !player->powers[pw_super] && !(player->pflags & PF_SHIELDDOWN)
-		&& ((!(player->pflags & PF_THOKKED) || (((player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP || (player->powers[pw_shield] & SH_NOSTACK) == SH_ATTRACT) && player->secondjump == UINT8_MAX) ))) // thokked is optional if you're bubblewrapped / 3dblasted
+	// Force stop
+	if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE)
 	{
-		if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ATTRACT && !(player->charflags & SF_NOSHIELDABILITY))
+		player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+		player->pflags &= ~PF_SPINNING;
+		player->mo->momx = player->mo->momy = player->mo->momz = 0;
+		S_StartSound(player->mo, sfx_ngskid);
+	}
+	else
+	{
+		switch (player->powers[pw_shield] & SH_NOSTACK)
 		{
-			if ((lockonshield = P_LookForEnemies(player, false, false)))
-			{
-				if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
-				{
-					boolean dovis = true;
-					if (lockonshield == lockonthok)
-					{
-						if (leveltime & 2)
-							dovis = false;
-						else if (visual)
-							P_RemoveMobj(visual);
-					}
-					if (dovis)
-					{
-						visual = P_SpawnMobj(lockonshield->x, lockonshield->y, lockonshield->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
-						if (!P_MobjWasRemoved(visual))
-						{
-							P_SetTarget(&visual->target, lockonshield);
-						visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
-							P_SetMobjStateNF(visual, visual->info->spawnstate+1);
-						}
-					}
-				}
-			}
-		}
-		if ((!(player->charflags & SF_NOSHIELDABILITY)) && (cmd->buttons & BT_SHIELD && !LUA_HookPlayer(player, HOOK(ShieldSpecial)))) // Shield button effects
-		{
-			// Force stop
-			if ((player->powers[pw_shield] & ~(SH_FORCEHP|SH_STACK)) == SH_FORCE)
-			{
+			// Whirlwind jump/Thunder jump
+			case SH_WHIRLWIND:
+			case SH_THUNDERCOIN:
+				P_DoJumpShield(player);
+				break;
+			// Armageddon pow
+			case SH_ARMAGEDDON:
 				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 				player->pflags &= ~PF_SPINNING;
-				player->mo->momx = player->mo->momy = player->mo->momz = 0;
-				S_StartSound(player->mo, sfx_ngskid);
-			}
-			else
+				P_BlackOw(player);
+				break;
+			// Attraction blast
+			case SH_ATTRACT:
+				player->pflags &= ~PF_SPINNING;
+				player->secondjump = 1;
+				player->homing = 2;
+				lockonshield = P_LookForEnemies(player, true, false);
+				P_SetTarget(&player->mo->target, P_SetTarget(&player->mo->tracer, lockonshield));
+				if (lockonshield)
+					{
+						player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockonshield->x, lockonshield->y);
+						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+						player->pflags &= ~PF_NOJUMPDAMAGE;
+						P_SetMobjState(player->mo, S_PLAY_ROLL);
+						S_StartSound(player->mo, sfx_s3k40);
+						player->homing = 3*TICRATE;
+					}
+					else
+					{
+						S_StartSound(player->mo, sfx_s3ka6);
+						player->secondjump = 0;
+					}
+					break;
+				// Bubble bounce
+				case SH_BUBBLEWRAP:
+					if (!(player->mo->eflags & MFE_GOOWATER))
+					{
+						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+						player->pflags &= ~PF_SPINNING;
+						player->mo->momx -= (player->mo->momx/3);
+						player->mo->momy -= (player->mo->momy/3);
+						player->pflags &= ~PF_NOJUMPDAMAGE;
+						P_SetMobjState(player->mo, S_PLAY_ROLL);
+						S_StartSound(player->mo, sfx_s3k44);
+						player->secondjump = 1;
+						P_SetObjectMomZ(player->mo, -24*FRACUNIT, false);
+					}
+					break;
+				// Flame burst
+				case SH_FLAMEAURA:
+					player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
+					P_Thrust(player->mo, player->mo->angle, FixedMul(45*FRACUNIT - FixedSqrt(FixedDiv(player->speed, player->mo->scale)), player->mo->scale));
+					player->drawangle = player->mo->angle;
+					player->pflags &= ~(PF_NOJUMPDAMAGE|PF_SPINNING);
+					P_SetMobjState(player->mo, S_PLAY_ROLL);
+					S_StartSound(player->mo, sfx_s3k43);
+					break;
+				default:
+					break;
+		}
+	}
+}
+
+// Returns whether to override ability only when spinshieldhack is in effect
+static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lockonthok, mobj_t *visual, boolean spinshieldhack)
+{
+	if (!(player->powers[pw_shield] & SH_NOSTACK)) //No shield? No service!
+		return false;
+
+	mobj_t *lockonshield = NULL;
+
+	if ((player->powers[pw_shield] & SH_NOSTACK) == SH_ATTRACT && !(player->charflags & SF_NOSHIELDABILITY) && !(player->pflags & PF_THOKKED))
+	{
+		if ((lockonshield = P_LookForEnemies(player, true, false)))
+		{
+			if (P_IsLocalPlayer(player)) // Only display it on your own view. Don't display it for spectators
 			{
-				switch (player->powers[pw_shield] & SH_NOSTACK)
+				boolean dovis = true;
+				if (lockonshield == lockonthok)
 				{
-					// Whirlwind jump/Thunder jump
-					case SH_WHIRLWIND:
-					case SH_THUNDERCOIN:
-						P_DoJumpShield(player);
-						break;
-					// Armageddon pow
-					case SH_ARMAGEDDON:
-						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-						player->pflags &= ~PF_SPINNING;
-						P_BlackOw(player);
-						break;
-					// Attraction blast
-					case SH_ATTRACT:
-						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-						player->pflags &= ~PF_SPINNING;
-						player->homing = 2;
-						P_SetTarget(&player->mo->target, P_SetTarget(&player->mo->tracer, lockonshield));
-						if (lockonshield)
-							{
-								player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockonshield->x, lockonshield->y);
-									player->pflags &= ~PF_NOJUMPDAMAGE;
-									P_SetMobjState(player->mo, S_PLAY_ROLL);
-									S_StartSound(player->mo, sfx_s3k40);
-									player->homing = 3*TICRATE;
-							}
-							else
-								S_StartSound(player->mo, sfx_s3ka6);
-							break;
-						// Elemental stomp/Bubble bounce
-						case SH_ELEMENTAL:
-						case SH_BUBBLEWRAP:
-							{
-								boolean elem = ((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL);
-								player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-								player->pflags &= ~PF_SPINNING;
-								if (elem)
-								{
-									player->mo->momx = player->mo->momy = 0;
-									S_StartSound(player->mo, sfx_s3k43);
-								}
-								else
-								{
-									player->mo->momx -= (player->mo->momx/3);
-									player->mo->momy -= (player->mo->momy/3);
-									player->pflags &= ~PF_NOJUMPDAMAGE;
-									P_SetMobjState(player->mo, S_PLAY_ROLL);
-									S_StartSound(player->mo, sfx_s3k44);
-								}
-								player->secondjump = 0;
-								P_SetObjectMomZ(player->mo, -24*FRACUNIT, false);
-								break;
-							}
-						// Flame burst
-						case SH_FLAMEAURA:
-							player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
-							P_Thrust(player->mo, player->mo->angle, FixedMul(30*FRACUNIT - FixedSqrt(FixedDiv(player->speed, player->mo->scale)), player->mo->scale));
-							player->drawangle = player->mo->angle;
-							player->pflags &= ~(PF_NOJUMPDAMAGE|PF_SPINNING);
-							P_SetMobjState(player->mo, S_PLAY_ROLL);
-							S_StartSound(player->mo, sfx_s3k43);
-						default:
-							break;
+					if (leveltime & 2)
+						dovis = false;
+					else if (visual)
+						P_RemoveMobj(visual);
+				}
+				if (dovis)
+				{
+					visual = P_SpawnMobj(lockonshield->x, lockonshield->y, lockonshield->z, MT_LOCKON); // positioning, flip handled in P_SceneryThinker
+					if (!P_MobjWasRemoved(visual))
+					{
+						P_SetTarget(&visual->target, lockonshield);
+					visual->drawonlyforplayer = player; // Hide it from the other player in splitscreen, and yourself when spectating
+						P_SetMobjStateNF(visual, visual->info->spawnstate+1);
+					}
 				}
 			}
 		}
-		return player->pflags & PF_SHIELDABILITY;
+	}
+
+	if (spinshieldhack && (cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
+	{
+		P_DoShieldAbility(player);
+		return true;
 	}
 	return false;
 }
+
 
 //
 // P_DoJumpStuff
@@ -8792,12 +8806,13 @@ void P_MovePlayer(player_t *player)
 		P_DoFiring(player, cmd);
 
 		// Shield button behavior
-		// Check P_PlayerShieldThink for actual shields!
+		// Check P_DoShieldAbility for actual shields!
 		if ((cmd->buttons & BT_SHIELD) && !(player->pflags & PF_SHIELDDOWN) && !spinshieldhack)
 		{
-			// Transform into super if we can!
-			if (P_SuperReady(player))
+			if (P_SuperReady(player)) // Transform into super if we can!
 				P_DoSuperTransformation(player, false);
+			else // Otherwise, try to use a shield ability
+				P_DoShieldAbility(player);
 		}
 	}
 

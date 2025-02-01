@@ -76,6 +76,7 @@ automatically.
 	X (AddonLoaded),\
 	X (KeyDown),\
 	X (KeyUp),\
+	X (PeeloutSpecial),\
 
 #define STRING_HOOK_LIST(X) \
 	X (BotAI),/* B_BuildTailsTiccmd by skin name */\
