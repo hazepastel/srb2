@@ -55,7 +55,7 @@ void P_ClearStarPost(INT32 postnum)
 	// scan the thinkers
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		mo2 = (mobj_t *)th;
@@ -84,7 +84,7 @@ void P_ResetStarposts(void)
 
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+		if (th->removing)
 			continue;
 
 		post = (mobj_t *)th;
@@ -492,14 +492,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 			if ((P_MobjFlip(toucher)*toucher->momz < 0) && (elementalpierce != 1) && (!(player->powers[pw_strong] & STR_HEAVY)))
 			{
 				fixed_t setmomz = -toucher->momz; // Store this, momz get changed by P_DoJump within P_DoBubbleBounce
-				
+
 				if (elementalpierce == 2) // Reset bubblewrap, part 1
 					P_DoBubbleBounce(player);
 				toucher->momz = setmomz;
 				if (elementalpierce == 2) // Reset bubblewrap, part 2
 				{
 					boolean underwater = toucher->eflags & MFE_UNDERWATER;
-							
+
 					if (underwater)
 						toucher->momz /= 2;
 					toucher->momz -= (toucher->momz/(underwater ? 8 : 4)); // Cap the height!
@@ -957,7 +957,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 						// scan the thinkers to find the corresponding anchorpoint
 						for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 						{
-							if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+							if (th->removing)
 								continue;
 
 							mo2 = (mobj_t *)th;
@@ -1051,7 +1051,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// scan the remaining thinkers
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -1101,7 +1101,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// in from the paraloop. Isn't this just so efficient?
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -1476,7 +1476,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher, boolean heightcheck)
 				// scan the remaining thinkers to find koopa
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo2 = (mobj_t *)th;
@@ -1974,7 +1974,7 @@ void P_TouchStarPost(mobj_t *post, player_t *player, boolean snaptopost)
 
 		for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 		{
-			if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+			if (th->removing)
 				continue;
 
 			mo2 = (mobj_t *)th;
@@ -2526,7 +2526,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 			if (!(target->flags2 & MF2_DONTRESPAWN))
 			{
 				if (!(netgame || multiplayer))
-					target->fuse = atoi(cv_itemrespawntime.defaultvalue)*TICRATE + 2; 
+					target->fuse = atoi(cv_itemrespawntime.defaultvalue)*TICRATE + 2;
 				else if (cv_itemrespawn.value)
 					target->fuse = cv_itemrespawntime.value*TICRATE + 2;
 			}
@@ -2824,7 +2824,7 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 				// scan the thinkers to make sure all the old pinch dummies are gone on death
 				for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 				{
-					if (th->function.acp1 == (actionf_p1)P_RemoveThinkerDelayed)
+					if (th->removing)
 						continue;
 
 					mo = (mobj_t *)th;
