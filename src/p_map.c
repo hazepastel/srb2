@@ -335,7 +335,7 @@ boolean P_DoSpring(mobj_t *spring, mobj_t *object)
 #endif
 		}
 
-		if ((horizspeed && vertispeed) || (object->player && object->player->homing)) // Mimic SA
+		if (horizspeed && vertispeed) // Mimic SA
 		{
 			object->momx = object->momy = 0;
 			P_TryMove(object, spring->x, spring->y, true);

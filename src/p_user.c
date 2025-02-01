@@ -4986,7 +4986,7 @@ void P_DoJumpShield(player_t *player)
 //
 void P_DoBubbleBounce(player_t *player)
 {
-	player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE|PF_SHIELDABILITY);
+	player->pflags &= ~(PF_JUMPED|PF_NOJUMPDAMAGE|PF_THOKKED|PF_SHIELDABILITY);
 	S_StartSound(player->mo, sfx_s3k44);
 	P_MobjCheckWater(player->mo);
 	P_DoJump(player, false, false);
@@ -4994,9 +4994,7 @@ void P_DoBubbleBounce(player_t *player)
 		P_SetMobjState(player->mo, S_PLAY_FALL);
 	else
 		P_SetMobjState(player->mo, S_PLAY_ROLL);
-	player->pflags |= PF_THOKKED;
 	player->pflags &= ~PF_STARTJUMP;
-	player->secondjump = UINT8_MAX;
 	player->mo->momz = FixedMul(player->mo->momz, 11*FRACUNIT/8);
 }
 
@@ -5191,15 +5189,14 @@ static void P_DoShieldAbility(player_t *player)
 				break;
 			// Attraction blast
 			case SH_ATTRACT:
+				player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 				player->pflags &= ~PF_SPINNING;
-				player->secondjump = 1;
 				player->homing = 2;
 				lockonshield = P_LookForEnemies(player, true, false);
 				P_SetTarget(&player->mo->target, P_SetTarget(&player->mo->tracer, lockonshield));
 				if (lockonshield)
 					{
 						player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, lockonshield->x, lockonshield->y);
-						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 						player->pflags &= ~PF_NOJUMPDAMAGE;
 						P_SetMobjState(player->mo, S_PLAY_ROLL);
 						S_StartSound(player->mo, sfx_s3k40);
@@ -5207,7 +5204,6 @@ static void P_DoShieldAbility(player_t *player)
 					}
 					else
 					{
-						player->pflags |= PF_THOKKED|PF_SHIELDABILITY;
 						S_StartSound(player->mo, sfx_s3ka6);
 					}
 					break;
@@ -5677,8 +5673,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 		{
 			if (!P_HomingAttack(player->mo, player->mo->tracer))
 			{
-				player->pflags &= ~PF_SHIELDABILITY;
-				player->secondjump = UINT8_MAX;
+				player->pflags &= ~PF_THOKKED & ~PF_SHIELDABILITY;
 				P_SetObjectMomZ(player->mo, 6*FRACUNIT, false);
 				if (player->mo->eflags & MFE_UNDERWATER)
 					player->mo->momz = FixedMul(player->mo->momz, FRACUNIT/3);
