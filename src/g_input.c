@@ -1517,39 +1517,6 @@ void G_SaveKeySetting(FILE *f, INT32 (*fromcontrols)[2], INT32 (*fromcontrolsbis
 	}
 }
 
-INT32 G_CheckDoubleUsage(INT32 keynum, boolean modify, UINT8 player)
-{
-	INT32 result = GC_NULL;
-	INT32 i;
-	for (i = 0; i < NUM_GAMECONTROLS; i++)
-	{
-		if (gamecontrol[i][0] == keynum && player != 2)
-		{
-			result = i;
-			if (modify) gamecontrol[i][0] = KEY_NULL;
-		}
-		if (gamecontrol[i][1] == keynum && player != 2)
-		{
-			result = i;
-			if (modify) gamecontrol[i][1] = KEY_NULL;
-		}
-		if (gamecontrolbis[i][0] == keynum && player != 1)
-		{
-			result = i;
-			if (modify) gamecontrolbis[i][0] = KEY_NULL;
-		}
-		if (gamecontrolbis[i][1] == keynum && player != 1)
-		{
-			result = i;
-			if (modify) gamecontrolbis[i][1] = KEY_NULL;
-		}
-		if (result && !modify)
-			return result;
-	}
-
-	return result;
-}
-
 static INT32 G_FilterSpecialKeys(INT32 keyidx, INT32 *keynum1, INT32 *keynum2)
 {
 	// Special case: ignore KEY_PAUSE because it's hardcoded
@@ -1578,7 +1545,6 @@ static void setcontrol(INT32 (*gc)[2])
 	INT32 numctrl;
 	const char *namectrl;
 	INT32 keynum, keynum1, keynum2 = 0;
-	INT32 player = ((void*)gc == (void*)&gamecontrolbis ? 1 : 0);
 
 	// TODO: 2.3: Delete the "use" alias
 	namectrl = (stricmp(COM_Argv(1), "use")) ? COM_Argv(1) : "spin";
@@ -1599,7 +1565,6 @@ static void setcontrol(INT32 (*gc)[2])
 
 	if (keynum >= 0)
 	{
-		(void)G_CheckDoubleUsage(keynum, true, player+1);
 
 		// if keynum was rejected, try it again with keynum2
 		if (!keynum && keynum2)
@@ -1607,8 +1572,6 @@ static void setcontrol(INT32 (*gc)[2])
 			keynum1 = keynum2; // push down keynum2
 			keynum2 = 0;
 			keynum = G_FilterSpecialKeys(0, &keynum1, &keynum2);
-			if (keynum >= 0)
-				(void)G_CheckDoubleUsage(keynum, true, player+1);
 		}
 	}
 
