@@ -14333,5 +14333,5 @@ void M_QuitResponse(INT32 ch)
 static void M_QuitSRB2(INT32 choice)
 {
 	(void)choice;
-	M_StartMessage(M_GetText("Are you sure you would like to quit SRB2?\n(Press 'Y Key' or 'Confirm Button' to quit)"), M_QuitResponse, MM_YESNO);
+	M_StartMessage(M_GetText("Are you sure you would like to quit SRB2?\n\n\n(Press 'Y Key' or 'Confirm Button' to quit)"), M_QuitResponse, MM_YESNO);
 }
