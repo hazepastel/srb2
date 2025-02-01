@@ -3311,6 +3311,7 @@ static void P_DoPlayerHeadSigns(player_t *player)
 					sign->frame = 2|FF_FULLBRIGHT;
 			}
 		}
+	}
 
 	if (!P_MobjWasRemoved(sign) && splitscreen) // Hide the sign from yourself in splitscreen - In single-screen, it wouldn't get spawned if it shouldn't be visible
 	{
@@ -3347,7 +3348,6 @@ static void P_DoPlayerHeadSigns(player_t *player)
 			}
 		}
 #endif
-	}
 	}
 }
 
