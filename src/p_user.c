@@ -5322,7 +5322,7 @@ static void P_DoJumpStuff(player_t *player, ticcmd_t *cmd, boolean spinshieldhac
 			;
 		else if (player->pflags & (PF_GLIDING|PF_SLIDING|PF_SHIELDABILITY)) // If the player has used an ability previously
 			;
-		else if (P_PlayerShieldThink(player, cmd, lockonthok, visual))
+		else if (P_PlayerShieldThink(player, cmd, lockonthok, visual, spinshieldhack))
 			;
 		else if (cmd->buttons & BT_SPIN)
 		{
