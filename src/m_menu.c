@@ -1000,14 +1000,15 @@ static menuitem_t OP_MainMenu[] =
 {
 	{IT_SUBMENU | IT_STRING, NULL, "Player 1 Controls...", &OP_P1ControlsDef,   10},
 	{IT_SUBMENU | IT_STRING, NULL, "Player 2 Controls...", &OP_P2ControlsDef,   20},
+	{IT_CALL | IT_STRING, NULL, "Assign Spin to Shield",  M_OverrideControl, 30},
 
-	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      40},
+	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      50},
 
-	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 60},
+	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 70},
 
-	{IT_CALL    | IT_STRING, NULL, "Server Options...",    M_ServerOptions,     80},
+	{IT_CALL    | IT_STRING, NULL, "Server Options...",    M_ServerOptions,     90},
 
-	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 100},
+	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 110},
 };
 
 enum
@@ -1055,9 +1056,6 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Jump",             M_ChangeControl, GC_JUMP        },
 	{IT_CALL | IT_STRING2, NULL, "Spin",             M_ChangeControl, GC_SPIN        },
 	{IT_CALL | IT_STRING2, NULL, "Shield / Peelout", M_ChangeControl, GC_SHIELD      },
-	{IT_CALL | IT_STRING2, NULL, "Assign Spin to Shield",  M_OverrideControl, 0},
-
-
 	{IT_HEADER, NULL, "Camera", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
 	{IT_CALL | IT_STRING2, NULL, "Look Up",        M_ChangeControl, GC_LOOKUP      },
@@ -1070,8 +1068,7 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Reset Camera",     M_ChangeControl, GC_CAMRESET    },
 	{IT_HEADER, NULL, "Meta", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
-	{IT_CALL | IT_STRING2, NULL, "Game Status",
-    M_ChangeControl, GC_SCORES      },
+	{IT_CALL | IT_STRING2, NULL, "Game Status", M_ChangeControl, GC_SCORES      },
 	{IT_CALL | IT_STRING2, NULL, "Pause / Run Retry", M_ChangeControl, GC_PAUSE      },
 	{IT_CALL | IT_STRING2, NULL, "Screenshot",            M_ChangeControl, GC_SCREENSHOT    },
 	{IT_CALL | IT_STRING2, NULL, "Toggle GIF Recording",  M_ChangeControl, GC_RECORDGIF     },
