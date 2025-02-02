@@ -386,6 +386,7 @@ static const char *SOCK_AddrToStr(mysockaddr_t *sk)
 	int v6 = 0;
 #endif
 	void *addr;
+	int e = 0; // save error code so it can't be modified later code and avoid calling WSAGetLastError() more then once
 
 	if(sk->any.sa_family == AF_INET)
 		addr = &sk->ip4.sin_addr;
@@ -399,7 +400,10 @@ static const char *SOCK_AddrToStr(mysockaddr_t *sk)
 	if(addr == NULL)
 		sprintf(s, "No address");
 	else if(inet_ntop(sk->any.sa_family, addr, &s[v6], sizeof (s) - v6) == NULL)
-		sprintf(s, "Unknown family type, error #%u", errno);
+	{
+		e = errno;
+		sprintf(s, "Unknown family type, error #%u: %s", e, strerror(e));
+	}
 #ifdef HAVE_IPV6
 	else if(sk->any.sa_family == AF_INET6)
 	{
@@ -657,6 +661,7 @@ static inline ssize_t SOCK_SendToAddr(SOCKET_TYPE socket, mysockaddr_t *sockaddr
 static void SOCK_Send(void)
 {
 	ssize_t c = ERRSOCKET;
+	int e = 0; // save error code so it can't be modified later code and avoid calling WSAGetLastError() more then once
 
 	if (!nodeconnected[doomcom->remotenode])
 		return;
@@ -670,8 +675,12 @@ static void SOCK_Send(void)
 				if (myfamily[i] == broadcastaddress[j].any.sa_family)
 				{
 					c = SOCK_SendToAddr(mysockets[i], &broadcastaddress[j]);
-					if (c == ERRSOCKET && !ALLOWEDERROR(errno))
-						break;
+					if (c == ERRSOCKET)
+					{
+						e = errno;
+						if (!ALLOWEDERROR(e))
+							break;
+					}
 				}
 			}
 		}
@@ -683,8 +692,12 @@ static void SOCK_Send(void)
 			if (myfamily[i] == clientaddress[doomcom->remotenode].any.sa_family)
 			{
 				c = SOCK_SendToAddr(mysockets[i], &clientaddress[doomcom->remotenode]);
-				if (c == ERRSOCKET && !ALLOWEDERROR(errno))
-					break;
+				if (c == ERRSOCKET)
+				{
+					e = errno;
+					if (!ALLOWEDERROR(e))
+						break;
+				}
 			}
 		}
 	}
@@ -695,7 +708,6 @@ static void SOCK_Send(void)
 
 	if (c == ERRSOCKET)
 	{
-		int e = errno; // save error code so it can't be modified later
 		if (!ALLOWEDERROR(e))
 			I_Error("SOCK_Send, error sending to node %d (%s) #%u, %s", doomcom->remotenode,
 				SOCK_GetNodeAddress(doomcom->remotenode), e, strerror(e));
@@ -729,7 +741,7 @@ static SOCKET_TYPE UDP_Bind(int family, struct sockaddr *addr, socklen_t addrlen
 	SOCKET_TYPE s = socket(family, SOCK_DGRAM, IPPROTO_UDP);
 	int opt;
 	int rc;
-	int e = 0; // save error code so it can't be modified later code
+	int e = 0; // save error code so it can't be modified later code and avoid calling WSAGetLastError() more then once
 	socklen_t opts;
 #ifdef FIONBIO
 	unsigned long trueval = true;
@@ -937,6 +949,13 @@ static boolean UDP_Socket(void)
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_protocol = IPPROTO_UDP;
+
+#ifdef HAVE_IPV6
+	if (!b_ipv6)
+		I_OutputMsg("Disabling IPv6 support at runtime\n");
+#else
+	I_OutputMsg("Compiled without IPv6 support\n");
+#endif
 
 	if (serverrunning)
 		serv = serverport_name;
