@@ -294,7 +294,6 @@ static void M_Setup1PPlaystyleMenu(INT32 choice);
 static void M_Setup2PPlaystyleMenu(INT32 choice);
 static void M_AssignGamepad(INT32 choice);
 static void M_ChangeControl(INT32 choice);
-static void M_OverrideControl(INT32 choice);
 
 // Video & Sound
 static void M_VideoOptions(INT32 choice);
@@ -1000,15 +999,14 @@ static menuitem_t OP_MainMenu[] =
 {
 	{IT_SUBMENU | IT_STRING, NULL, "Player 1 Controls...", &OP_P1ControlsDef,   10},
 	{IT_SUBMENU | IT_STRING, NULL, "Player 2 Controls...", &OP_P2ControlsDef,   20},
-	{IT_CALL | IT_STRING, NULL, "Assign Spin to Shield",  M_OverrideControl, 30},
 
-	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      50},
+	{IT_CALL    | IT_STRING, NULL, "Video Options...",     M_VideoOptions,      40},
 
-	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 70},
+	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 60},
 
-	{IT_CALL    | IT_STRING, NULL, "Server Options...",    M_ServerOptions,     90},
+	{IT_CALL    | IT_STRING, NULL, "Server Options...",    M_ServerOptions,     80},
 
-	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 110},
+	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 100},
 };
 
 enum
@@ -1055,7 +1053,7 @@ static menuitem_t OP_ChangeControlsMenu[] =
 	{IT_CALL | IT_STRING2, NULL, "Move Right",       M_ChangeControl, GC_STRAFERIGHT },
 	{IT_CALL | IT_STRING2, NULL, "Jump",             M_ChangeControl, GC_JUMP        },
 	{IT_CALL | IT_STRING2, NULL, "Spin",             M_ChangeControl, GC_SPIN        },
-	{IT_CALL | IT_STRING2, NULL, "Shield / Peelout", M_ChangeControl, GC_SHIELD      },
+	{IT_CALL | IT_STRING2, NULL, "Shield Ability",   M_ChangeControl, GC_SHIELD      },
 	{IT_HEADER, NULL, "Camera", NULL, 0},
 	{IT_SPACE, NULL, NULL, NULL, 0}, // padding
 	{IT_CALL | IT_STRING2, NULL, "Look Up",        M_ChangeControl, GC_LOOKUP      },
@@ -13554,33 +13552,27 @@ static void M_ChangeControlResponse(event_t *ev)
 
 static void M_ChangeControl(INT32 choice)
 {
-	// This buffer assumes a 35-character message (per below) plus a max control name limit of 32 chars (per controltochangetext)
+	// This buffer assumes a 91-character message (per below) plus a max control name limit of 32 chars (per controltochangetext)
 	// If you change the below message, then change the size of this buffer!
-	static char tmp[68];
+	static char tmp[124];
 
 	if (tutorialmode && tutorialgcs) // don't allow control changes if temp control override is active
 		return;
 
 	controltochange = currentMenu->menuitems[choice].alphaKey;
-	sprintf(tmp, M_GetText("Hit the new key for\n%s\nESC for Cancel"),
-		currentMenu->menuitems[choice].text);
+	if (controltochange == GC_SHIELD)
+	{
+		sprintf(tmp, M_GetText("Press the new key/button for\n%s\n\nESCAPE to cancel\n\nBind to same key/button as Spin to disable"),
+			currentMenu->menuitems[choice].text);
+	}
+	else
+	{
+		sprintf(tmp, M_GetText("Press the new key/button for\n%s\n\nESCAPE to cancel"),
+			currentMenu->menuitems[choice].text);
+	}
 	strlcpy(controltochangetext, currentMenu->menuitems[choice].text, 33);
 
 	M_StartMessage(tmp, M_ChangeControlResponse, MM_EVENTHANDLER);
-}
-
-static void M_OverrideControl(INT32 choice)
-{
-	(void)choice;
-
-	gamecontrol   [GC_SHIELD][0] = gamecontrol   [GC_SPIN][0];
-	gamecontrol   [GC_SHIELD][1] = gamecontrol   [GC_SPIN][1];
-	gamecontrolbis[GC_SHIELD][0] = gamecontrolbis[GC_SPIN][0];
-	gamecontrolbis[GC_SHIELD][1] = gamecontrolbis[GC_SPIN][1];
-	M_StartMessage(M_GetText("Spin and Shield / Peelout are now\nthe same button."
-	"\n\nYou can always reassign them them later."
-	"\n\n(Press 'Y Key' or 'Confirm Button' to exit)\n"),
-	NULL, MM_NOTHING);
 }
 
 static const char *M_GetGamepadAxisName(consvar_t *cv)

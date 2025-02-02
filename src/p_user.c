@@ -5151,12 +5151,12 @@ static void P_DoTwinSpin(player_t *player)
 //
 // Use the player's shield ability
 //
-static void P_DoShieldAbility(player_t *player)
+static void P_DoShieldAbility(player_t *player, boolean spinshieldhack)
 {
-	if (LUA_HookPlayer(player, HOOK(PeeloutSpecial)))
+	if (!spinshieldhack && LUA_HookPlayer(player, HOOK(ShieldButtonSpecial)))
 		return;
 
-	if (!(player->powers[pw_shield] & SH_NOSTACK) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (!(player->pflags & PF_JUMPED) && (((player->powers[pw_shield] & SH_NOSTACK) != SH_WHIRLWIND) || P_IsObjectOnGround(player->mo))) || (player->charflags & SF_NOSHIELDABILITY))
+	if (player->powers[pw_super] || !(player->powers[pw_shield] & SH_NOSTACK) || (player->pflags & (PF_THOKKED|PF_SHIELDABILITY)) || (!(player->pflags & PF_JUMPED) && (((player->powers[pw_shield] & SH_NOSTACK) != SH_WHIRLWIND) || P_IsObjectOnGround(player->mo))) || (player->charflags & SF_NOSHIELDABILITY))
 		return;
 
 	if (LUA_HookPlayer(player, HOOK(ShieldSpecial)))
@@ -5284,7 +5284,7 @@ static boolean P_PlayerShieldThink(player_t *player, ticcmd_t *cmd, mobj_t *lock
 
 	if (spinshieldhack && (cmd->buttons & BT_SPIN) && !(player->pflags & PF_SPINDOWN))
 	{
-		P_DoShieldAbility(player);
+		P_DoShieldAbility(player, spinshieldhack);
 		return true;
 	}
 	return false;
@@ -8813,7 +8813,7 @@ void P_MovePlayer(player_t *player)
 			if (P_SuperReady(player)) // Transform into super if we can!
 				P_DoSuperTransformation(player, false);
 			else // Otherwise, try to use a shield ability
-				P_DoShieldAbility(player);
+				P_DoShieldAbility(player, spinshieldhack);
 		}
 	}
 
